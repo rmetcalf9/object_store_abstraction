@@ -2,6 +2,7 @@
 from TestHelperSuperClass import testHelperSuperClass
 import object_store_abstraction as undertest
 import json
+import os
 
 '''
 #Sample code used to create a store in an application:
@@ -23,6 +24,12 @@ import json
     self.objectStore = createObjectStoreInstance(objectStoreConfigDict, fns)
 '''
 
+SKIPSQLALCHEMYTESTS=False
+if ('SKIPSQLALCHEMYTESTS' in os.environ):
+  if os.environ["SKIPSQLALCHEMYTESTS"]=="Y":
+    SKIPSQLALCHEMYTESTS=True
+
+
 class test_objectStoresMemory(testHelperSuperClass):
   def test_defaultCreation(self):
     objectStoreConfigDict = None
@@ -38,6 +45,9 @@ class test_objectStoresMemory(testHelperSuperClass):
       self.assertTrue(False,msg='Wrong type of object store created')
 
   def test_sqlAlchemyCreation(self):
+    if SKIPSQLALCHEMYTESTS:
+      print("Skipping SQLAlchemyTests")
+      return
     a = "{\"Type\":\"SQLAlchemy\", \"connectionString\":\"mysql+pymysql://saas_user_man_user:saas_user_man_testing_password@127.0.0.1:10103/saas_user_man_rad\"}"
     objectStoreConfigDict = json.loads(a)
     a = undertest.createObjectStoreInstance(objectStoreConfigDict, self.getObjectStoreExternalFns())
