@@ -1,0 +1,2 @@
+include versioneer.py
+include object_store_abstraction/_version.py

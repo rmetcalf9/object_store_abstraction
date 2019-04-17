@@ -42,8 +42,8 @@ def get_config():
     cfg.VCS = "git"
     cfg.style = "pep440"
     cfg.tag_prefix = ""
-    cfg.parentdir_prefix = "baseapp_for_restapi_backend_with_swagger-"
-    cfg.versionfile_source = "baseapp_for_restapi_backend_with_swagger/_version.py"
+    cfg.parentdir_prefix = "object_store_abstraction-"
+    cfg.versionfile_source = "object_store_abstraction/_version.py"
     cfg.verbose = False
     return cfg
 
