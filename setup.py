@@ -7,7 +7,8 @@ sp_install_requires = [
   'sortedcontainers==1.5.9',
   'pyjwt==1.7.1',
   'sqlalchemy==1.3.1',
-  'PyMySQL==0.9.3'
+  'PyMySQL==0.9.3',
+  'python-dateutil==2.7.2'
 ]
 sp_tests_require = [
   'nose==1.3.7'
