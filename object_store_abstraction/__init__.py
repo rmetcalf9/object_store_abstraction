@@ -4,7 +4,7 @@
     object_store_abstraction
     ~~~~~~~~
     Object store abstraction
-    :copyright: (c) 2018 by Robert Metcalf. 
+    :copyright: (c) 2018 by Robert Metcalf.
     :license: MIT, see LICENSE for more details.
 """
 
