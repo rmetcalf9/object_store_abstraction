@@ -8,7 +8,14 @@
     :license: MIT, see LICENSE for more details.
 """
 
-#from .AppObj import AppObjBaseClass
+
+from .objectStores_base import WrongObjectVersionException, SuppliedObjectVersionWhenCreatingException, MissingTransactionContextException, UnallowedMutationException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException
+
+from .makeDictJSONSerializable import getRJMJSONSerializableDICT, getNormalDICTFromRJMJSONSerializableDICT
+
+#Allow direct testing of types
+from .objectStores_SQLAlchemy import ObjectStore_SQLAlchemy
+from .objectStores_Memory import ObjectStore_Memory
 
 from ._version import get_versions
 __version__ = get_versions()['version']

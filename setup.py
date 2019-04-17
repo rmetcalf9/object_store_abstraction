@@ -3,7 +3,8 @@ import versioneer
 
 #Dependancy lists maintained here and in tox.ini
 sp_install_requires = [
-  'pytz==2018.4'
+  'pytz==2018.4',
+  'sortedcontainers==1.5.9',
 ]
 sp_tests_require = [
   'nose==1.3.7'
