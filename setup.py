@@ -5,6 +5,9 @@ import versioneer
 sp_install_requires = [
   'pytz==2018.4',
   'sortedcontainers==1.5.9',
+  'pyjwt==1.7.1',
+  'sqlalchemy==1.3.1',
+  'PyMySQL==0.9.3'
 ]
 sp_tests_require = [
   'nose==1.3.7'
