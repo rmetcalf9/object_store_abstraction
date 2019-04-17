@@ -129,6 +129,16 @@ class testHelperSuperClass(unittest.TestCase):
         raise context.exception
     self.assertTrue(ExpectedException == context.exception)
 
+  def checkGotRightExceptionType(self, context, ExpectedException, msg=""):
+    if (context.exception != None):
+      if (context.exception != ExpectedException):
+        if (not isinstance(context.exception,ExpectedException)):
+          print("**** Wrong exception TYPE raised:")
+          print("      expected: " + type(ExpectedException).__name__ + ' - ' + str(ExpectedException));
+          print("           got: " + type(context.exception).__name__ + ' - ' + str(context.exception));
+          raise context.exception
+    
+    
   def sortAllMembers(self, objToSotr):
     if isinstance(objToSotr,list):
       for k in objToSotr:

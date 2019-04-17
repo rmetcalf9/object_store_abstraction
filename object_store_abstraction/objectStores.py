@@ -1,5 +1,5 @@
-from objectStores_Memory import ObjectStore_Memory
-from objectStores_SQLAlchemy import ObjectStore_SQLAlchemy
+from .objectStores_Memory import ObjectStore_Memory
+from .objectStores_SQLAlchemy import ObjectStore_SQLAlchemy
 
 class InvalidObjectStoreConfigMissingTypeClass(Exception):
   pass
@@ -8,6 +8,9 @@ InvalidObjectStoreConfigMissingTypeException = InvalidObjectStoreConfigMissingTy
 class InvalidObjectStoreConfigUnknownTypeClass(Exception):
   pass
 InvalidObjectStoreConfigUnknownTypeException = InvalidObjectStoreConfigUnknownTypeClass('APIAPP_OBJECTSTORECONFIG Type value is not recognised')
+
+class ObjectStoreConfigNotDictObjectExceptionClass(Exception):
+  pass
 
 def _createObjectStoreInstanceTypeSpecified(type, configDICT, initFN, externalFns):
   print("Using Object Store Type: " + type)
@@ -25,7 +28,7 @@ def createObjectStoreInstance(objectStoreConfigDict, externalFns):
     objectStoreConfigDict["Type"] = "Memory"
   
   if not isinstance(objectStoreConfigDict, dict):
-    raise Exception('You must pass a dict as config to createObjectStoreInstance (or None)')
+    raise ObjectStoreConfigNotDictObjectExceptionClass('You must pass a dict as config to createObjectStoreInstance (or None)')
 
 
   if "Type" not in objectStoreConfigDict:
