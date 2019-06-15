@@ -1,5 +1,6 @@
 from .objectStores_Memory import ObjectStore_Memory
 from .objectStores_SQLAlchemy import ObjectStore_SQLAlchemy
+from .objectStores_SimpleFileStore import ObjectStore_SimpleFileStore
 
 class InvalidObjectStoreConfigMissingTypeClass(Exception):
   pass
@@ -26,7 +27,7 @@ def createObjectStoreInstance(objectStoreConfigDict, externalFns):
   if objectStoreConfigDict is None:
     objectStoreConfigDict = {}
     objectStoreConfigDict["Type"] = "Memory"
-  
+
   if not isinstance(objectStoreConfigDict, dict):
     raise ObjectStoreConfigNotDictObjectExceptionClass('You must pass a dict as config to createObjectStoreInstance (or None)')
 
@@ -37,6 +38,7 @@ def createObjectStoreInstance(objectStoreConfigDict, externalFns):
     return _createObjectStoreInstanceTypeSpecified("Memory", objectStoreConfigDict, ObjectStore_Memory, externalFns)
   if objectStoreConfigDict["Type"] == "SQLAlchemy":
     return _createObjectStoreInstanceTypeSpecified("SQLAlchemy", objectStoreConfigDict, ObjectStore_SQLAlchemy, externalFns)
+  if objectStoreConfigDict["Type"] == "SimpleFileStore":
+    return _createObjectStoreInstanceTypeSpecified("SimpleFileStore", objectStoreConfigDict, ObjectStore_SimpleFileStore, externalFns)
 
   raise InvalidObjectStoreConfigUnknownTypeException
-

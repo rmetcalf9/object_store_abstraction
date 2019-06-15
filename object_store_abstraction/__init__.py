@@ -20,6 +20,7 @@ from .makeDictJSONSerializable import getRJMJSONSerializableDICT, getNormalDICTF
 #Allow direct testing of types
 from .objectStores_SQLAlchemy import ObjectStore_SQLAlchemy
 from .objectStores_Memory import ObjectStore_Memory
+from .objectStores_SimpleFileStore import ObjectStore_SimpleFileStore
 
 from ._version import get_versions
 __version__ = get_versions()['version']
