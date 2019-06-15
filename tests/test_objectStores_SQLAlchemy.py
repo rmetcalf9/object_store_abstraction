@@ -5,15 +5,19 @@ These tests require a local mysql database
 To setup log into db as admin and run the following commands:
 
 create database saas_user_man CHARACTER SET utf8 COLLATE utf8_general_ci;
+create database saas_user_man_rad CHARACTER SET utf8 COLLATE utf8_general_ci;
+
 ## Check it is utf-8
 SELECT schema_name, default_character_set_name FROM information_schema.SCHEMATA;
 grant ALL on saas_user_man.* TO saas_user_man_user@'%' IDENTIFIED BY 'saas_user_man_testing_password';
+grant ALL on saas_user_man_rad.* TO saas_user_man_user@'%';
 FLUSH PRIVILEGES;
 select host, user, ssl_type from user;
 
 Alternative user creation syntax is:
 CREATE USER 'saas_user_man_user'@'%' IDENTIFIED BY 'saas_user_man_testing_password';
 grant ALL on saas_user_man.* TO saas_user_man_user@'%';
+grant ALL on saas_user_man_rad.* TO saas_user_man_user@'%';
 
 '''
 import copy
