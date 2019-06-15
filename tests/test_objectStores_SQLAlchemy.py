@@ -1,5 +1,21 @@
 from TestHelperSuperClass import testHelperSuperClass
 
+'''
+These tests require a local mysql database
+To setup log into db as admin and run the following commands:
+
+create database saas_user_man CHARACTER SET utf8 COLLATE utf8_general_ci;
+## Check it is utf-8
+SELECT schema_name, default_character_set_name FROM information_schema.SCHEMATA;
+grant ALL on saas_user_man.* TO saas_user_man_user@'%' IDENTIFIED BY 'saas_user_man_testing_password';
+FLUSH PRIVILEGES;
+select host, user, ssl_type from user;
+
+Alternative user creation syntax is:
+CREATE USER 'saas_user_man_user'@'%' IDENTIFIED BY 'saas_user_man_testing_password';
+grant ALL on saas_user_man.* TO saas_user_man_user@'%';
+
+'''
 import copy
 import datetime
 import pytz
@@ -65,7 +81,7 @@ def differentPrefixesDontShareData(testClass, objectStoreType, objectStoreType2)
         testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString, [  ], msg='Saved object dosen\'t match')
         (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection2.getObjectJSON("Test", "1_123" + str(x))
         testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, None, [  ], msg='Saved object dosen\'t match')
-      
+
         (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("Test", "2_123" + str(x))
         testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, None, [  ], msg='Saved object dosen\'t match')
         (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection2.getObjectJSON("Test", "2_123" + str(x))
@@ -78,7 +94,7 @@ class test_objectStoresSQLAlchemy(testHelperSuperClass):
     if SKIPSQLALCHEMYTESTS:
       print("Skipping SQLAlchemyTests")
       return
-    def getObjFn(SQLAlchemy_LocalDBConfigDict): 
+    def getObjFn(SQLAlchemy_LocalDBConfigDict):
       obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns())
       obj.resetDataForTest()
       return obj
@@ -88,21 +104,21 @@ class test_objectStoresSQLAlchemy(testHelperSuperClass):
   def test_differentPrefixesDontShareData(self):
     if SKIPSQLALCHEMYTESTS:
       print("Skipping SQLAlchemyTests")
-      return  
+      return
     obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns())
     obj.resetDataForTest()
     obj2 = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict_withPrefix, self.getObjectStoreExternalFns())
     obj2.resetDataForTest()
     differentPrefixesDontShareData(self, obj, obj2)
-    
+
   #Test rollback single transaction
   def test_rollbackTransactionIsSuccessful_InsertOnly(self):
     if SKIPSQLALCHEMYTESTS:
       print("Skipping SQLAlchemyTests")
-      return        
+      return
     obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns())
     obj.resetDataForTest()
-    
+
     def dbfn(storeConnection):
       #Test creation of record rollback works
       # _no data to start with
@@ -119,11 +135,11 @@ class test_objectStoresSQLAlchemy(testHelperSuperClass):
         storeConnection.executeInsideTransaction(someFn)
       except dummyException:
         pass
-      
+
       # _no data after rolledback insert start with
       (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("Test", "1_123")
       self.assertJSONStringsEqualWithIgnoredKeys(objectDICT, None, [  ], msg='Found but it should have rolled back')
-      
+
     obj.executeInsideConnectionContext(dbfn)
   def test_rollbackTransactionIsSuccessful_UpdateOnly(self):
     if SKIPSQLALCHEMYTESTS:
@@ -131,7 +147,7 @@ class test_objectStoresSQLAlchemy(testHelperSuperClass):
       return
     obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns())
     obj.resetDataForTest()
-    
+
     def dbfn(storeConnection):
       # insert data
       def someFn(connectionContext):
@@ -144,7 +160,7 @@ class test_objectStoresSQLAlchemy(testHelperSuperClass):
       # _no data to start with
       (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("Test", "1_123")
       self.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString, [  ], msg='Object found before it was added')
-    
+
       # update data
       def someFn(connectionContext):
         connectionContext.saveJSONObject("Test", "1_123", JSONString2, objVer)
@@ -155,9 +171,9 @@ class test_objectStoresSQLAlchemy(testHelperSuperClass):
         storeConnection.executeInsideTransaction(someFn)
       except dummyException:
         pass
-      
+
       # Make sure data has revereted to origional value
       (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("Test", "1_123")
-      self.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString, [  ], msg='Did not roll back to previous value')    
+      self.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString, [  ], msg='Did not roll back to previous value')
 
     obj.executeInsideConnectionContext(dbfn)
