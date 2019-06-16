@@ -60,8 +60,10 @@ def runAllGenericTests(testClass, getObjFn, ConfigDict):
 
 def t_saveFailsWithInvalidObjectVersionFirstSave(testClass, objectStoreType):
   objVerIDToSaveAs = 123
-  
+
   def someFn(connectionContext):
+    ##Taken out of assertRaises so I can see stack trace of other exception
+    #savedVer = connectionContext.saveJSONObject("Test", "123", JSONString, objVerIDToSaveAs)
     with testClass.assertRaises(Exception) as context:
       savedVer = connectionContext.saveJSONObject("Test", "123", JSONString, objVerIDToSaveAs)
     testClass.checkGotRightException(context,SuppliedObjectVersionWhenCreatingException)
@@ -69,12 +71,12 @@ def t_saveFailsWithInvalidObjectVersionFirstSave(testClass, objectStoreType):
 
 def t_saveFailsWithInvalidObjectVersionSecondSave(testClass, objectStoreType):
   objVerIDToSaveAs = 123
-  
+
   def dbfn(storeConnection):
     def someFn(connectionContext):
       return storeConnection.saveJSONObject("Test", "123", JSONString, None)
     savedVer = storeConnection.executeInsideTransaction(someFn)
-    
+
     def someFn2(connectionContext):
       gContext = None
       with testClass.assertRaises(Exception) as context:
@@ -88,7 +90,7 @@ def t_singleSaveAndRetrieveCommittedTransaction(testClass, objectStoreType):
     def someFn(connectionContext):
       savedVer = connectionContext.saveJSONObject("Test", "123", JSONString, None)
     savedVer = storeConnection.executeInsideTransaction(someFn)
-    
+
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("Test", "123")
     testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString, [  ], msg='Saved object dosen\'t match')
   objectStoreType.executeInsideConnectionContext(dbfn)
@@ -99,17 +101,17 @@ def t_singleSaveAndRetrieveUncommittedTransaction(testClass, objectStoreType):
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = connectionContext.getObjectJSON("Test", "123")
     testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString, [  ], msg='Saved object dosen\'t match')
   savedVer = objectStoreType.executeInsideTransaction(someFn)
-  
+
 def t_saveObjectsInSingleTransaction(testClass, objectStoreType):
   def dbfn(storeConnection):
     def someFn(connectionContext):
       lastSavedVer = None
-      for x in range(1,6): 
+      for x in range(1,6):
         savedVer = connectionContext.saveJSONObject("Test", "123", JSONString, lastSavedVer)
         testClass.assertEqual(savedVer, x)
         lastSavedVer = savedVer
     storeConnection.executeInsideTransaction(someFn)
-    
+
     #Check object was saved correctly
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("Test", "123")
     testClass.assertJSONStringsEqualWithIgnoredKeys(JSONString, objectDICT, [  ], msg='Saved object dosen\'t match')
@@ -120,7 +122,7 @@ def t_creationOfNewObjectNotAffectingOtherObjectTypeWithSameKey(testClass, objec
     def someFn(connectionContext):
       savedVer = connectionContext.saveJSONObject("Test1", "123", JSONString, None)
     savedVer = storeConnection.executeInsideTransaction(someFn)
-    
+
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("Test1", "123")
     testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString, [  ], msg='Saved object dosen\'t match')
 
@@ -131,7 +133,7 @@ def t_creationOfNewObjectNotAffectingOtherObjectTypeWithSameKey(testClass, objec
 def t_saveObjectsInMutipleTransactions(testClass, objectStoreType):
   def dbfn(storeConnection):
     lastSavedVer = None
-    for x in range(1,6): 
+    for x in range(1,6):
       def someFn(connectionContext):
         savedVer = connectionContext.saveJSONObject("Test", "123", JSONString, lastSavedVer)
         testClass.assertEqual(savedVer, x)
@@ -144,7 +146,7 @@ def t_saveObjectsInMutipleTransactions(testClass, objectStoreType):
   objectStoreType.executeInsideConnectionContext(dbfn)
 
 def t_creationDateSetCorrectly(testClass, objectStoreType):
-  
+
   def someFn(connectionContext):
     testDateTime = datetime.datetime.now(pytz.timezone("UTC"))
     testClass.setTestingDateTime(testDateTime)
@@ -169,7 +171,7 @@ def t_createExistingObjectFails(testClass, objectStoreType):
       savedVer = storeConnection.executeInsideTransaction(someFn)
     testClass.checkGotRightException(context,TryingToCreateExistingObjectException)
   objectStoreType.executeInsideConnectionContext(dbfn)
-  
+
 def t_supportsDifferentObjectTypes(testClass, objectStoreType):
   def dbfn(storeConnection):
     ##TODO Confirm this test
@@ -180,7 +182,7 @@ def t_supportsDifferentObjectTypes(testClass, objectStoreType):
 
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("TestType1", "123")
     testClass.assertJSONStringsEqualWithIgnoredKeys(JSONString, objectDICT, [  ], msg='object was not added')
-    
+
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("TestType2", "123")
     testClass.assertJSONStringsEqualWithIgnoredKeys(JSONString2, objectDICT, [  ], msg='object was not added')
   objectStoreType.executeInsideConnectionContext(dbfn)
@@ -190,12 +192,12 @@ def t_secondSaveObjectSendStringObjectVer(testClass, objectStoreType):
     def someFn(connectionContext):
       return storeConnection.saveJSONObject("Test", "123", JSONString, None)
     savedVer = storeConnection.executeInsideTransaction(someFn)
-    
+
     def someFn2(connectionContext):
       savedVer2 = storeConnection.saveJSONObject("Test", "123", JSONString, str(savedVer))
     storeConnection.executeInsideTransaction(someFn2)
   objectStoreType.executeInsideConnectionContext(dbfn)
-  
+
 #*************************************
 #   UpdateJSONObject Tests
 #*************************************
@@ -216,7 +218,7 @@ def t_updateToDifferentJSONWorks(testClass, objectStoreType):
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("Test", "123")
     testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString2, [  ], msg='Saved object dosen\'t match')
   objectStoreType.executeInsideConnectionContext(dbfn)
-  
+
 def t_updateDateSetCorrectly(testClass, objectStoreType):
   def someFn(connectionContext):
     testDateTime = datetime.datetime.now(pytz.timezone("UTC"))
@@ -243,7 +245,7 @@ def t_differentKeys(testClass, objectStoreType):
         objKeyMap["1_123" + str(x)] = connectionContext.saveJSONObject("Test", "1_123" + str(x), JSONString, None)
       return objKeyMap
     objKeyMap = storeConnection.executeInsideTransaction(someFn)
-    
+
     #update 3rd object to alternative data
     def someFn(connectionContext):
       connectionContext.saveJSONObject("Test", "1_123" + str(3), JSONString2, objKeyMap["1_123" + str(3)])
@@ -262,22 +264,22 @@ def t_updateUsingFunctionOutsideOfTransactionFails(testClass, objectStoreType):
     def someFn(connectionContext):
       return connectionContext.saveJSONObject("Test", "123", JSONString, None)
     savedVer = storeConnection.executeInsideTransaction(someFn)
-    
+
     def updateFn(obj, connectionContext):
       testClass.assertJSONStringsEqualWithIgnoredKeys(JSONString, obj, [  ], msg='Saved object dosen\'t match')
       return JSONString2
-    
+
     with testClass.assertRaises(Exception) as context:
       newVer = storeConnection.updateJSONObject("Test", "123", updateFn, savedVer)
     testClass.checkGotRightException(context,UnallowedMutationException)
-  objectStoreType.executeInsideConnectionContext(dbfn)    
-  
+  objectStoreType.executeInsideConnectionContext(dbfn)
+
 def t_updateUsingFunction(testClass, objectStoreType):
   def dbfn(storeConnection):
     def someFn(connectionContext):
       return connectionContext.saveJSONObject("Test", "123", JSONString, None)
     savedVer = storeConnection.executeInsideTransaction(someFn)
-    
+
     def updateFn(obj, connectionContext):
       testClass.assertJSONStringsEqualWithIgnoredKeys(JSONString, obj, [  ], msg='Saved object dosen\'t match')
       return JSONString2
@@ -285,11 +287,11 @@ def t_updateUsingFunction(testClass, objectStoreType):
     def someFn(connectionContext):
       newVer = connectionContext.updateJSONObject("Test", "123", updateFn, savedVer)
     storeConnection.executeInsideTransaction(someFn)
-    
+
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("Test", "123")
     testClass.assertJSONStringsEqualWithIgnoredKeys(JSONString2, objectDICT, [  ], msg='object was not updated')
-  objectStoreType.executeInsideConnectionContext(dbfn)  
-  
+  objectStoreType.executeInsideConnectionContext(dbfn)
+
 def t_updateUpdatesCorrectObjecTypet(testClass, objectStoreType):
   def dbfn(storeConnection):
     def someFn(connectionContext):
@@ -316,8 +318,8 @@ def t_updateUpdatesCorrectObjecTypet(testClass, objectStoreType):
     testClass.assertJSONStringsEqualWithIgnoredKeys(JSONString2, objectDICT, [  ], msg='object was not updated')
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("TestType2", "123")
     testClass.assertJSONStringsEqualWithIgnoredKeys(JSONString, objectDICT, [  ], msg='object with different key was updated')
-  objectStoreType.executeInsideConnectionContext(dbfn) 
-  
+  objectStoreType.executeInsideConnectionContext(dbfn)
+
 def t_updateMissingVersionAssumedSafe(testClass, objectStoreType):
   def dbfn(storeConnection):
     def someFn(connectionContext):
@@ -329,9 +331,9 @@ def t_updateMissingVersionAssumedSafe(testClass, objectStoreType):
     def someFn(connectionContext):
       newVer = connectionContext.updateJSONObject("Test", "123", updateFn, None)
     storeConnection.executeInsideTransaction(someFn)
-  objectStoreType.executeInsideConnectionContext(dbfn) 
-  
-  
+  objectStoreType.executeInsideConnectionContext(dbfn)
+
+
 #*************************************
 #   RemoveJSONObject Tests
 #*************************************
@@ -344,7 +346,7 @@ def t_removeMissingObject(testClass, objectStoreType):
     with testClass.assertRaises(Exception) as context:
       storeConnection.executeInsideTransaction(someFn)
     testClass.checkGotRightException(context,TriedToDeleteMissingObjectException)
-  objectStoreType.executeInsideConnectionContext(dbfn) 
+  objectStoreType.executeInsideConnectionContext(dbfn)
 
 def t_removeMissingObjectIgnoreMissing(testClass, objectStoreType):
   def dbfn(storeConnection):
@@ -354,7 +356,7 @@ def t_removeMissingObjectIgnoreMissing(testClass, objectStoreType):
 
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("Test", "123")
     testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, None, [  ], msg='object was not removed')
-  objectStoreType.executeInsideConnectionContext(dbfn) 
+  objectStoreType.executeInsideConnectionContext(dbfn)
 
 def t_removeObjectWithNoTransactionFails(testClass, objectStoreType):
   def dbfn(storeConnection):
@@ -369,7 +371,7 @@ def t_removeObjectWithNoTransactionFails(testClass, objectStoreType):
       newVer = storeConnection.removeJSONObject("Test", "123", savedVer, False)
     testClass.checkGotRightException(context,UnallowedMutationException)
   objectStoreType.executeInsideConnectionContext(dbfn)
-  
+
 def t_removeObject(testClass, objectStoreType):
   def dbfn(storeConnection):
     def someFn(connectionContext):
@@ -395,25 +397,25 @@ def t_removeObjectOnlyRemovesKeyOfSameObjectType(testClass, objectStoreType):
       savedVer2 = connectionContext.saveJSONObject("Test2", "123", JSONString2, None)
       return (savedVer1, savedVer2)
     (savedVer1, savedVer2) = storeConnection.executeInsideTransaction(someFn)
-    
+
     #check two different created objects exist (same key)
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("Test1", "123")
     testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString, [  ], msg='object 1 not ok')
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("Test2", "123")
     testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString2, [  ], msg='object 2 not ok')
-    
+
     #Remove Object 1
     def someFn(connectionContext):
       newVer = connectionContext.removeJSONObject("Test1", "123", savedVer1, False)
     storeConnection.executeInsideTransaction(someFn)
-    
+
     #Make sure object 1 is not there and object 2 is there
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("Test1", "123")
     testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, None, [  ], msg='object was not removed')
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("Test2", "123")
     testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString2, [  ], msg='object2 should not have been removed')
   objectStoreType.executeInsideConnectionContext(dbfn)
-  
+
 #*************************************
 #   getPaginatedResult Tests
 #*************************************
@@ -446,8 +448,8 @@ def t_getPaginatedResultsNoData(testClass, objectStoreType):
     res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN)
     expectedRes = {'pagination': {'offset': 0, 'pagesize': 10, 'total': 0}, 'result': []}
     testClass.assertJSONStringsEqualWithIgnoredKeys(res, expectedRes, [  ], msg='Wrong result')
-  objectStoreType.executeInsideConnectionContext(dbfn)  
-  
+  objectStoreType.executeInsideConnectionContext(dbfn)
+
 #Test with five rows all in one
 def t_getPaginatedResultsFiveRowsInOneHit(testClass, objectStoreType):
   def dbfn(storeConnection):
@@ -467,7 +469,7 @@ def t_getPaginatedResultsFiveRowsInOneHit(testClass, objectStoreType):
     assertCorrectPaginationResult(testClass, res, 0, 10, 5)
     testClass.assertJSONStringsEqualWithIgnoredKeys(res['result'], expectedRes, [  ], msg='Wrong result')
   objectStoreType.executeInsideConnectionContext(dbfn)
-  
+
 def t_getPaginatedResultsFiveRowsInOneHitWithPagesize(testClass, objectStoreType):
   def dbfn(storeConnection):
     addSampleRows(storeConnection, 5)
@@ -486,7 +488,7 @@ def t_getPaginatedResultsFiveRowsInOneHitWithPagesize(testClass, objectStoreType
     assertCorrectPaginationResult(testClass, res, 0, 5, 5)
     testClass.assertJSONStringsEqualWithIgnoredKeys(res['result'], expectedRes, [  ], msg='Wrong result')
   objectStoreType.executeInsideConnectionContext(dbfn)
-  
+
 def t_getPaginatedResultsFiveRowsPagesize2offset0(testClass, objectStoreType):
   def dbfn(storeConnection):
     addSampleRows(storeConnection, 5)
@@ -505,7 +507,7 @@ def t_getPaginatedResultsFiveRowsPagesize2offset0(testClass, objectStoreType):
     assertCorrectPaginationResult(testClass, res, 0, 2, 5)
     testClass.assertJSONStringsEqualWithIgnoredKeys(res['result'], expectedRes, [  ], msg='Wrong result')
   objectStoreType.executeInsideConnectionContext(dbfn)
-  
+
 def t_getPaginatedResultsFiveRowsPagesize2offset2(testClass, objectStoreType):
   def dbfn(storeConnection):
     addSampleRows(storeConnection, 5)
@@ -524,7 +526,7 @@ def t_getPaginatedResultsFiveRowsPagesize2offset2(testClass, objectStoreType):
     assertCorrectPaginationResult(testClass, res, 2, 2, 5)
     testClass.assertJSONStringsEqualWithIgnoredKeys(res['result'], expectedRes, [  ], msg='Wrong result')
   objectStoreType.executeInsideConnectionContext(dbfn)
-  
+
 def t_getPaginatedResultsFiveRowsPagesize2offset4(testClass, objectStoreType):
   def dbfn(storeConnection):
     addSampleRows(storeConnection, 5)
@@ -543,7 +545,7 @@ def t_getPaginatedResultsFiveRowsPagesize2offset4(testClass, objectStoreType):
     assertCorrectPaginationResult(testClass, res, 4, 2, 5)
     testClass.assertJSONStringsEqualWithIgnoredKeys(res['result'], expectedRes, [  ], msg='Wrong result')
   objectStoreType.executeInsideConnectionContext(dbfn)
-  
+
 def t_getPaginatedResultsFiveRowsPagesize2offset10(testClass, objectStoreType):
   def dbfn(storeConnection):
     addSampleRows(storeConnection, 5)
@@ -580,4 +582,3 @@ def t_UpdateFilter(testClass, objectStoreType):
     assertCorrectPaginationResult(testClass, res, 0, 10, 5)
     testClass.assertJSONStringsEqualWithIgnoredKeys(res['result'], expectedRes, [  ], msg='Wrong result')
   objectStoreType.executeInsideConnectionContext(dbfn)
-

@@ -1,20 +1,70 @@
 from .objectStores_base import ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException, artificalRequestWithPaginationArgs, ObjectStoreConfigError
 import os
 import threading
+import base64
+from dateutil.parser import parse
+import pytz
+
 
 # SimpleFileStore module
 #  transactions not implemented
 
+def getFileSystemSafeStringFromKey(key):
+  b64enc = base64.b64encode(key.encode('utf-8')).decode()
+  return b64enc.replace("/","_").replace("+",":")
+
+def getKeyFromFileSystemSafeString(fss):
+  b64enc = fss.replace("_","/").replace(":","+")
+  return base64.b64decode(b64enc.encode('utf-8')).decode('utf-8')
+
+
+
 class ConnectionContextSimpleFileStorePrivateFns(ObjectStoreConnectionContext):
-  def ensureObjectDirectoryExists(self, objectType, create):
-    pass
+  objectStore = None
+  def __init__(self, objectStore):
+    super(ConnectionContextSimpleFileStorePrivateFns, self).__init__()
+    self.objectStore = objectStore
+
+  def getObjectFile(self, objectType, objectKey, createObjectDir):
+    #Create is False
+    #  return string representing the directory if it exitst
+    #  return None if directory dosen't exist
+    #Create is True
+    #  always return string, creating it if it is not already there
+    dirString = self.objectStore.baseLocation + "/" + getFileSystemSafeStringFromKey(objectType)
+    fileString = dirString + "/" + getFileSystemSafeStringFromKey(objectKey)
+    #print(fileString)
+    #self.assertTrue(False)
+    if os.path.exists(dirString):
+      return fileString
+    if not createObjectDir:
+      return None
+    os.mkdir(dirString)
+    return fileString
+
+  def getObjectJSONWithoutLock(self, objectType, objectKey):
+    fileName = self.getObjectFile(objectType, objectKey, False)
+    if fileName is None:
+      return None, None, None, None
+
+    if not os.path.exists(fileName):
+      return None, None, None, None
+
+    fileO = open(fileName, 'r')
+    filecontent = fileO.read()
+    fileO.close()
+    print(filecontent)
+    filecontentDict = eval(filecontent)
+
+    #dictForObjectType[objectKey] = (JSONString, newObjectVersion, curTimeValue, curTimeValue)
+    dt = parse(filecontentDict["Create"])
+    creationDate = dt.astimezone(pytz.utc)
+    dt = parse(filecontentDict["LastUpdate"])
+    lastUpdateDate = dt.astimezone(pytz.utc)
+    return filecontentDict["Data"], filecontentDict["ObjVer"], creationDate, lastUpdateDate
 
 
 class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
-  objectType = None
-  def __init__(self, objectType):
-    super(ConnectionContext, self).__init__()
-    self.objectType = objectType
 
   #transactional memory not implemented
   def _startTransaction(self):
@@ -26,6 +76,47 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
 
 
   def _saveJSONObject(self, objectType, objectKey, JSONString, objectVersion):
+    self.objectStore.fileAccessLock.acquire()
+    curTimeValue = self.objectStore.externalFns['getCurDateTime']().isoformat()
+
+    (o_objectDICT, o_ObjectVersion, o_creationDate, o_lastUpdateDate) = self.getObjectJSONWithoutLock(objectType, objectKey)
+
+    newObjectVersion = None
+    createDate = None
+    updateDate = None
+
+    if o_ObjectVersion is None:
+      # Object dosen't exist we are creating it
+      if objectVersion is not None:
+        raise SuppliedObjectVersionWhenCreatingException
+      newObjectVersion = 1
+      createDate = curTimeValue
+      updateDate = curTimeValue
+    else:
+      # OBject exists we are updating it
+      if objectVersion is None:
+        raise TryingToCreateExistingObjectException
+      if (str(objectVersion) != o_ObjectVersion):
+        raise WrongObjectVersionException
+      newObjectVersion = int(objectVersion) + 1
+      createDate = o_creationDate
+      updateDate = curTimeValue
+
+    DictToSave = {
+      "Data": createDate,
+      "ObjVer": newObjectVersion,
+      "Create": createDate,
+      "LastUpdate": updateDate
+    }
+
+    fileName = self.getObjectFile(objectType, objectKey, True)
+
+    target = open(fileName, 'w') #w mode overwrites file content
+    target.write(str(DictToSave))
+    target.close()
+
+    self.objectStore.fileAccessLock.release()
+
     '''
     dictForObjectType = self.objectType._INT_getDictForObjectType(objectType)
     curTimeValue = self.objectType.externalFns['getCurDateTime']()
@@ -65,14 +156,14 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
     '''
     pass
 
+  #Return value is objectDICT, ObjectVersion, creationDate, lastUpdateDate
+  #Return None, None, None, None if object isn't in store
   def _getObjectJSON(self, objectType, objectKey):
-    '''
-    objectTypeDict = self.objectType._INT_getDictForObjectType(objectType)
-    if objectKey in objectTypeDict:
-      return objectTypeDict[objectKey]
-    return None, None, None, None
-    '''
-    pass
+    self.objectStore.fileAccessLock.acquire()
+    a = getObjectJSONWithoutLock(self, objectType, objectKey)
+    self.objectStore.fileAccessLock.release()
+    return a
+
 
   def _filterFN(self, item, whereClauseText):
     '''
@@ -118,6 +209,11 @@ class ObjectStore_SimpleFileStore(ObjectStore):
 
     self.baseLocation = ConfigDict["BaseLocation"]
 
+    if self.baseLocation[-1] == "/":
+      raise ObjectStoreConfigError("APIAPP_OBJECTSTORECONFIG SimpleFileStore ERROR - BaseLocation should not end with slash")
+    if self.baseLocation[-1] == "\\":
+      raise ObjectStoreConfigError("APIAPP_OBJECTSTORECONFIG SimpleFileStore ERROR - BaseLocation should not end with backslash")
+
     if not os.path.exists(self.baseLocation):
       raise ObjectStoreConfigError("APIAPP_OBJECTSTORECONFIG SimpleFileStore ERROR - BaseLocation not found")
     if not os.path.isdir(self.baseLocation):
@@ -137,6 +233,14 @@ class ObjectStore_SimpleFileStore(ObjectStore):
       #print("Creating dict for " + objectType)
       self.objectData[objectType] = dict()
     return self.objectData[objectType]
+
+  #required for unit testing
+  # using transaction even though they are not supported
+  def _resetDataForTest(self):
+    def someFn(connectionContext):
+      #raise Exception("TODO delete all the objects")
+      pass
+    self.executeInsideTransaction(someFn)
 
   def _getConnectionContext(self):
     return ConnectionContext(self)

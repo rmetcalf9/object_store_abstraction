@@ -118,7 +118,7 @@ class testHelperSuperClass(unittest.TestCase):
     return {
       'getCurDateTime': self.getCurDateTime,
       'getPaginatedResult': getPaginatedResult
-    }    
+    }
 
   def checkGotRightException(self, context, ExpectedException):
     if (context.exception != None):
@@ -126,6 +126,12 @@ class testHelperSuperClass(unittest.TestCase):
         print("**** Wrong exception raised:")
         print("      expected: " + type(ExpectedException).__name__ + ' - ' + str(ExpectedException));
         print("           got: " + type(context.exception).__name__ + ' - ' + str(context.exception));
+        print("")
+        if context.exception.__traceback__ is None:
+          print("No traceback data in origional exception")
+        else:
+          print("Origional exception Traceback: ", context.exception.__traceback__)
+        print("context", context)
         raise context.exception
     self.assertTrue(ExpectedException == context.exception)
 
@@ -136,9 +142,14 @@ class testHelperSuperClass(unittest.TestCase):
           print("**** Wrong exception TYPE raised:")
           print("      expected: " + type(ExpectedException).__name__ + ' - ' + str(ExpectedException));
           print("           got: " + type(context.exception).__name__ + ' - ' + str(context.exception));
+          print("")
+          if context.exception.__traceback__ is None:
+            print("No traceback data in origional exception")
+          else:
+            print("Origional exception Traceback: ", context.exception.__traceback__)
           raise context.exception
-    
-    
+
+
   def sortAllMembers(self, objToSotr):
     if isinstance(objToSotr,list):
       for k in objToSotr:
@@ -152,7 +163,7 @@ class testHelperSuperClass(unittest.TestCase):
       for k in objToSotr.keys():
         self.sortAllMembers(objToSotr[k])
       return
-    
+
   def convertAnyByteValueToString(self, val):
     if isinstance(val,list):
       for a in val:
@@ -165,7 +176,7 @@ class testHelperSuperClass(unittest.TestCase):
         self.convertAnyByteValueToString(val[a])
     else:
       pass
-    
+
   def areJSONStringsEqual(self, str1, str2):
     self.sortAllMembers(str1)
     self.sortAllMembers(str2)
@@ -185,7 +196,7 @@ class testHelperSuperClass(unittest.TestCase):
     print("--")
     print(b)
     self.assertTrue(False, msg=msg)
-    
+
   #provide a list of ignored keys
   def assertJSONStringsEqualWithIgnoredKeys(self, str1, str2, ignoredKeys, msg=''):
     cleaned1 = copy.deepcopy(str1)
@@ -218,6 +229,3 @@ def getHashedPasswordUsingSameMethodAsJavascriptFrontendShouldUse(username, pass
   masterSecretKey = (username + ":" + password + ":AG44")
   ret = appObj.bcrypt.hashpw(masterSecretKey, b64decode(tenantAuthProvSalt))
   return ret
-
-
-
