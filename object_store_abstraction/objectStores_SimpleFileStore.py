@@ -1,10 +1,16 @@
 from .objectStores_base import ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException, artificalRequestWithPaginationArgs, ObjectStoreConfigError
 import os
+import threading
 
 # SimpleFileStore module
 #  transactions not implemented
 
-class ConnectionContext(ObjectStoreConnectionContext):
+class ConnectionContextSimpleFileStorePrivateFns(ObjectStoreConnectionContext):
+  def ensureObjectDirectoryExists(self, objectType, create):
+    pass
+
+
+class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
   objectType = None
   def __init__(self, objectType):
     super(ConnectionContext, self).__init__()
@@ -100,8 +106,12 @@ class ConnectionContext(ObjectStoreConnectionContext):
 # Class that will store objects as directoryies and files in the file system
 class ObjectStore_SimpleFileStore(ObjectStore):
   baseLocation = ""
+  fileAccessLock = None #Make sure we do one operation at a time
+
   def __init__(self, ConfigDict, externalFns):
     super(ObjectStore_SimpleFileStore, self).__init__(externalFns)
+
+    self.fileAccessLock = threading.Lock()
 
     if "BaseLocation" not in ConfigDict:
       raise ObjectStoreConfigError("APIAPP_OBJECTSTORECONFIG SimpleFileStore ERROR - BaseLocation param Missing")

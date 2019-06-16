@@ -1,10 +1,10 @@
 from .objectStores_base import ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException, artificalRequestWithPaginationArgs
 
 class ConnectionContext(ObjectStoreConnectionContext):
-  objectType = None
-  def __init__(self, objectType):
+  objectStore = None
+  def __init__(self, objectStore):
     super(ConnectionContext, self).__init__()
-    self.objectType = objectType
+    self.objectStore = objectStore
 
   #transactional memory not implemented
   def _startTransaction(self):
@@ -14,10 +14,10 @@ class ConnectionContext(ObjectStoreConnectionContext):
   def _rollbackTransaction(self):
     pass
 
-    
+
   def _saveJSONObject(self, objectType, objectKey, JSONString, objectVersion):
-    dictForObjectType = self.objectType._INT_getDictForObjectType(objectType)
-    curTimeValue = self.objectType.externalFns['getCurDateTime']()
+    dictForObjectType = self.objectStore._INT_getDictForObjectType(objectType)
+    curTimeValue = self.objectStore.externalFns['getCurDateTime']()
     newObjectVersion = None
     if objectKey not in dictForObjectType:
       if objectVersion is not None:
@@ -35,7 +35,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
     return newObjectVersion
 
   def _removeJSONObject(self, objectType, objectKey, objectVersion, ignoreMissingObject):
-    dictForObjectType = self.objectType._INT_getDictForObjectType(objectType)
+    dictForObjectType = self.objectStore._INT_getDictForObjectType(objectType)
     if objectVersion is not None:
       if objectKey not in dictForObjectType:
         if ignoreMissingObject:
@@ -43,14 +43,14 @@ class ConnectionContext(ObjectStoreConnectionContext):
         raise TriedToDeleteMissingObjectException
       if str(dictForObjectType[objectKey][1]) != str(objectVersion):
         raise WrongObjectVersionException
-    if objectKey not in self.objectType._INT_getDictForObjectType(objectType):
+    if objectKey not in self.objectStore._INT_getDictForObjectType(objectType):
       if ignoreMissingObject:
         return None
-    del self.objectType._INT_getDictForObjectType(objectType)[objectKey]
+    del self.objectStore._INT_getDictForObjectType(objectType)[objectKey]
     return None
 
   def _getObjectJSON(self, objectType, objectKey):
-    objectTypeDict = self.objectType._INT_getDictForObjectType(objectType)
+    objectTypeDict = self.objectStore._INT_getDictForObjectType(objectType)
     if objectKey in objectTypeDict:
       return objectTypeDict[objectKey]
     return None, None, None, None
@@ -64,14 +64,14 @@ class ConnectionContext(ObjectStoreConnectionContext):
     #TODO replace with a dict awear generic function
     #  we also need to consider removing spaces from consideration
     return whereClauseText in str(item).upper()
-    
-    
+
+
   def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
     ##print('objectStoresMemory._getPaginatedResult self.objectType.objectData[objectType]:', self.objectType.objectData[objectType])
     srcData = []
-    if objectType in self.objectType.objectData:
-      srcData = self.objectType.objectData[objectType]
-    return self.objectType.externalFns['getPaginatedResult'](
+    if objectType in self.objectStore.objectData:
+      srcData = self.objectStore.objectData[objectType]
+    return self.objectStore.externalFns['getPaginatedResult'](
       srcData,
       outputFN,
       artificalRequestWithPaginationArgs(paginatedParamValues),
@@ -94,4 +94,3 @@ class ObjectStore_Memory(ObjectStore):
 
   def _getConnectionContext(self):
     return ConnectionContext(self)
-
