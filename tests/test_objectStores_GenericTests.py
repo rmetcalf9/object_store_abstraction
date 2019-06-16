@@ -108,7 +108,7 @@ def t_saveObjectsInSingleTransaction(testClass, objectStoreType):
       lastSavedVer = None
       for x in range(1,6):
         savedVer = connectionContext.saveJSONObject("Test", "123", JSONString, lastSavedVer)
-        testClass.assertEqual(savedVer, x)
+        testClass.assertEqual(savedVer, x, msg="Return value of saveJSONObject is not correct")
         lastSavedVer = savedVer
     storeConnection.executeInsideTransaction(someFn)
 

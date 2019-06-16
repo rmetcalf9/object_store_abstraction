@@ -20,6 +20,7 @@ class objectStoresSimpleFileStore(testHelperSuperClass):
       #self.AssertTrue(False);
       obj = undertest.ObjectStore_SimpleFileStore(ConfigDict, self.getObjectStoreExternalFns())
       obj.resetDataForTest()
+      # print("Test_SFS 23: Resetting")
       return obj
     genericTests.runAllGenericTests(self, getObjFn, ConfigDict)
 
