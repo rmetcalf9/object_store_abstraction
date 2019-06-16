@@ -28,13 +28,16 @@ class ConnectionContextSimpleFileStorePrivateFns(ObjectStoreConnectionContext):
     super(ConnectionContextSimpleFileStorePrivateFns, self).__init__()
     self.objectStore = objectStore
 
+  def getObjectTypeDirectory(self, objectType):
+    return self.objectStore.baseLocation + "/" + directoryNamePrefix + getFileSystemSafeStringFromKey(objectType)
+
   def getObjectFile(self, objectType, objectKey, createObjectDir):
     #Create is False
     #  return string representing the directory if it exitst
     #  return None if directory dosen't exist
     #Create is True
     #  always return string, creating it if it is not already there
-    dirString = self.objectStore.baseLocation + "/" + directoryNamePrefix + getFileSystemSafeStringFromKey(objectType)
+    dirString = self.getObjectTypeDirectory(objectType)
     fileString = dirString + "/" + getFileSystemSafeStringFromKey(objectKey)
     #print(fileString)
     #self.assertTrue(False)
@@ -156,23 +159,6 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
     self.objectStore.fileAccessLock.release()
     return None
 
-    '''
-    dictForObjectType = self.objectType._INT_getDictForObjectType(objectType)
-    if objectVersion is not None:
-      if objectKey not in dictForObjectType:
-        if ignoreMissingObject:
-          return None
-        raise TriedToDeleteMissingObjectException
-      if str(dictForObjectType[objectKey][1]) != str(objectVersion):
-        raise WrongObjectVersionException
-    if objectKey not in self.objectType._INT_getDictForObjectType(objectType):
-      if ignoreMissingObject:
-        return None
-    del self.objectType._INT_getDictForObjectType(objectType)[objectKey]
-    return None
-    '''
-    pass
-
   #Return value is objectDICT, ObjectVersion, creationDate, lastUpdateDate
   #Return None, None, None, None if object isn't in store
   def _getObjectJSON(self, objectType, objectKey):
@@ -183,7 +169,6 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
 
 
   def _filterFN(self, item, whereClauseText):
-    '''
     if whereClauseText is None:
       return True
     if whereClauseText == '':
@@ -192,24 +177,32 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
     #TODO replace with a dict awear generic function
     #  we also need to consider removing spaces from consideration
     return whereClauseText in str(item).upper()
-    '''
-    pass
-
 
   def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
-    '''
+    #This is as simple as getting a directory listing
+    collectedObjects = {}
+
+    if self.objectStore.isKnownObjectType(objectType):
+      objectFiles = []
+      otd = self.getObjectTypeDirectory(objectType)
+      with os.scandir(otd) as entries:
+        for entry in entries:
+          objectFiles.append(entry.name)
+
+      for curFileName in objectFiles:
+        #print(otd + "/" + curFileName + "->" + getKeyFromFileSystemSafeString(curFileName))
+        objectKey = getKeyFromFileSystemSafeString(curFileName)
+        #print("OK:" + objectKey)
+        (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = self._getObjectJSON(objectType, objectKey)
+        collectedObjects[objectKey] = (objectDICT, ObjectVersion, creationDate, lastUpdateDate)
+
     ##print('objectStoresMemory._getPaginatedResult self.objectType.objectData[objectType]:', self.objectType.objectData[objectType])
-    srcData = []
-    if objectType in self.objectType.objectData:
-      srcData = self.objectType.objectData[objectType]
-    return self.objectType.externalFns['getPaginatedResult'](
-      srcData,
+    return self.objectStore.externalFns['getPaginatedResult'](
+      collectedObjects,
       outputFN,
       artificalRequestWithPaginationArgs(paginatedParamValues),
       self._filterFN
     )
-    '''
-    pass
 
 # Class that will store objects as directoryies and files in the file system
 class ObjectStore_SimpleFileStore(ObjectStore):
