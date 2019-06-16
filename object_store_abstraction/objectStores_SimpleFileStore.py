@@ -7,9 +7,42 @@ import pytz
 
 import shutil #For remove dir and contents
 
+import sys
 
 # SimpleFileStore module
 #  transactions not implemented
+
+#I originoally used os.scandir but this is not supported in python 3.6
+#  so I have abstracted it to this function
+#  this returns a list of the names
+def localScanDir(directoryToScan, OnlyReturnDirectories):
+  subDirsToDel = []
+
+  isAtLeasePython3_6 = False
+  pythonMajorVersion = sys.version_info[0]
+  pythonMinorVersion = sys.version_info[1]
+  if pythonMajorVersion > 2:
+    if pythonMinorVersion > 5:
+      isAtLeasePython3_6 = True
+
+  if isAtLeasePython3_6:
+    with os.scandir(directoryToScan) as entries:
+      for entry in entries:
+        if entry.is_dir():
+          subDirsToDel.append(entry.name)
+        else:
+          if not OnlyReturnDirectories:
+            subDirsToDel.append(entry.name)
+  else:
+    fsEntries = os.listdir( directoryToScan )
+    for x in fsEntries:
+      if not OnlyReturnDirectories:
+        subDirsToDel.append(x)
+      else:
+        if os.path.isdir(directoryToScan + "/" + x):
+          subDirsToDel.append(x)
+
+  return subDirsToDel
 
 def getFileSystemSafeStringFromKey(key):
   b64enc = base64.b64encode(key.encode('utf-8')).decode()
@@ -183,11 +216,8 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
     collectedObjects = {}
 
     if self.objectStore.isKnownObjectType(objectType):
-      objectFiles = []
       otd = self.getObjectTypeDirectory(objectType)
-      with os.scandir(otd) as entries:
-        for entry in entries:
-          objectFiles.append(entry.name)
+      objectFiles = localScanDir(otd, False)
 
       for curFileName in objectFiles:
         #print(otd + "/" + curFileName + "->" + getKeyFromFileSystemSafeString(curFileName))
@@ -255,15 +285,11 @@ class ObjectStore_SimpleFileStore(ObjectStore):
   # using transaction even though they are not supported
   def _resetDataForTest(self):
     def someFn(connectionContext):
-      subDirsToDel = []
-      with os.scandir(self.baseLocation) as entries:
-        for entry in entries:
-          if entry.name.startswith(directoryNamePrefix):
-            if entry.is_dir():
-              subDirsToDel.append(self.baseLocation + "/" + entry.name)
+      subDirsToDel = localScanDir(directoryToScan=self.baseLocation, OnlyReturnDirectories=True)
 
       for curDir in subDirsToDel:
-        shutil.rmtree(curDir)
+        if curDir.startswith(directoryNamePrefix):
+          shutil.rmtree(self.baseLocation + "/" + curDir)
 
     self.fileAccessLock.acquire()
     self.knownExistingObjectTypes = {}
