@@ -5,6 +5,8 @@ import base64
 from dateutil.parser import parse
 import pytz
 
+import shutil #For remove dir and contents
+
 
 # SimpleFileStore module
 #  transactions not implemented
@@ -17,6 +19,7 @@ def getKeyFromFileSystemSafeString(fss):
   b64enc = fss.replace("_","/").replace(":","+")
   return base64.b64decode(b64enc.encode('utf-8')).decode('utf-8')
 
+directoryNamePrefix = "_"
 
 
 class ConnectionContextSimpleFileStorePrivateFns(ObjectStoreConnectionContext):
@@ -31,7 +34,7 @@ class ConnectionContextSimpleFileStorePrivateFns(ObjectStoreConnectionContext):
     #  return None if directory dosen't exist
     #Create is True
     #  always return string, creating it if it is not already there
-    dirString = self.objectStore.baseLocation + "/" + getFileSystemSafeStringFromKey(objectType)
+    dirString = self.objectStore.baseLocation + "/" + directoryNamePrefix + getFileSystemSafeStringFromKey(objectType)
     fileString = dirString + "/" + getFileSystemSafeStringFromKey(objectKey)
     #print(fileString)
     #self.assertTrue(False)
@@ -103,7 +106,7 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
       updateDate = curTimeValue
 
     DictToSave = {
-      "Data": createDate,
+      "Data": JSONString,
       "ObjVer": newObjectVersion,
       "Create": createDate,
       "LastUpdate": updateDate
@@ -160,7 +163,7 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
   #Return None, None, None, None if object isn't in store
   def _getObjectJSON(self, objectType, objectKey):
     self.objectStore.fileAccessLock.acquire()
-    a = getObjectJSONWithoutLock(self, objectType, objectKey)
+    a = self.getObjectJSONWithoutLock(objectType, objectKey)
     self.objectStore.fileAccessLock.release()
     return a
 
@@ -238,8 +241,16 @@ class ObjectStore_SimpleFileStore(ObjectStore):
   # using transaction even though they are not supported
   def _resetDataForTest(self):
     def someFn(connectionContext):
-      #raise Exception("TODO delete all the objects")
-      pass
+      subDirsToDel = []
+      with os.scandir(self.baseLocation) as entries:
+        for entry in entries:
+          if entry.name.startswith(directoryNamePrefix):
+            if entry.is_dir():
+              subDirsToDel.append(self.baseLocation + "/" + entry.name)
+
+      for curDir in subDirsToDel:
+        shutil.rmtree(curDir)
+
     self.executeInsideTransaction(someFn)
 
   def _getConnectionContext(self):
