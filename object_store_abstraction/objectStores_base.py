@@ -143,6 +143,20 @@ class ObjectStoreConnectionContext():
   def getObjectJSON(self, objectType, objectKey):
     return self._getObjectJSON(objectType, objectKey)
   
+  '''
+  Example call - getting all data from backend:
+    storeConnection = self.appObj.objectStore._getConnectionContext()
+    def someFn(connectionContext):
+      paginatedParamValues = {
+        'offset': 0,
+        'pagesize': 100000,
+        'query': '',
+        'sort': '',
+      }
+      return connectionContext.getPaginatedResult(objectType, paginatedParamValues=paginatedParamValues, outputFN=None)
+    loadedData = storeConnection.executeInsideTransaction(someFn)  
+  '''
+
   def getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
     def defOutput(item):
       return item
@@ -179,8 +193,8 @@ class ObjectStore():
   def __init__(self, externalFns):
     self.externalFns = externalFns
   
-  #def getConnectionContext(self):
-  #  return self._getConnectionContext()
+  def getConnectionContext(self):
+    return self._getConnectionContext()
   def executeInsideConnectionContext(self, fnToExecute):
     context = self._getConnectionContext()
     a = None
