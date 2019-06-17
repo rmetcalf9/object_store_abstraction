@@ -41,4 +41,5 @@ def createObjectStoreInstance(objectStoreConfigDict, externalFns):
   if objectStoreConfigDict["Type"] == "SimpleFileStore":
     return _createObjectStoreInstanceTypeSpecified("SimpleFileStore", objectStoreConfigDict, ObjectStore_SimpleFileStore, externalFns)
 
+  print("Trying to create object store type " + objectStoreConfigDict["Type"])
   raise InvalidObjectStoreConfigUnknownTypeException
