@@ -72,3 +72,48 @@ class objectStoresSimpleFileStore(testHelperSuperClass):
 
   def test_simpleCreationWithNoOperation(self):
     undertest.createObjectStoreInstance(ConfigDict, self.getObjectStoreExternalFns())
+
+
+  def test_dockJobBug(self):
+    objectType = "jobsData"
+
+    storeConnection = undertest.createObjectStoreInstance(ConfigDict, self.getObjectStoreExternalFns())
+
+    class jobClass() :
+      objectVersion = None
+      def _caculatedDict(self, appObj):
+        return {
+          "aa": "fff",
+          "bb": "fff22",
+        }
+
+
+    jobGUID = 'abc123'
+    jobs = {}
+    jobs[jobGUID] = jobClass()
+
+    def someFn(connectionContext):
+      #print(self.jobs[jobGUID]._caculatedDict(self.appObj))
+      newObjectVersion = connectionContext.saveJSONObject(
+        objectType,
+        jobGUID,
+        jobs[jobGUID]._caculatedDict(appObj=None),
+        objectVersion = jobs[jobGUID].objectVersion
+      )
+      jobs[jobGUID].objectVersion = newObjectVersion
+    storeConnection.executeInsideTransaction(someFn)
+
+
+    def someFn(connectionContext):
+      paginatedParamValues = {
+        'offset': 0,
+        'pagesize': 100000,
+        'query': None,
+        'sort': None,
+      }
+      loadedData = connectionContext.getPaginatedResult(objectType, paginatedParamValues=paginatedParamValues, outputFN=None)
+      ##print(loadedData)
+      print("Found " + str(len(loadedData["result"])) + " jobs in datastore")
+
+    storeConnection.executeInsideTransaction(someFn)
+    ##self.assertTrue(False)

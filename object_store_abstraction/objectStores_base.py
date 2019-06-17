@@ -64,16 +64,16 @@ class artificalRequestWithPaginationArgs():
   args = None
   def __init__(self, paginatedParamValues):
     self.args = artificalRequestWithPaginationArgs_args(paginatedParamValues)
-  
+
 
 class ObjectStoreConnectionContext():
   #if object version is set to none object version checking is turned off
   # object version may be a number or a guid depending on store technology
-  
+
   callsToStartTransaction = None
   def __init__(self):
     self.callsToStartTransaction = 0
-  
+
   def _INT_startTransaction(self):
     if self.callsToStartTransaction != 0:
       raise Exception("Disabled ability for nexted transactions")
@@ -89,12 +89,12 @@ class ObjectStoreConnectionContext():
       raise Exception("Trying to rollback transaction but none started")
     self.callsToStartTransaction = self.callsToStartTransaction - 1
     return self._rollbackTransaction()
-    
+
   def _INT_varifyWeCanMutateData(self):
     if self.callsToStartTransaction == 0:
       raise UnallowedMutationException
-  
-    
+
+
   def executeInsideTransaction(self, fnToExecute):
     retVal = None
     self._INT_startTransaction()
@@ -126,23 +126,23 @@ class ObjectStoreConnectionContext():
   #Seperate implementations not required as this uses save function
   def updateJSONObject(self, objectType, objectKey, updateFn, objectVersion = None):
     self._INT_varifyWeCanMutateData()
-    
+
     obj, ver, creationDateTime, lastUpdateDateTime = self.getObjectJSON(objectType, objectKey)
     if objectVersion is None:
       #If object version is not supplied then assume update will not cause an error
-      objectVersion = ver 
+      objectVersion = ver
     if str(objectVersion) != str(ver):
       raise WrongObjectVersionException
     obj = updateFn(obj, self)
     if obj is None:
       raise StoringNoneObjectAfterUpdateOperationException
     return self.saveJSONObject(objectType, objectKey, obj, objectVersion)
-  
+
   #Return value is objectDICT, ObjectVersion, creationDate, lastUpdateDate
   #Return None, None, None, None if object isn't in store
   def getObjectJSON(self, objectType, objectKey):
     return self._getObjectJSON(objectType, objectKey)
-  
+
   '''
   Example call - getting all data from backend:
     storeConnection = self.appObj.objectStore._getConnectionContext()
@@ -150,11 +150,11 @@ class ObjectStoreConnectionContext():
       paginatedParamValues = {
         'offset': 0,
         'pagesize': 100000,
-        'query': '',
-        'sort': '',
+        'query': None,
+        'sort': None,
       }
       return connectionContext.getPaginatedResult(objectType, paginatedParamValues=paginatedParamValues, outputFN=None)
-    loadedData = storeConnection.executeInsideTransaction(someFn)  
+    loadedData = storeConnection.executeInsideTransaction(someFn)
   '''
 
   def getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
@@ -165,7 +165,7 @@ class ObjectStoreConnectionContext():
     if outputFN is None:
       outputFN = defOutput
     return self._getPaginatedResult(objectType, paginatedParamValues, outputFN)
-  
+
   def _saveJSONObject(self, objectType, objectKey, JSONString, objectVersion):
     raise Exception('Not Overridden')
   def _removeJSONObject(self, objectType, objectKey, objectVersion, ignoreMissingObject):
@@ -186,13 +186,13 @@ class ObjectStoreConnectionContext():
   #Optional override for closing the context
   def _close(self):
     pass
-    
+
 #Base class for object store
 class ObjectStore():
   externalFns = None
   def __init__(self, externalFns):
     self.externalFns = externalFns
-  
+
   def getConnectionContext(self):
     return self._getConnectionContext()
   def executeInsideConnectionContext(self, fnToExecute):
@@ -209,15 +209,13 @@ class ObjectStore():
     def dbfn(context):
       return context.executeInsideTransaction(fnToExecute)
     return self.executeInsideConnectionContext(dbfn)
-      
+
   def _getConnectionContext(self):
     raise Exception('Not Overridden')
 
   def resetDataForTest(self):
     return self._resetDataForTest()
 
-  #test only functions  
+  #test only functions
   def _resetDataForTest(self):
     raise Exception('Not Overridden')
-
-

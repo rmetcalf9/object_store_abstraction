@@ -214,7 +214,6 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
   def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
     #This is as simple as getting a directory listing
     collectedObjects = {}
-
     if self.objectStore.isKnownObjectType(objectType):
       otd = self.getObjectTypeDirectory(objectType)
       objectFiles = localScanDir(otd, False)
