@@ -61,28 +61,24 @@ class ConnectionContextSimpleFileStorePrivateFns(ObjectStoreConnectionContext):
     super(ConnectionContextSimpleFileStorePrivateFns, self).__init__()
     self.objectStore = objectStore
 
-  def getObjectTypeDirectory(self, objectType):
-    return self.objectStore.baseLocation + "/" + directoryNamePrefix + getFileSystemSafeStringFromKey(objectType)
-
-  def getObjectFile(self, objectType, objectKey, createObjectDir):
-    #Create is False
-    #  return string representing the directory if it exitst
-    #  return None if directory dosen't exist
-    #Create is True
-    #  always return string, creating it if it is not already there
-    dirString = self.getObjectTypeDirectory(objectType)
-    fileString = dirString + "/" + getFileSystemSafeStringFromKey(objectKey)
-    #print(fileString)
-    #self.assertTrue(False)
+  #Return the object type directory or None
+  def getObjectTypeDirectory(self, objectType, createObjectDir):
+    dirString =  self.objectStore.baseLocation + "/" + directoryNamePrefix + getFileSystemSafeStringFromKey(objectType)
     if self.objectStore.isKnownObjectType(objectType):
-      return fileString #Save a os filesystem call
+      return dirString
     if os.path.exists(dirString):
-      return fileString
+      return dirString
     if not createObjectDir:
       return None
     os.mkdir(dirString)
     self.objectStore.setKnownObjectType(objectType)
-    return fileString
+    return dirString
+
+  def getObjectFile(self, objectType, objectKey, createObjectDir):
+    dirString = self.getObjectTypeDirectory(objectType, createObjectDir)
+    if dirString is None:
+      return None
+    return dirString + "/" + getFileSystemSafeStringFromKey(objectKey)
 
   def getObjectJSONWithoutLock(self, objectType, objectKey):
     fileName = self.getObjectFile(objectType, objectKey, False)
@@ -214,16 +210,18 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
   def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
     #This is as simple as getting a directory listing
     collectedObjects = {}
+    otd = ""
     if self.objectStore.isKnownObjectType(objectType):
-      otd = self.getObjectTypeDirectory(objectType)
-      objectFiles = localScanDir(otd, False)
+      otd = self.getObjectTypeDirectory(objectType, createObjectDir=False)
+      if otd is not None:
+        objectFiles = localScanDir(otd, False)
 
-      for curFileName in objectFiles:
-        #print(otd + "/" + curFileName + "->" + getKeyFromFileSystemSafeString(curFileName))
-        objectKey = getKeyFromFileSystemSafeString(curFileName)
-        #print("OK:" + objectKey)
-        (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = self._getObjectJSON(objectType, objectKey)
-        collectedObjects[objectKey] = (objectDICT, ObjectVersion, creationDate, lastUpdateDate)
+        for curFileName in objectFiles:
+          #print(otd + "/" + curFileName + "->" + getKeyFromFileSystemSafeString(curFileName))
+          objectKey = getKeyFromFileSystemSafeString(curFileName)
+          #print("OK:" + objectKey)
+          (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = self._getObjectJSON(objectType, objectKey)
+          collectedObjects[objectKey] = (objectDICT, ObjectVersion, creationDate, lastUpdateDate)
 
     ##print('objectStoresMemory._getPaginatedResult self.objectType.objectData[objectType]:', self.objectType.objectData[objectType])
     return self.objectStore.externalFns['getPaginatedResult'](
