@@ -67,6 +67,7 @@ class ConnectionContextSimpleFileStorePrivateFns(ObjectStoreConnectionContext):
     if self.objectStore.isKnownObjectType(objectType):
       return dirString
     if os.path.exists(dirString):
+      self.objectStore.setKnownObjectType(objectType)
       return dirString
     if not createObjectDir:
       return None
@@ -210,18 +211,16 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
   def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
     #This is as simple as getting a directory listing
     collectedObjects = {}
-    otd = ""
-    if self.objectStore.isKnownObjectType(objectType):
-      otd = self.getObjectTypeDirectory(objectType, createObjectDir=False)
-      if otd is not None:
-        objectFiles = localScanDir(otd, False)
 
-        for curFileName in objectFiles:
-          #print(otd + "/" + curFileName + "->" + getKeyFromFileSystemSafeString(curFileName))
-          objectKey = getKeyFromFileSystemSafeString(curFileName)
-          #print("OK:" + objectKey)
-          (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = self._getObjectJSON(objectType, objectKey)
-          collectedObjects[objectKey] = (objectDICT, ObjectVersion, creationDate, lastUpdateDate)
+    otd = self.getObjectTypeDirectory(objectType, createObjectDir=False)
+    if otd is not None:
+      objectFiles = localScanDir(otd, False)
+      for curFileName in objectFiles:
+        #print(otd + "/" + curFileName + "->" + getKeyFromFileSystemSafeString(curFileName))
+        objectKey = getKeyFromFileSystemSafeString(curFileName)
+        #print("OK:" + objectKey)
+        (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = self._getObjectJSON(objectType, objectKey)
+        collectedObjects[objectKey] = (objectDICT, ObjectVersion, creationDate, lastUpdateDate)
 
     ##print('objectStoresMemory._getPaginatedResult self.objectType.objectData[objectType]:', self.objectType.objectData[objectType])
     return self.objectStore.externalFns['getPaginatedResult'](
