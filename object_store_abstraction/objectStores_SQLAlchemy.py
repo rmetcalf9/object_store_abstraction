@@ -8,6 +8,55 @@ import os
 from .makeDictJSONSerializable import getJSONtoPutInStore, getObjFromJSONThatWasPutInStore
 
 
+###---------- Code to get actual query being run
+'''
+from sqlalchemy.engine.default import DefaultDialect
+from sqlalchemy.sql.sqltypes import String, DateTime, NullType
+
+PY3 = str is not bytes
+text = str if PY3 else unicode
+int_type = int if PY3 else (int, long)
+str_type = str if PY3 else (str, unicode)
+class StringLiteral(String):
+    """Teach SA how to literalize various things."""
+    def literal_processor(self, dialect):
+        super_processor = super(StringLiteral, self).literal_processor(dialect)
+
+        def process(value):
+            if isinstance(value, int_type):
+                return text(value)
+            if not isinstance(value, str_type):
+                value = text(value)
+            result = super_processor(value)
+            if isinstance(result, bytes):
+                result = result.decode(dialect.encoding)
+            return result
+        return process
+
+
+class LiteralDialect(DefaultDialect):
+    colspecs = {
+        # prevent various encoding explosions
+        String: StringLiteral,
+        # teach SA about how to literalize a datetime
+        DateTime: StringLiteral,
+        # don't format py2 long integers to NULL
+        NullType: StringLiteral,
+    }
+
+
+def literalquery(statement):
+    """NOTE: This is entirely insecure. DO NOT execute the resulting strings."""
+    import sqlalchemy.orm
+    if isinstance(statement, sqlalchemy.orm.Query):
+        statement = statement.statement
+    return statement.compile(
+        dialect=LiteralDialect(),
+        compile_kwargs={'literal_binds': True},
+    ).string
+'''
+###--------------
+
 objectStoreHardCodedVersionInteger = 1
 
 class ConnectionContext(ObjectStoreConnectionContext):
@@ -143,19 +192,26 @@ class ConnectionContext(ObjectStoreConnectionContext):
   def _INT_filterFn(self, item, whereClauseText):
     return True
     
-  def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
+  def __getObjectTypeListFromDBUsingQuery(self, objectType, queryString, offset, pagesize):
     whereclauseToUse = self.objectStore.objDataTable.c.type==objectType
-    if paginatedParamValues['query'] is not None:
-      if paginatedParamValues['query'] != '':
+    if queryString is not None:
+      if queryString != '':
         whereclauseToUse = and_(
           whereclauseToUse,
-          self.objectStore.objDataTable.c.objectDICT.ilike('%' + paginatedParamValues['query'] + '%')
+          self.objectStore.objDataTable.c.objectDICT.ilike('%' + queryString + '%')
         )
-      
     query = self.objectStore.objDataTable.select(
       whereclause=whereclauseToUse,
       order_by=self.objectStore.objDataTable.c.key
     )
+    '''
+     SELECT "_objData".id, "_objData".type, "_objData".key, "_objData"."objectDICT", "_objData"."objectVersion", "_objData"."creationDate", "_objData"."lastUpdateDate", "_objData"."creationDate_iso8601", "_objData"."lastUpdateDate_iso8601"
+     FROM "_objData"
+     WHERE "_objData".type = 'Test1' AND lower("_objData"."objectDICT") LIKE lower('%''AA'': 3%') ORDER BY "_objData".key
+    '''
+    
+    #print("\n---------\nwhereclauseToUse:", whereclauseToUse)
+    #print("query:", literalquery(query))
     result =  self._INT_execute(query)
     
     srcData = {}
@@ -168,16 +224,40 @@ class ConnectionContext(ObjectStoreConnectionContext):
         fetching = False
       else:
         srcData[row['key']] = self._INT_getTupleFromRow(row)
-      if numFetched > (paginatedParamValues['offset'] + paginatedParamValues['pagesize']): #Total caculation will be off when we don't go thorough entire dataset
-                          # but invalid figure will be always be one over as we fetch one past in all cases
-        fetching = False
-  
+      if offset != None: # allows this to work in non-pagination mode
+        if numFetched > (offset + pagesize): #Total caculation will be off when we don't go thorough entire dataset
+                            # but invalid figure will be always be one over as we fetch one past in all cases
+          fetching = False
+    return srcData
+
+  def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
+    srcData = self.__getObjectTypeListFromDBUsingQuery(
+      objectType, 
+      paginatedParamValues['query'], 
+      paginatedParamValues['offset'], 
+      paginatedParamValues['pagesize']
+    )
+
     return self.objectStore.externalFns['getPaginatedResult'](
       srcData,
       outputFN,
       artificalRequestWithPaginationArgs(paginatedParamValues),
       self._INT_filterFn
     )
+
+  def _getAllRowsForObjectType(self, objectType, filterFN, outputFN, whereClauseText):
+    superObj = self.__getObjectTypeListFromDBUsingQuery(
+      objectType, 
+      queryString = whereClauseText, 
+      offset = None, 
+      pagesize = None
+    )
+    outputLis = []
+    for curKey in superObj:
+      if filterFN(superObj[curKey], ''):
+        outputLis.append(superObj[curKey])
+    return list(map(outputFN, outputLis))
+
 
   def _close(self):
     self.connection.close()

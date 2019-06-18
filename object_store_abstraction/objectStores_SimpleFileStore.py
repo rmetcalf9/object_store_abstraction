@@ -209,6 +209,17 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
     return whereClauseText in str(item).upper()
 
   def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
+    collectedObjects = self.__getAllRowsForObjectType(objectType)
+  
+    ##print('objectStoresMemory._getPaginatedResult self.objectType.objectData[objectType]:', self.objectType.objectData[objectType])
+    return self.objectStore.externalFns['getPaginatedResult'](
+      collectedObjects,
+      outputFN,
+      artificalRequestWithPaginationArgs(paginatedParamValues),
+      self._filterFN
+    )
+    
+  def __getAllRowsForObjectType(self, objectType):
     #This is as simple as getting a directory listing
     collectedObjects = {}
 
@@ -222,13 +233,17 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
         (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = self._getObjectJSON(objectType, objectKey)
         collectedObjects[objectKey] = (objectDICT, ObjectVersion, creationDate, lastUpdateDate)
 
-    ##print('objectStoresMemory._getPaginatedResult self.objectType.objectData[objectType]:', self.objectType.objectData[objectType])
-    return self.objectStore.externalFns['getPaginatedResult'](
-      collectedObjects,
-      outputFN,
-      artificalRequestWithPaginationArgs(paginatedParamValues),
-      self._filterFN
-    )
+    return collectedObjects
+
+  def _getAllRowsForObjectType(self, objectType, filterFN, outputFN, whereClauseText):
+    superObj = self.__getAllRowsForObjectType(objectType)
+    outputLis = []
+    for curKey in superObj:
+      if self._filterFN_basicTextInclusion(superObj[curKey], whereClauseText):
+        if filterFN(superObj[curKey], whereClauseText):
+          outputLis.append(superObj[curKey])
+    return list(map(outputFN, outputLis))
+
 
 # Class that will store objects as directoryies and files in the file system
 class ObjectStore_SimpleFileStore(ObjectStore):

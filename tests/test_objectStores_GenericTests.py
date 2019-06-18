@@ -420,14 +420,19 @@ def t_removeObjectOnlyRemovesKeyOfSameObjectType(testClass, objectStoreType):
 #   getPaginatedResult Tests
 #*************************************
 
-def addSampleRows(storeConnection, numRows, bbString='BB', offset=0):
+def addSampleRows2(storeConnection, numRows, bbStringFN, offset=0):
   def someFn(connectionContext):
     for x in range(offset,numRows + offset):
       toInsert = copy.deepcopy(JSONString)
       toInsert['AA'] = x
-      toInsert['BB'] = bbString
+      toInsert['BB'] = bbStringFN(x)
       xres = connectionContext.saveJSONObject("Test1", "123" + str(x), toInsert, None)
   storeConnection.executeInsideTransaction(someFn)
+
+def addSampleRows(storeConnection, numRows, bbString='BB', offset=0):
+  def bbStringFN(x):
+    return bbString
+  addSampleRows2(storeConnection, numRows, bbStringFN, offset)
 
 def assertCorrectPaginationResult(testClass, result, expectedOffset, expectedPageSize, expectedTotal):
   testClass.assertEqual(result['pagination']['offset'], expectedOffset, msg='Wrong offset in pagination')
@@ -581,4 +586,91 @@ def t_UpdateFilter(testClass, objectStoreType):
       expectedRes.append({"AA": x, "BB": "yyYYyyy", "CC": {"CC.AA": "AA", "CC.BB": "BB", "CC.CC": "CC"}})
     assertCorrectPaginationResult(testClass, res, 0, 10, 5)
     testClass.assertJSONStringsEqualWithIgnoredKeys(res['result'], expectedRes, [  ], msg='Wrong result')
+  objectStoreType.executeInsideConnectionContext(dbfn)
+
+def t_getAllRowsForObjectType(testClass, objectStoreType):
+  def dbfn(storeConnection):
+    addSampleRows(storeConnection, 5)
+    def outputFN(item):
+      return item[0]
+    filterFN = None
+
+    resALL = storeConnection.getAllRowsForObjectType("Test1", filterFN, outputFN, None)
+
+    expectedRes = []
+    for x in range(0,5):
+      expectedRes.append({"AA": x, "BB": "BB", "CC": {"CC.AA": "AA", "CC.BB": "BB", "CC.CC": "CC"}})
+
+    actualResSorted = [{},{},{},{},{}]
+    for x in range(0,5):
+      actualResSorted[resALL[x]["AA"]] = resALL[x]
+
+    testClass.assertEqual(actualResSorted, expectedRes)
+  objectStoreType.executeInsideConnectionContext(dbfn)
+
+def t_getAllRowsForObjectType(testClass, objectStoreType):
+  def dbfn(storeConnection):
+    addSampleRows(storeConnection, 5)
+    def outputFN(item):
+      return item[0]
+    filterFN = None
+
+    resALL = storeConnection.getAllRowsForObjectType("Test1", filterFN, outputFN, None)
+    expectedRes = []
+    for x in range(0,5):
+      expectedRes.append({"AA": x, "BB": "BB", "CC": {"CC.AA": "AA", "CC.BB": "BB", "CC.CC": "CC"}})
+
+    actualResSorted = [{},{},{},{},{}]
+    for x in range(0,len(resALL)):
+      actualResSorted[resALL[x]["AA"]] = resALL[x]
+
+    testClass.assertEqual(actualResSorted, expectedRes)
+  objectStoreType.executeInsideConnectionContext(dbfn)
+
+def t_getAllRowsForObjectType_FilterByFN(testClass, objectStoreType):
+  def dbfn(storeConnection):
+    addSampleRows(storeConnection, 5)
+    def outputFN(item):
+      return item[0]
+    def filterFN(item, whereClauseText):
+      if item[0]["AA"] == 3:
+        return False
+      return True
+
+    resALL = storeConnection.getAllRowsForObjectType("Test1", filterFN, outputFN, None)
+    expectedRes = []
+    for x in range(0,5):
+      if x == 3:
+        expectedRes.append({})
+      else:
+        expectedRes.append({"AA": x, "BB": "BB", "CC": {"CC.AA": "AA", "CC.BB": "BB", "CC.CC": "CC"}})
+
+    actualResSorted = [{},{},{},{},{}]
+    for x in range(0,len(resALL)):
+      actualResSorted[resALL[x]["AA"]] = resALL[x]
+
+    testClass.assertEqual(actualResSorted, expectedRes)
+  objectStoreType.executeInsideConnectionContext(dbfn)
+
+def t_getAllRowsForObjectType_FilterByWhereClause(testClass, objectStoreType):
+  def dbfn(storeConnection):
+    def bbStringFN(x):
+      return "BB" + str(x) + "BB"
+    addSampleRows2(storeConnection, 5, bbStringFN)
+    def outputFN(item):
+      return item[0]
+
+    resALL = storeConnection.getAllRowsForObjectType("Test1", None, outputFN, "BB3BB")
+    expectedRes = []
+    for x in range(0,5):
+      if x != 3:
+        expectedRes.append({})
+      else:
+        expectedRes.append({"AA": x, "BB": "BB" + str(x) + "BB", "CC": {"CC.AA": "AA", "CC.BB": "BB", "CC.CC": "CC"}})
+
+    actualResSorted = [{},{},{},{},{}]
+    for x in range(0,len(resALL)):
+      actualResSorted[resALL[x]["AA"]] = resALL[x]
+
+    testClass.assertEqual(actualResSorted, expectedRes)
   objectStoreType.executeInsideConnectionContext(dbfn)

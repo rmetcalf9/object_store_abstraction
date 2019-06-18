@@ -160,11 +160,22 @@ class ObjectStoreConnectionContext():
   def getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
     def defOutput(item):
       return item
-    def defFilter(item, whereClauseText):
-      return True
     if outputFN is None:
       outputFN = defOutput
     return self._getPaginatedResult(objectType, paginatedParamValues, outputFN)
+  
+  # filterFN is applied first, then outputFN
+  def getAllRowsForObjectType(self, objectType, filterFN, outputFN, whereClauseText):
+    def defOutput(item):
+      return item
+    if outputFN is None:
+      outputFN = defOutput
+    def defFilter(item, whereClauseText):
+      return True
+    if filterFN is None:
+      filterFN = defFilter
+    return self._getAllRowsForObjectType(objectType, filterFN, outputFN, whereClauseText)
+  
 
   def _saveJSONObject(self, objectType, objectKey, JSONString, objectVersion):
     raise Exception('Not Overridden')
@@ -183,9 +194,22 @@ class ObjectStoreConnectionContext():
   def _rollbackTransaction(self):
     raise Exception('Not Overridden')
 
+  def _getAllRowsForObjectType(self, objectType, filterFN, outputFN, whereClauseText):
+    raise Exception('Not Implemented for this objectstore type')
+
   #Optional override for closing the context
   def _close(self):
     pass
+
+  def _filterFN_basicTextInclusion(self, item, whereClauseText):
+    if whereClauseText is None:
+      return True
+    if whereClauseText == '':
+      return True
+    ###userDICT = CreateUserObjFromUserDict(appObj, item[0],item[1],item[2],item[3]).getJSONRepresenation()
+    #TODO replace with a dict awear generic function
+    #  we also need to consider removing spaces from consideration
+    return whereClauseText in str(item).upper()
 
 #Base class for object store
 class ObjectStore():

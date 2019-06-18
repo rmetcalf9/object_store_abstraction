@@ -55,28 +55,31 @@ class ConnectionContext(ObjectStoreConnectionContext):
       return objectTypeDict[objectKey]
     return None, None, None, None
 
-  def _filterFN(self, item, whereClauseText):
-    if whereClauseText is None:
-      return True
-    if whereClauseText == '':
-      return True
-    ###userDICT = CreateUserObjFromUserDict(appObj, item[0],item[1],item[2],item[3]).getJSONRepresenation()
-    #TODO replace with a dict awear generic function
-    #  we also need to consider removing spaces from consideration
-    return whereClauseText in str(item).upper()
-
-
-  def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
-    ##print('objectStoresMemory._getPaginatedResult self.objectType.objectData[objectType]:', self.objectType.objectData[objectType])
+  def __getAllRowsForObjectType(self, objectType):
     srcData = []
     if objectType in self.objectStore.objectData:
       srcData = self.objectStore.objectData[objectType]
+    return srcData
+
+  def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
+    ##print('objectStoresMemory._getPaginatedResult self.objectType.objectData[objectType]:', self.objectType.objectData[objectType])
+    srcData = self.__getAllRowsForObjectType(objectType)
     return self.objectStore.externalFns['getPaginatedResult'](
       srcData,
       outputFN,
       artificalRequestWithPaginationArgs(paginatedParamValues),
-      self._filterFN
+      self._filterFN_basicTextInclusion
     )
+
+  def _getAllRowsForObjectType(self, objectType, filterFN, outputFN, whereClauseText):
+    superObj = self.__getAllRowsForObjectType(objectType)
+    outputLis = []
+    for curKey in superObj:
+      if self._filterFN_basicTextInclusion(superObj[curKey], whereClauseText):
+        if filterFN(superObj[curKey], whereClauseText):
+          outputLis.append(superObj[curKey])
+    return list(map(outputFN, outputLis))
+
 
 # Class that will store objects in memory only
 class ObjectStore_Memory(ObjectStore):
