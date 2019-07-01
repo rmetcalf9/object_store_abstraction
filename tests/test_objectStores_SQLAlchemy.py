@@ -25,6 +25,7 @@ import datetime
 import pytz
 
 import test_objectStores_GenericTests as genericTests
+from test_objectStores_GenericTests import addSampleRows, assertCorrectPaginationResult
 
 import object_store_abstraction as undertest
 
@@ -181,3 +182,26 @@ class test_objectStoresSQLAlchemy(testHelperSuperClass):
       self.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString, [  ], msg='Did not roll back to previous value')
 
     obj.executeInsideConnectionContext(dbfn)
+
+  def test_filter(self):
+    objectStoreType = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns())
+    objectStoreType.resetDataForTest()
+    testClass = self
+
+
+    def dbfn(storeConnection):
+      addSampleRows(storeConnection, 5, 'yyYYyyy')
+      addSampleRows(storeConnection, 5, 'xxxxxxx', 5)
+      def outputFN(item):
+        return item[0]
+      paginatedParamValues = {
+        'offset': 0,
+        'pagesize': 10,
+        'query': 'dfgdbdfgfgfvfdgfd',
+        'sort': None
+      }
+      res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN)
+      expectedRes = []
+      assertCorrectPaginationResult(testClass, res, 0, 10, 0)
+      self.assertJSONStringsEqualWithIgnoredKeys(res['result'], expectedRes, [  ], msg='Wrong result')
+    objectStoreType.executeInsideConnectionContext(dbfn)

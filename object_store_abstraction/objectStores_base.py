@@ -163,7 +163,7 @@ class ObjectStoreConnectionContext():
     if outputFN is None:
       outputFN = defOutput
     return self._getPaginatedResult(objectType, paginatedParamValues, outputFN)
-  
+
   # filterFN is applied first, then outputFN
   def getAllRowsForObjectType(self, objectType, filterFN, outputFN, whereClauseText):
     def defOutput(item):
@@ -175,7 +175,7 @@ class ObjectStoreConnectionContext():
     if filterFN is None:
       filterFN = defFilter
     return self._getAllRowsForObjectType(objectType, filterFN, outputFN, whereClauseText)
-  
+
 
   def _saveJSONObject(self, objectType, objectKey, JSONString, objectVersion):
     raise Exception('Not Overridden')
@@ -202,6 +202,7 @@ class ObjectStoreConnectionContext():
     pass
 
   def _filterFN_basicTextInclusion(self, item, whereClauseText):
+    #baseapp passes in whereClauseText as all upper case
     if whereClauseText is None:
       return True
     if whereClauseText == '':

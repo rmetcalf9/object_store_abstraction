@@ -198,27 +198,17 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
     return a
 
 
-  def _filterFN(self, item, whereClauseText):
-    if whereClauseText is None:
-      return True
-    if whereClauseText == '':
-      return True
-    ###userDICT = CreateUserObjFromUserDict(appObj, item[0],item[1],item[2],item[3]).getJSONRepresenation()
-    #TODO replace with a dict awear generic function
-    #  we also need to consider removing spaces from consideration
-    return whereClauseText in str(item).upper()
-
   def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
     collectedObjects = self.__getAllRowsForObjectType(objectType)
-  
+
     ##print('objectStoresMemory._getPaginatedResult self.objectType.objectData[objectType]:', self.objectType.objectData[objectType])
     return self.objectStore.externalFns['getPaginatedResult'](
       collectedObjects,
       outputFN,
       artificalRequestWithPaginationArgs(paginatedParamValues),
-      self._filterFN
+      self._filterFN_basicTextInclusion
     )
-    
+
   def __getAllRowsForObjectType(self, objectType):
     #This is as simple as getting a directory listing
     collectedObjects = {}

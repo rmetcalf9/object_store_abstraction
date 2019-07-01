@@ -588,6 +588,24 @@ def t_UpdateFilter(testClass, objectStoreType):
     testClass.assertJSONStringsEqualWithIgnoredKeys(res['result'], expectedRes, [  ], msg='Wrong result')
   objectStoreType.executeInsideConnectionContext(dbfn)
 
+def t_filterAllResultsOut(testClass, objectStoreType):
+  def dbfn(storeConnection):
+    addSampleRows(storeConnection, 5, 'yyYYyyy')
+    addSampleRows(storeConnection, 5, 'xxxxxxx', 5)
+    def outputFN(item):
+      return item[0]
+    paginatedParamValues = {
+      'offset': 0,
+      'pagesize': 10,
+      'query': 'dfgdbdfgfgfvfdgfd',
+      'sort': None
+    }
+    res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN)
+    expectedRes = []
+    assertCorrectPaginationResult(testClass, res, 0, 10, 0)
+    testClass.assertJSONStringsEqualWithIgnoredKeys(res['result'], expectedRes, [  ], msg='Wrong result')
+  objectStoreType.executeInsideConnectionContext(dbfn)
+
 def t_getAllRowsForObjectType(testClass, objectStoreType):
   def dbfn(storeConnection):
     addSampleRows(storeConnection, 5)
