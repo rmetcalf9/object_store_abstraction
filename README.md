@@ -15,9 +15,9 @@ git tag -l #find latest tag
 
 
 git tag 0.0.1
-python3 setup.py sdist
-python3 setup.py register sdist upload
-git push --tags 
+sudo python3 setup.py sdist
+sudo python3 setup.py register sdist upload
+git push --tags
 ````
 
 If you get an error message reporting "dirty" versions can't be uploaded to pypi it means that you have uncommitted changes.

@@ -184,6 +184,10 @@ class test_objectStoresSQLAlchemy(testHelperSuperClass):
     obj.executeInsideConnectionContext(dbfn)
 
   def test_filter(self):
+    if SKIPSQLALCHEMYTESTS:
+      print("Skipping SQLAlchemyTests")
+      return
+
     objectStoreType = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns())
     objectStoreType.resetDataForTest()
     testClass = self
