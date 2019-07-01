@@ -1,9 +1,10 @@
-from .objectStores_base import ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, ObjectStoreConfigError, MissingTransactionContextException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException, artificalRequestWithPaginationArgs
+from .objectStores_base import ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, ObjectStoreConfigError, MissingTransactionContextException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException
 from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, ForeignKey, BigInteger, DateTime, JSON, func, UniqueConstraint, and_, Text
 import pytz
 ##import datetime
 from dateutil.parser import parse
 import os
+from .paginatedResult import getPaginatedResult
 
 from .makeDictJSONSerializable import getJSONtoPutInStore, getObjFromJSONThatWasPutInStore
 
@@ -80,7 +81,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
     if self.transaction is None:
       MissingTransactionContextException
     return self.connection.execute(statement.execution_options(autocommit=False))
-    
+
   def _commitTransaction(self):
     res = self.transaction.commit()
     self.transaction = None
@@ -95,7 +96,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
     query = self.objectStore.objDataTable.select(
       whereclause=(
         and_(
-          self.objectStore.objDataTable.c.type==objectType, 
+          self.objectStore.objDataTable.c.type==objectType,
           self.objectStore.objDataTable.c.key==objectKey
           )
         )
@@ -112,8 +113,8 @@ class ConnectionContext(ObjectStoreConnectionContext):
       newObjectVersion = 1
       query = self.objectStore.objDataTable.insert().values(
         type=objectType,
-        key=objectKey, 
-        objectVersion=newObjectVersion, 
+        key=objectKey,
+        objectVersion=newObjectVersion,
         objectDICT=getJSONtoPutInStore(JSONString),
         creationDate=curTime,
         lastUpdateDate=curTime,
@@ -133,11 +134,11 @@ class ConnectionContext(ObjectStoreConnectionContext):
     newObjectVersion = firstRow.objectVersion + 1
     query = self.objectStore.objDataTable.update(whereclause=(
       and_(
-        self.objectStore.objDataTable.c.type==objectType, 
+        self.objectStore.objDataTable.c.type==objectType,
         self.objectStore.objDataTable.c.key==objectKey
         )
       )).values(
-      objectVersion=newObjectVersion, 
+      objectVersion=newObjectVersion,
       objectDICT=getJSONtoPutInStore(JSONString),
       lastUpdateDate=curTime,
       lastUpdateDate_iso8601=curTime.isoformat()
@@ -159,17 +160,17 @@ class ConnectionContext(ObjectStoreConnectionContext):
     if result.rowcount == 0:
       if not ignoreMissingObject:
         raise TriedToDeleteMissingObjectException
-  
+
   def _INT_getTupleFromRow(self, row):
     dt = parse(row['creationDate_iso8601'])
     creationDate = dt.astimezone(pytz.utc)
     dt = parse(row['lastUpdateDate_iso8601'])
     lastUpdateDate = dt.astimezone(pytz.utc)
     convertedObjectDICT = getObjFromJSONThatWasPutInStore(row['objectDICT'])
-    
+
     return convertedObjectDICT, row['objectVersion'], creationDate, lastUpdateDate
-  
-  
+
+
   #Return value is objectDICT, ObjectVersion, creationDate, lastUpdateDate
   #Return None, None, None, None if object isn't in store
   ObjTableKeyMap = None
@@ -191,7 +192,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
 
   def _INT_filterFn(self, item, whereClauseText):
     return True
-    
+
   def __getObjectTypeListFromDBUsingQuery(self, objectType, queryString, offset, pagesize):
     whereclauseToUse = self.objectStore.objDataTable.c.type==objectType
     if queryString is not None:
@@ -209,11 +210,11 @@ class ConnectionContext(ObjectStoreConnectionContext):
      FROM "_objData"
      WHERE "_objData".type = 'Test1' AND lower("_objData"."objectDICT") LIKE lower('%''AA'': 3%') ORDER BY "_objData".key
     '''
-    
+
     #print("\n---------\nwhereclauseToUse:", whereclauseToUse)
     #print("query:", literalquery(query))
     result =  self._INT_execute(query)
-    
+
     srcData = {}
     fetching = True
     numFetched = 0
@@ -232,24 +233,27 @@ class ConnectionContext(ObjectStoreConnectionContext):
 
   def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
     srcData = self.__getObjectTypeListFromDBUsingQuery(
-      objectType, 
-      paginatedParamValues['query'], 
-      paginatedParamValues['offset'], 
+      objectType,
+      paginatedParamValues['query'],
+      paginatedParamValues['offset'],
       paginatedParamValues['pagesize']
     )
 
-    return self.objectStore.externalFns['getPaginatedResult'](
-      srcData,
-      outputFN,
-      artificalRequestWithPaginationArgs(paginatedParamValues),
-      self._INT_filterFn
+    return getPaginatedResult(
+      list=srcData,
+      outputFN=outputFN,
+      offset=paginatedParamValues['offset'],
+      pagesize=paginatedParamValues['pagesize'],
+      query=paginatedParamValues['query'],
+      sort=paginatedParamValues['sort'],
+      filterFN=self._INT_filterFn
     )
 
   def _getAllRowsForObjectType(self, objectType, filterFN, outputFN, whereClauseText):
     superObj = self.__getObjectTypeListFromDBUsingQuery(
-      objectType, 
-      queryString = whereClauseText, 
-      offset = None, 
+      objectType,
+      queryString = whereClauseText,
+      offset = None,
       pagesize = None
     )
     outputLis = []
@@ -262,7 +266,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
   def _close(self):
     self.connection.close()
 
-    
+
 class ObjectStore_SQLAlchemy(ObjectStore):
   engine = None
   objDataTable = None
@@ -276,7 +280,7 @@ class ObjectStore_SQLAlchemy(ObjectStore):
       self.objectPrefix = ConfigDict["objectPrefix"]
     else:
       self.objectPrefix = ""
-    
+
     connect_args = None
     if "ssl_ca" in ConfigDict:
       print("ssl_ca:", ConfigDict['ssl_ca'])
@@ -285,15 +289,15 @@ class ObjectStore_SQLAlchemy(ObjectStore):
       connect_args = {
         "ssl": {'ca': ConfigDict['ssl_ca']}
       }
-    
+
     #My experiment for SSL https://code.metcarob.com/node/249
     #debugging https://github.com/PyMySQL/PyMySQL/blob/master/pymysql/connections.py
-    
+
     if connect_args is None:
       self.engine = create_engine(ConfigDict["connectionString"], pool_recycle=3600, pool_size=40, max_overflow=0)
     else:
       self.engine = create_engine(ConfigDict["connectionString"], pool_recycle=3600, pool_size=40, max_overflow=0, connect_args=connect_args)
-    
+
     metadata = MetaData()
     #(objDICT, objectVersion, creationDate, lastUpdateDate)
     #from https://stackoverflow.com/questions/15157227/mysql-varchar-index-length
@@ -307,9 +311,9 @@ class ObjectStore_SQLAlchemy(ObjectStore):
         #Column('objectDICT', JSON), #MariaDB has not implemented JSON data type
         Column('objectDICT', Text),
         Column('objectVersion', BigInteger),
-        Column('creationDate', DateTime(timezone=True)), 
+        Column('creationDate', DateTime(timezone=True)),
         Column('lastUpdateDate', DateTime(timezone=True)),
-        Column('creationDate_iso8601', String(length=40)), 
+        Column('creationDate_iso8601', String(length=40)),
         Column('lastUpdateDate_iso8601', String(length=40)),
         UniqueConstraint('type', 'key', name=self.objectPrefix + '_objData_ix1')
     )
@@ -317,13 +321,13 @@ class ObjectStore_SQLAlchemy(ObjectStore):
         Column('id', Integer, primary_key=True),
         Column('first_installed_ver', Integer),
         Column('current_installed_ver', Integer),
-        Column('creationDate_iso8601', String(length=40)), 
+        Column('creationDate_iso8601', String(length=40)),
         Column('lastUpdateDate_iso8601', String(length=40))
     )
     metadata.create_all(self.engine)
-    
+
     self._INT_setupOrUpdateVer(externalFns)
-  
+
   #AppObj passed in as None
   def _INT_setupOrUpdateVer(self, externalFns):
     def someFn(connectionContext):
@@ -335,8 +339,8 @@ class ObjectStore_SQLAlchemy(ObjectStore):
           raise Exception('invalid database structure - can\'t read version')
         #There are 0 rows, create one
         query = self.verTable.insert().values(
-          first_installed_ver=objectStoreHardCodedVersionInteger, 
-          current_installed_ver=objectStoreHardCodedVersionInteger, 
+          first_installed_ver=objectStoreHardCodedVersionInteger,
+          current_installed_ver=objectStoreHardCodedVersionInteger,
           creationDate_iso8601=curTime.isoformat(),
           lastUpdateDate_iso8601=curTime.isoformat()
         )
@@ -347,14 +351,13 @@ class ObjectStore_SQLAlchemy(ObjectStore):
         return
       raise Exception('Not Implemented - update datastore from x to objectStoreHardCodedVersionInteger')
     self.executeInsideTransaction(someFn)
-    
+
 
   def _resetDataForTest(self):
     def someFn(connectionContext):
       query = self.objDataTable.delete()
       connectionContext._INT_execute(query)
     self.executeInsideTransaction(someFn)
-    
+
   def _getConnectionContext(self):
     return ConnectionContext(self)
-

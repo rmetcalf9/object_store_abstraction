@@ -51,21 +51,6 @@ except:
 
 '''
 
-#Required until I update the baseapp with a class that accepts paginated param vlalues rather than a request
-class artificalRequestWithPaginationArgs_args():
-  paginatedParamValues = None
-  def __init__(self, paginatedParamValues):
-    self.paginatedParamValues = paginatedParamValues
-  def get(self, paramName):
-    if paramName in ['offset', 'pagesize', 'query', 'sort']:
-      return self.paginatedParamValues[paramName]
-    raise Exception("Unknown argument - " + paramName)
-class artificalRequestWithPaginationArgs():
-  args = None
-  def __init__(self, paginatedParamValues):
-    self.args = artificalRequestWithPaginationArgs_args(paginatedParamValues)
-
-
 class ObjectStoreConnectionContext():
   #if object version is set to none object version checking is turned off
   # object version may be a number or a guid depending on store technology
@@ -216,6 +201,8 @@ class ObjectStoreConnectionContext():
 class ObjectStore():
   externalFns = None
   def __init__(self, externalFns):
+    if 'getPaginatedResult' in externalFns:
+      raise Exception("getPaginatedResult is supplied in external functions - new version of objectstore dosen't require it")
     self.externalFns = externalFns
 
   def getConnectionContext(self):

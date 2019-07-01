@@ -1,9 +1,10 @@
-from .objectStores_base import ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException, artificalRequestWithPaginationArgs, ObjectStoreConfigError
+from .objectStores_base import ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException, ObjectStoreConfigError
 import os
 import threading
 import base64
 from dateutil.parser import parse
 import pytz
+from .paginatedResult import getPaginatedResult
 
 import shutil #For remove dir and contents
 
@@ -202,11 +203,14 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
     collectedObjects = self.__getAllRowsForObjectType(objectType)
 
     ##print('objectStoresMemory._getPaginatedResult self.objectType.objectData[objectType]:', self.objectType.objectData[objectType])
-    return self.objectStore.externalFns['getPaginatedResult'](
-      collectedObjects,
-      outputFN,
-      artificalRequestWithPaginationArgs(paginatedParamValues),
-      self._filterFN_basicTextInclusion
+    return getPaginatedResult(
+      list=collectedObjects,
+      outputFN=outputFN,
+      offset=paginatedParamValues['offset'],
+      pagesize=paginatedParamValues['pagesize'],
+      query=paginatedParamValues['query'],
+      sort=paginatedParamValues['sort'],
+      filterFN=self._filterFN_basicTextInclusion
     )
 
   def __getAllRowsForObjectType(self, objectType):

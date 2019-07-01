@@ -1,4 +1,5 @@
-from .objectStores_base import ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException, artificalRequestWithPaginationArgs
+from .objectStores_base import ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException
+from .paginatedResult import getPaginatedResult
 
 class ConnectionContext(ObjectStoreConnectionContext):
   objectStore = None
@@ -64,11 +65,15 @@ class ConnectionContext(ObjectStoreConnectionContext):
   def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
     ##print('objectStoresMemory._getPaginatedResult self.objectType.objectData[objectType]:', self.objectType.objectData[objectType])
     srcData = self.__getAllRowsForObjectType(objectType)
-    return self.objectStore.externalFns['getPaginatedResult'](
-      srcData,
-      outputFN,
-      artificalRequestWithPaginationArgs(paginatedParamValues),
-      self._filterFN_basicTextInclusion
+
+    return getPaginatedResult(
+      list=srcData,
+      outputFN=outputFN,
+      offset=paginatedParamValues['offset'],
+      pagesize=paginatedParamValues['pagesize'],
+      query=paginatedParamValues['query'],
+      sort=paginatedParamValues['sort'],
+      filterFN=self._filterFN_basicTextInclusion
     )
 
   def _getAllRowsForObjectType(self, objectType, filterFN, outputFN, whereClauseText):

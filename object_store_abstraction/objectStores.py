@@ -21,8 +21,6 @@ def _createObjectStoreInstanceTypeSpecified(type, configDICT, initFN, externalFn
 def createObjectStoreInstance(objectStoreConfigDict, externalFns):
   if 'getCurDateTime' not in externalFns:
     raise Exception("createObjectStoreInstance - Must supply getCurDateTime externalFunction")
-  if 'getPaginatedResult' not in externalFns:
-    raise Exception("createObjectStoreInstance - Must supply getPaginatedResult externalFunction")
 
   if objectStoreConfigDict is None:
     objectStoreConfigDict = {}
