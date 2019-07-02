@@ -39,6 +39,11 @@ def someFn(connectionContext):
   ##DO STUFF
 storeConnection.executeInsideTransaction(someFn)
 
+##Simplier
+def someFn(connectionContext):
+  ##DO STUFF
+obj.executeInsideConnectionContext(someFn)
+
 ##Alternative (depreciated)
 storeConnection = obj.getConnectionContext()
 storeConnection.startTransaction()
