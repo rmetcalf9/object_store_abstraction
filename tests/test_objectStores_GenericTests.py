@@ -7,6 +7,8 @@
 import datetime
 import pytz
 import copy
+from python_Testing_Utilities import objectsEqual
+import json
 
 #import exceptions
 from object_store_abstraction import WrongObjectVersionException, SuppliedObjectVersionWhenCreatingException, MissingTransactionContextException, UnallowedMutationException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException
@@ -472,7 +474,11 @@ def t_getPaginatedResultsFiveRowsInOneHit(testClass, objectStoreType):
     for x in range(0,5):
       expectedRes.append({"AA": x, "BB": "BB", "CC": {"CC.AA": "AA", "CC.BB": "BB", "CC.CC": "CC"}})
     assertCorrectPaginationResult(testClass, res, 0, 10, 5)
-    testClass.assertJSONStringsEqualWithIgnoredKeys(res['result'], expectedRes, [  ], msg='Wrong result')
+
+    a = list(map(lambda x: json.dumps(x), res['result']))
+    b = list(map(lambda x: json.dumps(x), expectedRes))
+    testClass.assertTrue(objectsEqual(a, b), msg="Wrong result")
+
   objectStoreType.executeInsideConnectionContext(dbfn)
 
 def t_getPaginatedResultsFiveRowsInOneHitWithPagesize(testClass, objectStoreType):
@@ -491,7 +497,11 @@ def t_getPaginatedResultsFiveRowsInOneHitWithPagesize(testClass, objectStoreType
     for x in range(0,5):
       expectedRes.append({"AA": x, "BB": "BB", "CC": {"CC.AA": "AA", "CC.BB": "BB", "CC.CC": "CC"}})
     assertCorrectPaginationResult(testClass, res, 0, 5, 5)
-    testClass.assertJSONStringsEqualWithIgnoredKeys(res['result'], expectedRes, [  ], msg='Wrong result')
+
+    a = list(map(lambda x: json.dumps(x), res['result']))
+    b = list(map(lambda x: json.dumps(x), expectedRes))
+    testClass.assertTrue(objectsEqual(a, b), msg="Wrong result")
+
   objectStoreType.executeInsideConnectionContext(dbfn)
 
 def t_getPaginatedResultsFiveRowsPagesize2offset0(testClass, objectStoreType):
@@ -503,14 +513,20 @@ def t_getPaginatedResultsFiveRowsPagesize2offset0(testClass, objectStoreType):
       'offset': 0,
       'pagesize': 2,
       'query': '',
-      'sort': None
+      'sort': 'AA'
     }
     res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN)
     expectedRes = []
     for x in range(0,2):
       expectedRes.append({"AA": x, "BB": "BB", "CC": {"CC.AA": "AA", "CC.BB": "BB", "CC.CC": "CC"}})
     assertCorrectPaginationResult(testClass, res, 0, 2, 5)
-    testClass.assertJSONStringsEqualWithIgnoredKeys(res['result'], expectedRes, [  ], msg='Wrong result')
+
+    a = list(map(lambda x: json.dumps(x), res['result']))
+    b = list(map(lambda x: json.dumps(x), expectedRes))
+    print("a:", a)
+    print("b:", b)
+    testClass.assertTrue(objectsEqual(a, b), msg="Wrong result")
+
   objectStoreType.executeInsideConnectionContext(dbfn)
 
 def t_getPaginatedResultsFiveRowsPagesize2offset2(testClass, objectStoreType):
@@ -522,7 +538,7 @@ def t_getPaginatedResultsFiveRowsPagesize2offset2(testClass, objectStoreType):
       'offset': 2,
       'pagesize': 2,
       'query': '',
-      'sort': None
+      'sort': 'AA'
     }
     res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN)
     expectedRes = []

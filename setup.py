@@ -11,7 +11,8 @@ sp_install_requires = [
   'python-dateutil==2.7.2'
 ]
 sp_tests_require = [
-  'nose==1.3.7'
+  'nose==1.3.7',
+  'python_Testing_Utilities==0.1.2'
 ]
 
 all_require = sp_install_requires + sp_tests_require

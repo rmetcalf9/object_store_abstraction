@@ -1,3 +1,5 @@
+from .paginatedResult import sanatizePaginatedParamValues
+
 # Code to save JSON objects into a store.
 #  Allows abstraction of particular store
 #  This is the baseClass other stores inherit from
@@ -152,7 +154,7 @@ class ObjectStoreConnectionContext():
       return item
     if outputFN is None:
       outputFN = defOutput
-    return self._getPaginatedResult(objectType, paginatedParamValues, outputFN)
+    return self._getPaginatedResult(objectType, sanatizePaginatedParamValues(paginatedParamValues), outputFN)
 
   # filterFN is applied first, then outputFN
   def getAllRowsForObjectType(self, objectType, filterFN, outputFN, whereClauseText):

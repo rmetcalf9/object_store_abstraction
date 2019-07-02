@@ -8,6 +8,45 @@ def isValue(val):
     return False
   return True
 
+def sanatizePaginatedParamValues(origValues):
+  pagesizemax = 100
+
+  offset = -1  #number from 0 upwards
+  pagesize = -1 #number from 0 upwards
+  query = None #none or string not empty
+  sort = None #none or string not empty
+
+  #'offset': offset,
+  if origValues['offset'] is None:
+    offset = 0
+  else:
+    offset = int(origValues['offset'])
+
+  #'pagesize': pagesize,
+  if origValues['pagesize'] is None:
+    pagesize = 100
+  else:
+    pagesize = int(origValues['pagesize'])
+
+  if pagesize > pagesizemax:
+    pagesize = pagesizemax
+
+  #'query': query,
+  if isValue(origValues['query']):
+    query = origValues['query']
+
+  #'sort': sort,
+  if isValue(origValues['sort']):
+    sort = origValues['sort']
+
+
+  return {
+    'offset': offset,
+    'pagesize': pagesize,
+    'query': query,
+    'sort': sort,
+  }
+
 def getPaginatedResult(
   list,
   outputFN,
@@ -17,21 +56,7 @@ def getPaginatedResult(
   sort,
   filterFN
 ):
-  pagesizemax = 100
-  if not isValue(offset):
-    offset = 0
-  else:
-    offset = int(offset)
-  if pagesize is None:
-    pagesize = 100
-  else:
-    pagesize = int(pagesize)
-
-  # limit rows returned per request
-  if pagesize > pagesizemax:
-    pagesize = pagesizemax
-
-  if not isValue(query):
+  if query is not None:
     origList = SortedDict(list)
     list = SortedDict()
     where_clauses = query.strip().upper().split(" ")
@@ -51,7 +76,7 @@ def getPaginatedResult(
     sortedKeys.append(cur)
 
   #Sort sortedKeys
-  if not isValue(sort):
+  if sort is not None:
     def getSortTuple(key):
       #sort keys are case sensitive
       kk = key.split(":")
