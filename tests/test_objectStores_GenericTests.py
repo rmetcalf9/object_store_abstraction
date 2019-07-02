@@ -557,7 +557,7 @@ def t_getPaginatedResultsFiveRowsPagesize2offset4(testClass, objectStoreType):
       'offset': 4,
       'pagesize': 2,
       'query': '',
-      'sort': None
+      'sort': 'AA'
     }
     res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN)
     expectedRes = []
@@ -576,7 +576,7 @@ def t_getPaginatedResultsFiveRowsPagesize2offset10(testClass, objectStoreType):
       'offset': 10,
       'pagesize': 2,
       'query': '',
-      'sort': None
+      'sort': 'AA'
     }
     res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN)
     expectedRes = []
