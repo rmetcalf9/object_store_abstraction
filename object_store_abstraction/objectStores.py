@@ -15,7 +15,7 @@ class ObjectStoreConfigNotDictObjectExceptionClass(Exception):
 
 def _createObjectStoreInstanceTypeSpecified(type, configDICT, initFN, externalFns, detailLogging):
   print("Using Object Store Type: " + type)
-  return initFN(configDICT, externalFns, detailLogging)
+  return initFN(configDICT, externalFns, detailLogging, type)
 
 #Based on applicaiton options create an instance of objectStore to be used
 def createObjectStoreInstance(

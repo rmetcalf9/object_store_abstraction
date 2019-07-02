@@ -207,12 +207,19 @@ class ObjectStoreConnectionContext():
 class ObjectStore():
   externalFns = None
   detailLogging = False
+  type = None
 
-  def __init__(self, externalFns, detailLogging):
+  def __init__(self, externalFns, detailLogging, type):
     self.detailLogging = detailLogging
+    self.type = type
     if 'getPaginatedResult' in externalFns:
       raise Exception("getPaginatedResult is supplied in external functions - new version of objectstore dosen't require it")
     self.externalFns = externalFns
+
+  def detailLog(self, logMsg):
+    if not self.detailLogging:
+      return
+    print("DETLOG:" + self.type + ":" + logMsg)
 
   def getConnectionContext(self):
     return self._getConnectionContext()

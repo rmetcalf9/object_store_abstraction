@@ -195,9 +195,13 @@ class ConnectionContext(ObjectStoreConnectionContext):
     return True
 
   def __getObjectTypeListFromDBUsingQuery(self, objectType, queryString, offset, pagesize):
+    self.objectStore.detailLog('__getObjectTypeListFromDBUsingQuery')
+    self.objectStore.detailLog('   objectType:' + str(objectType))
+    self.objectStore.detailLog('  queryString:' + str(queryString))
     whereclauseToUse = self.objectStore.objDataTable.c.type==objectType
     if queryString is not None:
       if queryString != '':
+        self.objectStore.detailLog('   **Adding where clause**')
         whereclauseToUse = and_(
           whereclauseToUse,
           self.objectStore.objDataTable.c.objectDICT.ilike('%' + queryString + '%')
@@ -273,8 +277,8 @@ class ObjectStore_SQLAlchemy(ObjectStore):
   objDataTable = None
   verTable = None
   objectPrefix = None
-  def __init__(self, ConfigDict, externalFns, detailLogging):
-    super(ObjectStore_SQLAlchemy, self).__init__(externalFns, detailLogging)
+  def __init__(self, ConfigDict, externalFns, detailLogging, type):
+    super(ObjectStore_SQLAlchemy, self).__init__(externalFns, detailLogging, type)
 
     if detailLogging:
       logging.basicConfig()

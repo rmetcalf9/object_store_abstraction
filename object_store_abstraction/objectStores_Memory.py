@@ -89,8 +89,8 @@ class ConnectionContext(ObjectStoreConnectionContext):
 # Class that will store objects in memory only
 class ObjectStore_Memory(ObjectStore):
   objectData = None
-  def __init__(self, configJSON, externalFns, detailLogging):
-    super(ObjectStore_Memory, self).__init__(externalFns, detailLogging)
+  def __init__(self, configJSON, externalFns, detailLogging, type):
+    super(ObjectStore_Memory, self).__init__(externalFns, detailLogging, type)
     self.objectData = dict()
     #Dict = (objDICT, objectVersion, creationDate, lastUpdateDate)
 
