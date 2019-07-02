@@ -4,16 +4,21 @@ import pytz
 import os
 import json
 from object_store_abstraction import createObjectStoreInstance
+import copy
+
+import logging
 
 
+print("---------------------------------------")
+print("---------------------------------------")
+print("---------------------------------------")
+print("---------------------------------------")
+print("---------------------------------------")
+print("Start of main.py\n")
 
-
-print("---------------------------------------")
-print("---------------------------------------")
-print("---------------------------------------")
-print("---------------------------------------")
-print("---------------------------------------")
-print("Start of main.py")
+#Configure SQLAlchemy to log all statements
+logging.basicConfig()
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 objectStoreConfigJSON = readFromEnviroment(os.environ, 'APIAPP_OBJECTSTORECONFIG', '{}', None)
 objectStoreConfigDict = None
@@ -35,19 +40,38 @@ print("objectStoreInstance:", objectStoreInstance)
 
 def someFn(connectionContext):
   paginatedParamValues = {}
-  paginatedParamValues['query'] = ""
-  paginatedParamValues['sort'] = ""
+  #paginatedParamValues['query'] = ""
+  #paginatedParamValues['sort'] = ""
+  paginatedParamValues['query'] = None
+  paginatedParamValues['sort'] = None
   paginatedParamValues['offset'] = 0
   paginatedParamValues['pagesize'] = 100
 
-  a = connectionContext.getPaginatedResult("users", paginatedParamValues, None)
+  print("---")
+  print("-A call with NO query-")
+  print("---")
+  a = connectionContext.getPaginatedResult("users", copy.deepcopy(paginatedParamValues), None)
+  print("Res:", a)
 
-  print(a)
+  paginatedParamValues['query'] = "exampleQueryString"
+  print("---")
+  print("-B call with query-")
+  print("---")
+  a = connectionContext.getPaginatedResult("users", copy.deepcopy(paginatedParamValues), None)
+  print("Res:", a)
+
+  paginatedParamValues['query'] = "codefresh"
+  print("---")
+  print("-C call with single return-")
+  print("---")
+  a = connectionContext.getPaginatedResult("users", copy.deepcopy(paginatedParamValues), None)
+  print("Res:", a)
+
 objectStoreInstance.executeInsideConnectionContext(someFn)
 
 
 
-print("End of main.py")
+print("\nEnd of main.py")
 print("---------------------------------------")
 print("---------------------------------------")
 print("---------------------------------------")

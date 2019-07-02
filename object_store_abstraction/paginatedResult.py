@@ -1,6 +1,13 @@
 #Function to return paginated result for query
 from sortedcontainers import SortedDict
 
+def isValue(val):
+  if val is None:
+    return False
+  if len(val.strip())==0:
+    return False
+  return True
+
 def getPaginatedResult(
   list,
   outputFN,
@@ -11,7 +18,7 @@ def getPaginatedResult(
   filterFN
 ):
   pagesizemax = 100
-  if offset is None:
+  if not isValue(offset):
     offset = 0
   else:
     offset = int(offset)
@@ -24,7 +31,7 @@ def getPaginatedResult(
   if pagesize > pagesizemax:
     pagesize = pagesizemax
 
-  if query is not None:
+  if not isValue(query):
     origList = SortedDict(list)
     list = SortedDict()
     where_clauses = query.strip().upper().split(" ")
@@ -44,7 +51,7 @@ def getPaginatedResult(
     sortedKeys.append(cur)
 
   #Sort sortedKeys
-  if sort is not None:
+  if not isValue(sort):
     def getSortTuple(key):
       #sort keys are case sensitive
       kk = key.split(":")
