@@ -13,12 +13,16 @@ InvalidObjectStoreConfigUnknownTypeException = InvalidObjectStoreConfigUnknownTy
 class ObjectStoreConfigNotDictObjectExceptionClass(Exception):
   pass
 
-def _createObjectStoreInstanceTypeSpecified(type, configDICT, initFN, externalFns):
+def _createObjectStoreInstanceTypeSpecified(type, configDICT, initFN, externalFns, detailLogging):
   print("Using Object Store Type: " + type)
-  return initFN(configDICT, externalFns)
+  return initFN(configDICT, externalFns, detailLogging)
 
 #Based on applicaiton options create an instance of objectStore to be used
-def createObjectStoreInstance(objectStoreConfigDict, externalFns):
+def createObjectStoreInstance(
+  objectStoreConfigDict,
+  externalFns,
+  detailLogging=False  #True or False
+):
   if 'getCurDateTime' not in externalFns:
     raise Exception("createObjectStoreInstance - Must supply getCurDateTime externalFunction")
 
@@ -33,11 +37,11 @@ def createObjectStoreInstance(objectStoreConfigDict, externalFns):
   if "Type" not in objectStoreConfigDict:
     raise InvalidObjectStoreConfigMissingTypeException
   if objectStoreConfigDict["Type"] == "Memory":
-    return _createObjectStoreInstanceTypeSpecified("Memory", objectStoreConfigDict, ObjectStore_Memory, externalFns)
+    return _createObjectStoreInstanceTypeSpecified("Memory", objectStoreConfigDict, ObjectStore_Memory, externalFns, detailLogging)
   if objectStoreConfigDict["Type"] == "SQLAlchemy":
-    return _createObjectStoreInstanceTypeSpecified("SQLAlchemy", objectStoreConfigDict, ObjectStore_SQLAlchemy, externalFns)
+    return _createObjectStoreInstanceTypeSpecified("SQLAlchemy", objectStoreConfigDict, ObjectStore_SQLAlchemy, externalFns, detailLogging)
   if objectStoreConfigDict["Type"] == "SimpleFileStore":
-    return _createObjectStoreInstanceTypeSpecified("SimpleFileStore", objectStoreConfigDict, ObjectStore_SimpleFileStore, externalFns)
+    return _createObjectStoreInstanceTypeSpecified("SimpleFileStore", objectStoreConfigDict, ObjectStore_SimpleFileStore, externalFns, detailLogging)
 
   print("Trying to create object store type " + objectStoreConfigDict["Type"])
   raise InvalidObjectStoreConfigUnknownTypeException

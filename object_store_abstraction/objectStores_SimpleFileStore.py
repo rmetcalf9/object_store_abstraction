@@ -250,8 +250,8 @@ class ObjectStore_SimpleFileStore(ObjectStore):
   def setKnownObjectType(self, objectType):
     self.knownExistingObjectTypes[objectType] = True
 
-  def __init__(self, ConfigDict, externalFns):
-    super(ObjectStore_SimpleFileStore, self).__init__(externalFns)
+  def __init__(self, ConfigDict, externalFns, detailLogging):
+    super(ObjectStore_SimpleFileStore, self).__init__(externalFns, detailLogging)
 
     self.fileAccessLock = threading.Lock()
     self.knownExistingObjectTypes = {}

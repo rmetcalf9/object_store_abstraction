@@ -61,7 +61,6 @@ except:
 class ObjectStoreConnectionContext():
   #if object version is set to none object version checking is turned off
   # object version may be a number or a guid depending on store technology
-
   callsToStartTransaction = None
   def __init__(self):
     self.callsToStartTransaction = 0
@@ -207,7 +206,10 @@ class ObjectStoreConnectionContext():
 #Base class for object store
 class ObjectStore():
   externalFns = None
-  def __init__(self, externalFns):
+  detailLogging = False
+
+  def __init__(self, externalFns, detailLogging):
+    self.detailLogging = detailLogging
     if 'getPaginatedResult' in externalFns:
       raise Exception("getPaginatedResult is supplied in external functions - new version of objectstore dosen't require it")
     self.externalFns = externalFns

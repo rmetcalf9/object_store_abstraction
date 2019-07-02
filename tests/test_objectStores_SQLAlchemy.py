@@ -100,7 +100,7 @@ class test_objectStoresSQLAlchemy(testHelperSuperClass):
       print("Skipping SQLAlchemyTests")
       return
     def getObjFn(SQLAlchemy_LocalDBConfigDict):
-      obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns())
+      obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False)
       obj.resetDataForTest()
       return obj
     genericTests.runAllGenericTests(self, getObjFn, SQLAlchemy_LocalDBConfigDict)
@@ -110,9 +110,9 @@ class test_objectStoresSQLAlchemy(testHelperSuperClass):
     if SKIPSQLALCHEMYTESTS:
       print("Skipping SQLAlchemyTests")
       return
-    obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns())
+    obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False)
     obj.resetDataForTest()
-    obj2 = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict_withPrefix, self.getObjectStoreExternalFns())
+    obj2 = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict_withPrefix, self.getObjectStoreExternalFns(), detailLogging=False)
     obj2.resetDataForTest()
     differentPrefixesDontShareData(self, obj, obj2)
 
@@ -121,7 +121,7 @@ class test_objectStoresSQLAlchemy(testHelperSuperClass):
     if SKIPSQLALCHEMYTESTS:
       print("Skipping SQLAlchemyTests")
       return
-    obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns())
+    obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False)
     obj.resetDataForTest()
 
     def dbfn(storeConnection):
@@ -150,7 +150,7 @@ class test_objectStoresSQLAlchemy(testHelperSuperClass):
     if SKIPSQLALCHEMYTESTS:
       print("Skipping SQLAlchemyTests")
       return
-    obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns())
+    obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False)
     obj.resetDataForTest()
 
     def dbfn(storeConnection):
@@ -188,7 +188,34 @@ class test_objectStoresSQLAlchemy(testHelperSuperClass):
       print("Skipping SQLAlchemyTests")
       return
 
-    objectStoreType = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns())
+    objectStoreType = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False)
+    objectStoreType.resetDataForTest()
+    testClass = self
+
+
+    def dbfn(storeConnection):
+      addSampleRows(storeConnection, 5, 'yyYYyyy')
+      addSampleRows(storeConnection, 5, 'xxxxxxx', 5)
+      def outputFN(item):
+        return item[0]
+      paginatedParamValues = {
+        'offset': 0,
+        'pagesize': 10,
+        'query': 'dfgdbdfgfgfvfdgfd',
+        'sort': None
+      }
+      res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN)
+      expectedRes = []
+      assertCorrectPaginationResult(testClass, res, 0, 10, 0)
+      self.assertJSONStringsEqualWithIgnoredKeys(res['result'], expectedRes, [  ], msg='Wrong result')
+    objectStoreType.executeInsideConnectionContext(dbfn)
+
+  def test_detailLogging(self):
+    if SKIPSQLALCHEMYTESTS:
+      print("Skipping SQLAlchemyTests")
+      return
+
+    objectStoreType = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=True)
     objectStoreType.resetDataForTest()
     testClass = self
 

@@ -4,6 +4,7 @@ import pytz
 ##import datetime
 from dateutil.parser import parse
 import os
+import logging
 from .paginatedResult import getPaginatedResult
 
 from .makeDictJSONSerializable import getJSONtoPutInStore, getObjFromJSONThatWasPutInStore
@@ -272,8 +273,13 @@ class ObjectStore_SQLAlchemy(ObjectStore):
   objDataTable = None
   verTable = None
   objectPrefix = None
-  def __init__(self, ConfigDict, externalFns):
-    super(ObjectStore_SQLAlchemy, self).__init__(externalFns)
+  def __init__(self, ConfigDict, externalFns, detailLogging):
+    super(ObjectStore_SQLAlchemy, self).__init__(externalFns, detailLogging)
+
+    if detailLogging:
+      logging.basicConfig()
+      logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+
     if "connectionString" not in ConfigDict:
       raise ObjectStoreConfigError("APIAPP_OBJECTSTORECONFIG SQLAlchemy ERROR - Expected connectionString")
     if "objectPrefix" in ConfigDict:
