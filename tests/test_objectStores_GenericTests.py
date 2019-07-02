@@ -490,7 +490,7 @@ def t_getPaginatedResultsFiveRowsInOneHitWithPagesize(testClass, objectStoreType
       'offset': 0,
       'pagesize': 5,
       'query': '',
-      'sort': None
+      'sort': 'AA'
     }
     res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN)
     expectedRes = []
