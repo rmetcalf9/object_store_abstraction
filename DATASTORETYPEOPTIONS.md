@@ -25,6 +25,7 @@ Paramater passed as objectStoreConfigDict to createObjectStoreInstance
   "connectionString": "mysql+pymysql://saas_user_man_user:saas_user_man_testing_password@127.0.0.1:10103/saas_user_man_rad"
 }
 ```
+Add "objectPrefix" to prefix tables used.
 
 or sample environment variable setup
 ```
@@ -60,3 +61,5 @@ This module creates sessions as per https://boto3.amazonaws.com/v1/documentation
 Endpoint URL is used when testing with a local endpoint, if not the url to send it should be the text value "None"
 
 Access keys can be obtained following instructions here https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/SettingUp.DynamoWebService.html#SettingUp.DynamoWebService.GetCredentials
+
+Add "objectPrefix" to prefix tables used.

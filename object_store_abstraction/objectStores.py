@@ -1,6 +1,7 @@
 from .objectStores_Memory import ObjectStore_Memory
 from .objectStores_SQLAlchemy import ObjectStore_SQLAlchemy
 from .objectStores_SimpleFileStore import ObjectStore_SimpleFileStore
+from .objectStores_DynamoDB import ObjectStore_DynamoDB
 
 class InvalidObjectStoreConfigMissingTypeClass(Exception):
   pass
@@ -42,6 +43,8 @@ def createObjectStoreInstance(
     return _createObjectStoreInstanceTypeSpecified("SQLAlchemy", objectStoreConfigDict, ObjectStore_SQLAlchemy, externalFns, detailLogging)
   if objectStoreConfigDict["Type"] == "SimpleFileStore":
     return _createObjectStoreInstanceTypeSpecified("SimpleFileStore", objectStoreConfigDict, ObjectStore_SimpleFileStore, externalFns, detailLogging)
+  if objectStoreConfigDict["Type"] == "DynamoDB":
+    return _createObjectStoreInstanceTypeSpecified("DynamoDB", objectStoreConfigDict, ObjectStore_DynamoDB, externalFns, detailLogging)
 
   print("Trying to create object store type " + objectStoreConfigDict["Type"])
   raise InvalidObjectStoreConfigUnknownTypeException
