@@ -21,7 +21,7 @@ DynamoDB_LocalDBConfigDict = {
   "aws_access_key_id": "ACCESS_KEY",
   "aws_secret_access_key": "SECRET_KEY",
   "region_name": "eu-west-2",
-  "endpoint_url": "http://localhost:8000"
+  "endpoint_url": "http://localhost:10111"
 }
 DynamoDB_LocalDBConfigDict_withPrefix = copy.deepcopy(DynamoDB_LocalDBConfigDict)
 DynamoDB_LocalDBConfigDict_withPrefix["objectPrefix"] ="testPrefix"
