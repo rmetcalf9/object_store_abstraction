@@ -45,7 +45,11 @@ JSONString2 = {
 
 def runAllGenericTests(testClass, getObjFn, ConfigDict):
   curModuleName = globals()['__name__']
+  #globalsCopy = copy.deepcopy(globals())
+  globalsCopy = []
   for x in globals():
+    globalsCopy.append(x)
+  for x in globalsCopy:
     if x.startswith("t_"):
       #print("**********************************************************************")
       #print("    test " + x)

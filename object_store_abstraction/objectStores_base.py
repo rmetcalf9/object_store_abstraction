@@ -169,24 +169,24 @@ class ObjectStoreConnectionContext():
 
 
   def _saveJSONObject(self, objectType, objectKey, JSONString, objectVersion):
-    raise Exception('Not Overridden')
+    raise Exception('_saveJSONObject Not Overridden')
   def _removeJSONObject(self, objectType, objectKey, objectVersion, ignoreMissingObject):
-    raise Exception('Not Overridden')
+    raise Exception('_removeJSONObject Not Overridden')
   def _getObjectJSON(self, objectType, objectKey):
-    raise Exception('Not Overridden')
+    raise Exception('_getObjectJSON Not Overridden')
   def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
-    raise Exception('Not Overridden')
+    raise Exception('_getPaginatedResult Not Overridden')
 
   #should return a fresh transaction context
   def _startTransaction(self):
-    raise Exception('Not Overridden')
+    raise Exception('_startTransaction Not Overridden')
   def _commitTransaction(self):
-    raise Exception('Not Overridden')
+    raise Exception('_commitTransaction Not Overridden')
   def _rollbackTransaction(self):
-    raise Exception('Not Overridden')
+    raise Exception(' _rollbackTransaction Not Overridden')
 
   def _getAllRowsForObjectType(self, objectType, filterFN, outputFN, whereClauseText):
-    raise Exception('Not Implemented for this objectstore type')
+    raise Exception('_getAllRowsForObjectType Not Implemented for this objectstore type')
 
   #Optional override for closing the context
   def _close(self):
