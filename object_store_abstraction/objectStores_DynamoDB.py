@@ -6,6 +6,8 @@ from .paginatedResult import getPaginatedResult
 from boto3 import Session as AWSSession
 from botocore.config import Config
 from botocore import exceptions as botocoreexceptions
+from boto3.dynamodb.conditions import Key, Attr
+
 import logging
 from dateutil.parser import parse
 import pytz
@@ -34,6 +36,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
         raise SuppliedObjectVersionWhenCreatingException
       newObjectVersion = 1
 
+      jsonToStore = getJSONtoPutInStore(JSONString)
       response = self.objectStore.dynTable.put_item(
          Item={
               'objectType': objectType,
@@ -41,7 +44,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
               'objectVersion': newObjectVersion,
               'creationDate': curTime,
               'lastUpdateData': curTime,
-              'objectDICT': getJSONtoPutInStore(JSONString)
+              'objectDICT': jsonToStore
           }
       )
       return newObjectVersion
@@ -52,6 +55,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
       raise WrongObjectVersionException
     newObjectVersion = curObjectVersion + 1
 
+    jsonToStore = getJSONtoPutInStore(JSONString)
     response = self.objectStore.dynTable.update_item(
         Key={
             'objectType': objectType,
@@ -61,7 +65,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
         ExpressionAttributeValues={
             ':ov': newObjectVersion,
             ':lud': curTime,
-            ':od': getJSONtoPutInStore(JSONString)
+            ':od': jsonToStore
         },
         ReturnValues="UPDATED_NEW"
     )
@@ -126,14 +130,51 @@ class ConnectionContext(ObjectStoreConnectionContext):
     return self.__getTupleFromItem(response["Item"])
 
 
+  def __getAllRowsForObjectType(self, objectType, offset, pagesize):
+    response = {'LastEvaluatedKey': 'setToStartLoop'}
+    srcData = {}
+    numFetched = 0
+    fetching = True
+    while ('LastEvaluatedKey' in response) and (fetching == True):
+      response = self.objectStore.dynTable.query(
+          KeyConditionExpression=Key('objectType').eq(objectType),
+      )
+      for curItem in response['Items']:
+        if fetching:
+          numFetched = numFetched + 1
+          srcData[curItem['objectKey']] = self.__getTupleFromItem(curItem)
+          if offset != None: # allows this to work in non-pagination mode
+            if numFetched > (offset + pagesize): #Total caculation will be off when we don't go thorough entire dataset
+                                # but invalid figure will be always be one over as we fetch one past in all cases
+              fetching = False
+    return srcData
+
   def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
     #https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb.html?highlight=delete_item#paginators
-    raise Exception('TODO override dynmodb _getPaginatedResult')
+    srcData = self.__getAllRowsForObjectType(objectType, paginatedParamValues['offset'], paginatedParamValues['pagesize'])
+
+    #paginatedParamValues['query'],
+    #paginatedParamValues['offset'],
+    #paginatedParamValues['pagesize']
+
+    return getPaginatedResult(
+      list=srcData,
+      outputFN=outputFN,
+      offset=paginatedParamValues['offset'],
+      pagesize=paginatedParamValues['pagesize'],
+      query=paginatedParamValues['query'],
+      sort=paginatedParamValues['sort'],
+      filterFN=self._filterFN_basicTextInclusion
+    )
 
   def _getAllRowsForObjectType(self, objectType, filterFN, outputFN, whereClauseText):
-    raise Exception('TODO override dynmodb _getAllRowsForObjectType')
-
-
+    superObj = self.__getAllRowsForObjectType(objectType, None, None)
+    outputLis = []
+    for curKey in superObj:
+      if self._filterFN_basicTextInclusion(superObj[curKey], whereClauseText):
+        if filterFN(superObj[curKey], whereClauseText):
+          outputLis.append(superObj[curKey])
+    return list(map(outputFN, outputLis))
 
 # Class that will store objects
 class ObjectStore_DynamoDB(ObjectStore):

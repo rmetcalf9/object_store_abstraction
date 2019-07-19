@@ -203,6 +203,9 @@ class ObjectStoreConnectionContext():
     #  we also need to consider removing spaces from consideration
     return whereClauseText in str(item).upper()
 
+  def _filterFN_allowAll(self, item, whereClauseText):
+    return True
+
 #Base class for object store
 class ObjectStore():
   externalFns = None

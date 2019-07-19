@@ -191,9 +191,6 @@ class ConnectionContext(ObjectStoreConnectionContext):
 
     return self._INT_getTupleFromRow(firstRow)
 
-  def _INT_filterFn(self, item, whereClauseText):
-    return True
-
   def __getObjectTypeListFromDBUsingQuery(self, objectType, queryString, offset, pagesize):
     self.objectStore.detailLog('__getObjectTypeListFromDBUsingQuery')
     self.objectStore.detailLog('   objectType:' + str(objectType))
@@ -251,7 +248,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
       pagesize=paginatedParamValues['pagesize'],
       query=paginatedParamValues['query'],
       sort=paginatedParamValues['sort'],
-      filterFN=self._INT_filterFn
+      filterFN=self._filterFN_allowAll
     )
 
   def _getAllRowsForObjectType(self, objectType, filterFN, outputFN, whereClauseText):
