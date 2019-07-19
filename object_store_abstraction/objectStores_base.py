@@ -207,6 +207,13 @@ class ObjectStoreConnectionContext():
   def _filterFN_allowAll(self, item, whereClauseText):
     return True
 
+  #This won't work via a cache since not all objectTypes are read
+  def list_all_objectTypes(self):
+    return self._list_all_objectTypes()
+
+  def _list_all_objectTypes(self):
+    raise Exception('_list_all_objectTypes Not Overridden')
+
 #Base class for object store
 class ObjectStore():
   externalFns = None

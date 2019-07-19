@@ -13,6 +13,9 @@ from dateutil.parser import parse
 import pytz
 from .makeDictJSONSerializable import getJSONtoPutInStore, getObjFromJSONThatWasPutInStore
 
+def make_partition_key(objectType, objectKey):
+  return objectType + "_" + objectKey
+
 class ConnectionContext(ObjectStoreConnectionContext):
   objectStore = None
   def __init__(self, objectStore):
@@ -28,6 +31,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
     pass
 
   def _saveJSONObject(self, objectType, objectKey, JSONString, objectVersion):
+    partition_key = make_partition_key(objectType, objectKey)
     (curObjectDICT, curObjectVersion, curCreationDate, curLastUpdateDate, curObjectKey) = self._getObjectJSON(objectType, objectKey)
     curTime = self.objectStore.externalFns['getCurDateTime']().isoformat()
 
@@ -36,9 +40,11 @@ class ConnectionContext(ObjectStoreConnectionContext):
         raise SuppliedObjectVersionWhenCreatingException
       newObjectVersion = 1
 
+      self.objectStore.savingNewObject(objectType)
       jsonToStore = getJSONtoPutInStore(JSONString)
       response = self.objectStore.getTable(objectType).put_item(
          Item={
+              'partition_key': partition_key,
               'objectType': objectType,
               'objectKey': objectKey,
               'objectVersion': newObjectVersion,
@@ -58,8 +64,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
     jsonToStore = getJSONtoPutInStore(JSONString)
     response = self.objectStore.getTable(objectType).update_item(
         Key={
-            'objectType': objectType,
-            'objectKey': objectKey
+            'partition_key': partition_key
         },
         UpdateExpression="set objectVersion = :ov, lastUpdateData=:lud, objectDICT=:od",
         ExpressionAttributeValues={
@@ -83,6 +88,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
   def _removeJSONObject(self, objectType, objectKey, objectVersion, ignoreMissingObject):
     #Object version error only raised when not ignoring missing
     #https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Expressions.ConditionExpressions.html#Expressions.ConditionExpressions.AdvancedComparisons
+    partition_key = make_partition_key(objectType, objectKey)
     ConditionalExpression = None
     ExpressionAttributeValues = None
     if not ignoreMissingObject:
@@ -95,15 +101,13 @@ class ConnectionContext(ObjectStoreConnectionContext):
       if ConditionalExpression is None:
         response = self.objectStore.getTable(objectType).delete_item(
           Key={
-            'objectType': objectType,
-            'objectKey': objectKey
+            'partition_key': partition_key
           }
         )
       else:
         response = self.objectStore.getTable(objectType).delete_item(
           Key={
-            'objectType': objectType,
-            'objectKey': objectKey
+            'partition_key': partition_key
           },
           ConditionExpression=ConditionalExpression,
           ExpressionAttributeValues=ExpressionAttributeValues
@@ -117,11 +121,11 @@ class ConnectionContext(ObjectStoreConnectionContext):
   #Return value is objectDICT, ObjectVersion, creationDate, lastUpdateDate
   #Return None, None, None, None if object isn't in store
   def _getObjectJSON(self, objectType, objectKey):
+    partition_key = make_partition_key(objectType, objectKey)
 
     response = self.objectStore.getTable(objectType).get_item(
         Key={
-            'objectType': objectType,
-            'objectKey': objectKey
+            'partition_key': partition_key
         }
     )
     if "Item" not in response:
@@ -131,13 +135,15 @@ class ConnectionContext(ObjectStoreConnectionContext):
 
 
   def __getAllRowsForObjectType(self, objectType, offset, pagesize):
-    response = {'LastEvaluatedKey': 'setToStartLoop'}
     srcData = {}
+
+
+    response = {'LastEvaluatedKey': 'setToStartLoop'}
     numFetched = 0
     fetching = True
     while ('LastEvaluatedKey' in response) and (fetching == True):
-      response = self.objectStore.getTable(objectType).query(
-          KeyConditionExpression=Key('objectType').eq(objectType),
+      response = self.objectStore.getTable(objectType).scan(
+          FilterExpression=Key('partition_key').begins_with(objectType),
       )
       for curItem in response['Items']:
         if fetching:
@@ -147,6 +153,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
             if numFetched > (offset + pagesize): #Total caculation will be off when we don't go thorough entire dataset
                                 # but invalid figure will be always be one over as we fetch one past in all cases
               fetching = False
+
     return srcData
 
   def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
@@ -176,13 +183,53 @@ class ConnectionContext(ObjectStoreConnectionContext):
           outputLis.append(superObj[curKey])
     return list(map(outputFN, outputLis))
 
+  def _list_all_objectTypes_singleTableMode(self):
+    results = []
+    if not self.objectStore.singleTableModeObjectTypeCacheLoaded:
+      #Preform one full scan to readback all possible objectTypes
+      # If someone tells me how this can be avoided :) :) :)
+      self.objectStore.singleTableModeObjectTypeCacheLoaded = True
+      response = {'LastEvaluatedKey': 'setToStartLoop'}
+      while ('LastEvaluatedKey' in response):
+        #'xx param in getTable ignored in singleTableMode'
+        response = self.objectStore.getTable('xx').scan(
+        )
+        for curItem in response['Items']:
+          self.objectStore.savingNewObject(curItem['objectType'])
+
+    for x in self.objectStore.singleTableModeObjectTypeCache:
+      results.append(x)
+    return results
+
+  def _list_all_objectTypes_multiTableMode(self):
+    results = []
+    for x in self.objectStore.dynTables:
+      results.append(self.objectStore.dynTables[x]['name'])
+    return results
+
+  def _list_all_objectTypes(self):
+    if self.objectStore.singleTableMode:
+      return self._list_all_objectTypes_singleTableMode()
+    return self._list_all_objectTypes_multiTableMode()
+
 # Class that will store objects
 class ObjectStore_DynamoDB(ObjectStore):
   awsSession = None
   awsDynamodbClient = None
   objectPrefix = None
   dynTables = None
-  singleTableMode = False
+  singleTableMode = None
+
+  singleTableModeObjectTypeCache = None
+  singleTableModeObjectTypeCacheLoaded = None #Exactly one full table scan preformed
+
+  def savingNewObject(self, objectType):
+    #Called when an object type is NEWLY saved into the DB
+    # To allow us to cache if we are in singleTableMode
+    # meaning we will only have to do one full scan if we need to know
+    if self.singleTableMode:
+      self.singleTableModeObjectTypeCache[objectType] = objectType
+
 
   #Return a table for an objectype, creating it if required
   def getTable(self, objectType):
@@ -200,6 +247,10 @@ class ObjectStore_DynamoDB(ObjectStore):
 
   def __init__(self, configJSON, externalFns, detailLogging, type):
     super(ObjectStore_DynamoDB, self).__init__(externalFns, detailLogging, type)
+
+    self.singleTableModeObjectTypeCache = {}
+    self.singleTableModeObjectTypeCacheLoaded = False #Exactly one full table scan preformed
+
 
     logging.getLogger('boto3').setLevel(logging.CRITICAL)
     logging.getLogger('botocore').setLevel(logging.CRITICAL)
@@ -259,22 +310,14 @@ class ObjectStore_DynamoDB(ObjectStore):
         # Declare your Primary Key in the KeySchema argument
         KeySchema=[
             {
-                "AttributeName": "objectType",
+                "AttributeName": "partition_key",
                 "KeyType": "HASH"
-            },
-            {
-                "AttributeName": "objectKey",
-                "KeyType": "RANGE"
             }
         ],
         # Any attributes used in KeySchema or Indexes must be declared in AttributeDefinitions
         AttributeDefinitions=[
             {
-                "AttributeName": "objectType",
-                "AttributeType": "S"
-            },
-            {
-                "AttributeName": "objectKey",
+                "AttributeName": "partition_key",
                 "AttributeType": "S"
             }
         ],

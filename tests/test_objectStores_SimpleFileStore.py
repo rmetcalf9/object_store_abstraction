@@ -15,11 +15,12 @@ ConfigDict = {
 
 class objectStoresSimpleFileStore(testHelperSuperClass):
   def test_genericSimpleFileStoreTests(self):
-    def getObjFn(ConfigDict):
+    def getObjFn(ConfigDict, resetData = True):
       #print("AAA", ConfigDict)
       #self.AssertTrue(False);
       obj = undertest.ObjectStore_SimpleFileStore(ConfigDict, self.getObjectStoreExternalFns(), False, type='testSFS')
-      obj.resetDataForTest()
+      if resetData:
+        obj.resetDataForTest()
       # print("Test_SFS 23: Resetting")
       return obj
     genericTests.runAllGenericTests(self, getObjFn, ConfigDict)

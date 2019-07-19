@@ -56,6 +56,12 @@ class ConnectionContext(ObjectStoreConnectionContext):
       return objectTypeDict[objectKey]
     return None, None, None, None, None
 
+  def _list_all_objectTypes(self):
+    results = []
+    for x in self.objectStore.objectData:
+      results.append(x)
+    return results
+
   def __getAllRowsForObjectType(self, objectType):
     srcData = []
     if objectType in self.objectStore.objectData:

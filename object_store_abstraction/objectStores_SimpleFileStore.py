@@ -76,6 +76,16 @@ class ConnectionContextSimpleFileStorePrivateFns(ObjectStoreConnectionContext):
     self.objectStore.setKnownObjectType(objectType)
     return dirString
 
+  def _list_all_objectTypes(self):
+    self.objectStore.fileAccessLock.acquire()
+    lis = localScanDir(self.objectStore.baseLocation, OnlyReturnDirectories=True)
+    self.objectStore.fileAccessLock.release()
+    results = []
+    for x in lis:
+      if x.startswith(directoryNamePrefix):
+        results.append(getKeyFromFileSystemSafeString(x[1:]))
+    return results
+
   def getObjectFile(self, objectType, objectKey, createObjectDir):
     dirString = self.getObjectTypeDirectory(objectType, createObjectDir)
     if dirString is None:

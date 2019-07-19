@@ -1,5 +1,5 @@
 from .objectStores_base import ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, ObjectStoreConfigError, MissingTransactionContextException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException
-from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, ForeignKey, BigInteger, DateTime, JSON, func, UniqueConstraint, and_, Text
+from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, ForeignKey, BigInteger, DateTime, JSON, func, UniqueConstraint, and_, Text, select
 import pytz
 ##import datetime
 from dateutil.parser import parse
@@ -190,6 +190,23 @@ class ConnectionContext(ObjectStoreConnectionContext):
       raise Exception('_getObjectJSON Wrong number of rows returned for key')
 
     return self._INT_getTupleFromRow(firstRow)
+
+  def _list_all_objectTypes(self):
+    results = []
+
+    query = select([self.objectStore.objDataTable.c.type]).group_by(self.objectStore.objDataTable.c.type)
+    #print("QUERY:", query)
+    result = self._INT_execute(query)
+
+    fetching = True
+    while (fetching):
+      row = result.fetchone()
+      if row is None:
+        fetching = False
+      else:
+        results.append(row[0])
+
+    return results
 
   def __getObjectTypeListFromDBUsingQuery(self, objectType, queryString, offset, pagesize):
     self.objectStore.detailLog('__getObjectTypeListFromDBUsingQuery')

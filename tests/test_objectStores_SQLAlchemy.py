@@ -53,9 +53,10 @@ class test_objectStoresSQLAlchemy(objectStoresWithPrefix):
     if SKIPSQLALCHEMYTESTS:
       print("Skipping SQLAlchemyTests")
       return
-    def getObjFn(SQLAlchemy_LocalDBConfigDict):
+    def getObjFn(SQLAlchemy_LocalDBConfigDict, resetData = True):
       obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA')
-      obj.resetDataForTest()
+      if resetData:
+        obj.resetDataForTest()
       return obj
     genericTests.runAllGenericTests(self, getObjFn, SQLAlchemy_LocalDBConfigDict)
 

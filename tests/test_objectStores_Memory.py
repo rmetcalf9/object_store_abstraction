@@ -11,6 +11,6 @@ ConfigDict = {}
 
 class test_objectStoresMemory(testHelperSuperClass):
   def test_genericTests(self):
-    def getObjFn(ConfigDict):
+    def getObjFn(ConfigDict, resetData = True):
       return undertest.ObjectStore_Memory(ConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testMEM')
-    genericTests.runAllGenericTests(self, getObjFn, ConfigDict)
+    genericTests.runAllGenericTests(self, getObjFn, ConfigDict, expectPersistance=False)

@@ -43,9 +43,10 @@ class test_objectStoresDynamoDB(objectStoresWithPrefix):
     if SKIPSQLALCHEMYTESTS:
       print("Skipping SQLAlchemyTests")
       return
-    def getObjFn(DynamoDB_LocalDBConfigDict):
+    def getObjFn(DynamoDB_LocalDBConfigDict, resetData = True):
       obj = undertest.ObjectStore_DynamoDB(DynamoDB_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA')
-      obj.resetDataForTest()
+      if resetData:
+        obj.resetDataForTest()
       return obj
     genericTests.runAllGenericTests(self, getObjFn, DynamoDB_LocalDBConfigDict)
 
@@ -53,9 +54,10 @@ class test_objectStoresDynamoDB(objectStoresWithPrefix):
     if SKIPSQLALCHEMYTESTS:
       print("Skipping SQLAlchemyTests")
       return
-    def getObjFn(DynamoDB_LocalDBConfigDict):
+    def getObjFn(DynamoDB_LocalDBConfigDict, resetData = True):
       obj = undertest.ObjectStore_DynamoDB(DynamoDB_LocalDBConfigDict_multiTable, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA')
-      obj.resetDataForTest()
+      if resetData:
+        obj.resetDataForTest()
       return obj
     genericTests.runAllGenericTests(self, getObjFn, DynamoDB_LocalDBConfigDict_multiTable)
 

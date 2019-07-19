@@ -42,15 +42,33 @@ JSONString2 = {
   #'listOfBytes': [b'abc1', b'abc2']
 }
 
+persistanceTestList = ["tt_listAllObjectTypes_MutipleTypesSaveAndLoad"]
 
-def runAllGenericTests(testClass, getObjFn, ConfigDict):
+
+def isThisTestToRun(nam, expectPersistance, reqObjCon):
+  ##print("nam:", nam, ":", expectPersistance)
+  if nam in persistanceTestList:
+    if not expectPersistance:
+      return False
+  if nam.startswith("t_"):
+    return not reqObjCon
+  if nam.startswith("tt_"):
+    return reqObjCon
+  return False
+
+def runAllGenericTests(testClass, getObjFn, ConfigDict, expectPersistance=True):
   curModuleName = globals()['__name__']
+
+
   #globalsCopy = copy.deepcopy(globals())
   globalsCopy = []
+  testsRequiringObjConsturctor = []
   for x in globals():
-    globalsCopy.append(x)
+    if isThisTestToRun(x, expectPersistance, False):
+      globalsCopy.append(x)
+    elif isThisTestToRun(x, expectPersistance, True):
+      testsRequiringObjConsturctor.append(x)
   for x in globalsCopy:
-    if x.startswith("t_"):
       #print("**********************************************************************")
       #print("    test " + x)
       #print("**********************************************************************")
@@ -58,6 +76,9 @@ def runAllGenericTests(testClass, getObjFn, ConfigDict):
       obj = getObjFn(ConfigDict)
       test_fn(testClass, obj)
       #print("")
+  for x in testsRequiringObjConsturctor:
+      test_fn = globals()[x]
+      test_fn(testClass, getObjFn, ConfigDict)
 
 #*************************************
 #   SaveJSONObject Tests
@@ -716,3 +737,62 @@ def t_getAllRowsForObjectType_FilterByWhereClause(testClass, objectStoreType):
 
     testClass.assertEqual(actualResSorted, expectedRes)
   objectStoreType.executeInsideConnectionContext(dbfn)
+
+
+def t_listAllObjectTypes_ZeroTypes(testClass, objectStoreType):
+  def dbfn(storeConnection):
+    objTypes = storeConnection.list_all_objectTypes()
+    testClass.assertEqual(len(objTypes),0,'Returned objectTypes when there should not be any')
+
+  objectStoreType.executeInsideTransaction(dbfn)
+
+
+def t_listAllObjectTypes_MutipleTypes(testClass, objectStoreType):
+  def dbfn(storeConnection):
+    xres = storeConnection.saveJSONObject("Test1", "123", {"S":12}, None)
+    xres = storeConnection.saveJSONObject("Test1", "124", {"S":12}, None)
+    xres = storeConnection.saveJSONObject("Test2", "123", {"S":12}, None)
+    xres = storeConnection.saveJSONObject("Test3", "123", {"S":12}, None)
+    xres = storeConnection.saveJSONObject("Test4", "123", {"S":12}, None)
+    xres = storeConnection.saveJSONObject("Test5", "123", {"S":12}, None)
+
+    objTypes = storeConnection.list_all_objectTypes()
+    expectedLis = ["Test1", "Test2", "Test3", "Test4", "Test5"]
+    if not objectsEqual(objTypes, expectedLis):
+      print("Got list:", objTypes)
+      print("Expected list:", expectedLis)
+      testClass.assertTrue(objectsEqual(objTypes, expectedLis), msg="Wrong result")
+
+  objectStoreType.executeInsideTransaction(dbfn)
+
+def tt_listAllObjectTypes_MutipleTypesSaveAndLoad(testClass, getObjFn, ConfigDict):
+  def dbfn(storeConnection):
+    xres = storeConnection.saveJSONObject("Test1", "123", {"S":12}, None)
+    xres = storeConnection.saveJSONObject("Test1", "124", {"S":12}, None)
+    xres = storeConnection.saveJSONObject("Test2", "123", {"S":12}, None)
+    xres = storeConnection.saveJSONObject("Test3", "123", {"S":12}, None)
+    xres = storeConnection.saveJSONObject("Test4", "123", {"S":12}, None)
+    xres = storeConnection.saveJSONObject("Test5", "123", {"S":12}, None)
+
+    objTypes = storeConnection.list_all_objectTypes()
+    expectedLis = ["Test1", "Test2", "Test3", "Test4", "Test5"]
+    if not objectsEqual(objTypes, expectedLis):
+      print("Got list:", objTypes)
+      print("Expected list:", expectedLis)
+      testClass.assertTrue(objectsEqual(objTypes, expectedLis), msg="Wrong result")
+
+  obj1 = getObjFn(ConfigDict, resetData=True)
+  obj1.executeInsideTransaction(dbfn)
+  obj1 = None
+
+
+  def dbfn(storeConnection):
+    objTypes = storeConnection.list_all_objectTypes()
+    expectedLis = ["Test1", "Test2", "Test3", "Test4", "Test5"]
+    if not objectsEqual(objTypes, expectedLis):
+      print("Got list:", objTypes)
+      print("Expected list:", expectedLis)
+      testClass.assertTrue(objectsEqual(objTypes, expectedLis), msg="Object list not retrived on DB reload")
+
+  obj2 = getObjFn(ConfigDict, resetData=False)
+  obj2.executeInsideTransaction(dbfn)
