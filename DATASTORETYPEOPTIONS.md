@@ -1,6 +1,6 @@
 # Datastore type option
 
-This page explains the options availiable for different datastore types.
+This page explains the options available for different datastore types.
 
 # Memory Datastore
 

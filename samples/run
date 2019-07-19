@@ -1,0 +1,171 @@
+#!/usr/bin/python3
+import os
+import sys
+import json
+import datetime
+import pytz
+from object_store_abstraction import createObjectStoreInstance, TryingToCreateExistingObjectExceptionClass
+
+configs = []
+for f in os.listdir("./datastore_configs"):
+  if os.path.isfile("./datastore_configs/" + f):
+    configs.append({
+      "shortName": f,
+      "full": "./datastore_configs/" + f
+    })
+
+datasets = []
+for f in os.listdir("./sample_data"):
+  if os.path.isfile("./sample_data/" + f):
+    datasets.append({
+      "shortName": f,
+      "full": "./sample_data/" + f
+    })
+
+commands = []
+
+print("Start of " + sys.argv[0])
+
+def getCurDateTime():
+  return datetime.datetime.now(pytz.timezone("UTC"))
+
+def userSelectOptionFromList(prompt, list, dispItem):
+  if len(list)==0:
+    raise Exception("No items to select from")
+  if len(list)==1:
+    return 0
+  print(prompt)
+  for n in range(len(list)):
+    print(n, ":", list[n][dispItem])
+
+  num = int(input())
+
+  valid = False
+  if num > -1:
+    if num < len(list):
+      valid = True
+
+  if not valid:
+    raise Exception("Invalid selection")
+
+  return num
+
+def getAnObjectStoreFromUser(prompt):
+  selectedConfig = userSelectOptionFromList(prompt, configs, "shortName")
+
+  f=open(configs[selectedConfig]["full"], "r")
+  objectStoreConfigDict =  json.loads(f.read())
+  f.close()
+
+  print("Creating object store...")
+
+  fns = {
+    'getCurDateTime': getCurDateTime
+  }
+  objectStore = createObjectStoreInstance(
+    objectStoreConfigDict,
+    fns,
+    detailLogging=False
+  )
+  return objectStore
+
+def getADataset(prompt):
+  selectedDataset = userSelectOptionFromList(prompt, datasets, "shortName")
+  data = []
+  f=open(datasets[selectedDataset]["full"], "r")
+  dateLines = f.readlines()
+  f.close()
+  for x in dateLines:
+    data.append(json.loads(x))
+  return data
+
+def writeLines():
+  store = getAnObjectStoreFromUser("Select object store to use")
+  dataSet = getADataset("Select dataset to test")
+
+  def dbfn(storeConnection):
+    lineNum = 0
+    for x in dataSet:
+      lineNum = lineNum + 1
+      print("Writing ", x)
+      try:
+        key = "L:" + str(x).strip()
+        storeConnection.saveJSONObject("lines", key, {'key':key, 'data': x})
+      except TryingToCreateExistingObjectExceptionClass:
+        print("  Skipping - already exists")
+  a = store.executeInsideTransaction(dbfn)
+
+  print("Done writing now reading...")
+
+  def dbfn2(storeConnection):
+    return storeConnection.getAllRowsForObjectType("lines", filterFN=None, outputFN=None, whereClauseText=None)
+  lis = store.executeInsideTransaction(dbfn2)
+  for x in lis:
+    print(x)
+
+  print("Done")
+
+commands.append({
+  'Name': 'Write text file and read back',
+  'fn': writeLines
+})
+
+def readLines():
+  store = getAnObjectStoreFromUser("Select object store to use")
+
+  print("Reading lines...")
+
+  def dbfn2(storeConnection):
+    return storeConnection.getAllRowsForObjectType("lines", filterFN=None, outputFN=None, whereClauseText=None)
+  lis = store.executeInsideTransaction(dbfn2)
+  for x in lis:
+    print(x)
+
+  print("Done")
+
+commands.append({
+  'Name': 'Read text file and read back',
+  'fn': readLines
+})
+
+def deleteLines():
+  store = getAnObjectStoreFromUser("Select object store to use")
+
+  print("Deleting lines...")
+
+  def dbfn2(storeConnection):
+    lins = storeConnection.getAllRowsForObjectType("lines", filterFN=None, outputFN=None, whereClauseText=None)
+    for objectDICT, ObjectVersion, creationDate, lastUpdateDate in lins:
+      if "key" not in objectDICT:
+        print("Can't delete as line has no key:", objectDICT)
+      else:
+        storeConnection.removeJSONObject("lines", objectDICT["key"])
+  lis = store.executeInsideTransaction(dbfn2)
+
+  print("Done")
+
+commands.append({
+  'Name': 'Delete lines',
+  'fn': deleteLines
+})
+
+
+running = { 'val': True }
+
+def quit():
+  running['val'] = False
+
+commands.append({
+  'Name': 'Quit',
+  'fn': quit
+})
+
+
+
+while running['val']:
+  selectedCommand = userSelectOptionFromList("Select command to run:", commands, "Name")
+  commands[selectedCommand]["fn"]()
+
+
+print("End of " + sys.argv[0])
+exit(0)
