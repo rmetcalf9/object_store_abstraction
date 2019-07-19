@@ -21,10 +21,21 @@ DynamoDB_LocalDBConfigDict = {
   "aws_access_key_id": "ACCESS_KEY",
   "aws_secret_access_key": "SECRET_KEY",
   "region_name": "eu-west-2",
-  "endpoint_url": "http://localhost:10111"
+  "endpoint_url": "http://localhost:10111",
+  "single_table_mode": "true"
 }
 DynamoDB_LocalDBConfigDict_withPrefix = copy.deepcopy(DynamoDB_LocalDBConfigDict)
 DynamoDB_LocalDBConfigDict_withPrefix["objectPrefix"] ="testPrefix"
+
+
+DynamoDB_LocalDBConfigDict_multiTable = {
+  "Type": "DynamoDB",
+  "aws_access_key_id": "ACCESS_KEY",
+  "aws_secret_access_key": "SECRET_KEY",
+  "region_name": "eu-west-2",
+  "endpoint_url": "http://localhost:10111",
+  "single_table_mode": "false"
+}
 
 
 class test_objectStoresDynamoDB(objectStoresWithPrefix):
@@ -37,6 +48,16 @@ class test_objectStoresDynamoDB(objectStoresWithPrefix):
       obj.resetDataForTest()
       return obj
     genericTests.runAllGenericTests(self, getObjFn, DynamoDB_LocalDBConfigDict)
+
+  def test_genericTests_MultiTable(self):
+    if SKIPSQLALCHEMYTESTS:
+      print("Skipping SQLAlchemyTests")
+      return
+    def getObjFn(DynamoDB_LocalDBConfigDict):
+      obj = undertest.ObjectStore_DynamoDB(DynamoDB_LocalDBConfigDict_multiTable, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA')
+      obj.resetDataForTest()
+      return obj
+    genericTests.runAllGenericTests(self, getObjFn, DynamoDB_LocalDBConfigDict_multiTable)
 
   #Different prefixes don't share data
   def test_differentPrefixesDontShareData(self):

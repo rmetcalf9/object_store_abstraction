@@ -182,9 +182,15 @@ class ObjectStore_DynamoDB(ObjectStore):
   awsDynamodbClient = None
   objectPrefix = None
   dynTables = None
+  singleTableMode = False
 
   #Return a table for an objectype, creating it if required
   def getTable(self, objectType):
+    if self.singleTableMode:
+      return self.__getTable('xx')
+    return self.__getTable(objectType)
+
+  def __getTable(self, objectType):
     if objectType not in self.dynTables:
       self.__createTable(objectType)
     return self.dynTables[objectType]['dyn']
@@ -200,13 +206,23 @@ class ObjectStore_DynamoDB(ObjectStore):
     logging.getLogger('nose').setLevel(logging.CRITICAL)
     logging.getLogger('urllib3').setLevel(logging.CRITICAL)
 
-    requiredConfigItems = ['aws_access_key_id','aws_secret_access_key','region_name','endpoint_url']
+    requiredConfigItems = ['aws_access_key_id','aws_secret_access_key','region_name','endpoint_url', 'single_table_mode']
     for x in requiredConfigItems:
       if x not in configJSON:
         raise ObjectStoreConfigError("APIAPP_OBJECTSTORECONFIG DynamoDB ERROR - config param " + x + " missing")
     endpointURL = configJSON["endpoint_url"]
     if endpointURL.strip().upper() == "NONE":
       endpointURL = None
+
+    singleTableModeTT = configJSON["single_table_mode"].strip().upper()
+    if singleTableModeTT == "FALSE":
+      self.singleTableMode = False
+    else:
+      if singleTableModeTT.strip().upper() == "TRUE":
+        self.singleTableMode = True
+      else:
+        raise ObjectStoreConfigError("APIAPP_OBJECTSTORECONFIG DynamoDB ERROR - single_table_mode must be true or false")
+
 
     self.awsSession = AWSSession(
       aws_access_key_id=configJSON["aws_access_key_id"],

@@ -53,7 +53,8 @@ This module creates sessions as per https://boto3.amazonaws.com/v1/documentation
   "aws_access_key_id": "ACCESS_KEY",
   "aws_secret_access_key": "SECRET_KEY",
   "region_name": "eu-west-2",
-  "endpoint_url": "http://localhost:8000"
+  "endpoint_url": "http://localhost:8000",
+  "single_table_mode": "True"
 }
 ```
 (eu-west-2 = London)
