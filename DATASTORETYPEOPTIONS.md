@@ -64,3 +64,5 @@ Endpoint URL is used when testing with a local endpoint, if not the url to send 
 Access keys can be obtained following instructions here https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/SettingUp.DynamoWebService.html#SettingUp.DynamoWebService.GetCredentials
 
 Add "objectPrefix" to prefix tables used.
+
+single_table_mode should probably be set as there are only 256 tables per AWS account
