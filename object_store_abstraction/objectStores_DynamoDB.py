@@ -37,7 +37,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
       newObjectVersion = 1
 
       jsonToStore = getJSONtoPutInStore(JSONString)
-      response = self.objectStore.dynTable.put_item(
+      response = self.objectStore.getTable(objectType).put_item(
          Item={
               'objectType': objectType,
               'objectKey': objectKey,
@@ -56,7 +56,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
     newObjectVersion = curObjectVersion + 1
 
     jsonToStore = getJSONtoPutInStore(JSONString)
-    response = self.objectStore.dynTable.update_item(
+    response = self.objectStore.getTable(objectType).update_item(
         Key={
             'objectType': objectType,
             'objectKey': objectKey
@@ -93,14 +93,14 @@ class ConnectionContext(ObjectStoreConnectionContext):
       }
     try:
       if ConditionalExpression is None:
-        response = self.objectStore.dynTable.delete_item(
+        response = self.objectStore.getTable(objectType).delete_item(
           Key={
             'objectType': objectType,
             'objectKey': objectKey
           }
         )
       else:
-        response = self.objectStore.dynTable.delete_item(
+        response = self.objectStore.getTable(objectType).delete_item(
           Key={
             'objectType': objectType,
             'objectKey': objectKey
@@ -118,7 +118,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
   #Return None, None, None, None if object isn't in store
   def _getObjectJSON(self, objectType, objectKey):
 
-    response = self.objectStore.dynTable.get_item(
+    response = self.objectStore.getTable(objectType).get_item(
         Key={
             'objectType': objectType,
             'objectKey': objectKey
@@ -136,7 +136,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
     numFetched = 0
     fetching = True
     while ('LastEvaluatedKey' in response) and (fetching == True):
-      response = self.objectStore.dynTable.query(
+      response = self.objectStore.getTable(objectType).query(
           KeyConditionExpression=Key('objectType').eq(objectType),
       )
       for curItem in response['Items']:
@@ -181,7 +181,16 @@ class ObjectStore_DynamoDB(ObjectStore):
   awsSession = None
   awsDynamodbClient = None
   objectPrefix = None
-  dynTable = None
+  dynTables = None
+
+  #Return a table for an objectype, creating it if required
+  def getTable(self, objectType):
+    if objectType not in self.dynTables:
+      self.__createTable(objectType)
+    return self.dynTables[objectType]['dyn']
+
+  def getTableName(self, objectType):
+    return self.objectPrefix + '_objData_' + objectType
 
   def __init__(self, configJSON, externalFns, detailLogging, type):
     super(ObjectStore_DynamoDB, self).__init__(externalFns, detailLogging, type)
@@ -218,25 +227,19 @@ class ObjectStore_DynamoDB(ObjectStore):
 
     self.awsDynamodbClient = self.awsSession.resource('dynamodb', region_name=configJSON["region_name"], endpoint_url=endpointURL, config=config)
 
-    #This could prbally be more efficient
-    tblExists = False
+    self.dynTables = {}
     for x in self.awsDynamodbClient.tables.all():
-      if x.name == self.objectPrefix + '_objData':
-        tblExists = True
-
-    if not tblExists:
-      self.__createTable()
-
-    #existing_tables = self.awsDynamodbClient.list_tables()['TableNames']
-    #if self.objectPrefix + '_objData' not in existing_tables:
-    #  self.__createTable()
-
-    self.dynTable = self.awsDynamodbClient.Table(self.objectPrefix + '_objData')
+      if x.name.startswith(self.objectPrefix + '_objData_'):
+        objectType = x.name[len(self.objectPrefix + '_objData_'):]
+        self.dynTables[objectType] = {
+          'name': objectType,
+          'dyn': self.awsDynamodbClient.Table(self.getTableName(objectType))
+        }
 
 
-  def __createTable(self):
+  def __createTable(self, objectType):
     resp = self.awsDynamodbClient.create_table(
-        TableName=self.objectPrefix + '_objData',
+        TableName=self.getTableName(objectType),
         # Declare your Primary Key in the KeySchema argument
         KeySchema=[
             {
@@ -266,18 +269,19 @@ class ObjectStore_DynamoDB(ObjectStore):
             "WriteCapacityUnits": 1
         }
     )
+    self.dynTables[objectType] = {
+      'name': objectType,
+      'dyn': self.awsDynamodbClient.Table(self.getTableName(objectType))
+    }
 
 
     #Dict = (objDICT, objectVersion, creationDate, lastUpdateDate)
 
   def _resetDataForTest(self):
     def someFn(connectionContext):
-      self.dynTable.delete()
-      #resp = self.awsDynamodbClient.delete_table(
-      #    TableName=self.objectPrefix + '_objData'
-      #)
-      self.__createTable()
-      self.dynTable = self.awsDynamodbClient.Table(self.objectPrefix + '_objData')
+      for objectType in self.dynTables:
+        self.dynTables[objectType]['dyn'].delete()
+      self.dynTables = {}
     self.executeInsideTransaction(someFn)
 
   def _getConnectionContext(self):
