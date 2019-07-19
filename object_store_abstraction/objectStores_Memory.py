@@ -24,7 +24,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
       if objectVersion is not None:
         raise SuppliedObjectVersionWhenCreatingException
       newObjectVersion = 1
-      dictForObjectType[objectKey] = (JSONString, newObjectVersion, curTimeValue, curTimeValue)
+      dictForObjectType[objectKey] = (JSONString, newObjectVersion, curTimeValue, curTimeValue, objectKey)
     else:
       #We have found an object in the DB
       if objectVersion is None:
@@ -32,7 +32,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
       if str(objectVersion) != str(dictForObjectType[objectKey][1]):
         raise WrongObjectVersionException
       newObjectVersion = int(objectVersion) + 1
-    dictForObjectType[objectKey] = (JSONString, newObjectVersion, dictForObjectType[objectKey][2], curTimeValue)
+    dictForObjectType[objectKey] = (JSONString, newObjectVersion, dictForObjectType[objectKey][2], curTimeValue, objectKey)
     return newObjectVersion
 
   def _removeJSONObject(self, objectType, objectKey, objectVersion, ignoreMissingObject):
@@ -54,7 +54,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
     objectTypeDict = self.objectStore._INT_getDictForObjectType(objectType)
     if objectKey in objectTypeDict:
       return objectTypeDict[objectKey]
-    return None, None, None, None
+    return None, None, None, None, None
 
   def __getAllRowsForObjectType(self, objectType):
     srcData = []

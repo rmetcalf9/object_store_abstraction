@@ -85,10 +85,10 @@ class ConnectionContextSimpleFileStorePrivateFns(ObjectStoreConnectionContext):
   def getObjectJSONWithoutLock(self, objectType, objectKey):
     fileName = self.getObjectFile(objectType, objectKey, False)
     if fileName is None:
-      return None, None, None, None
+      return None, None, None, None, None
 
     if not os.path.exists(fileName):
-      return None, None, None, None
+      return None, None, None, None, None
 
     fileO = open(fileName, 'r')
     filecontent = fileO.read()
@@ -101,7 +101,7 @@ class ConnectionContextSimpleFileStorePrivateFns(ObjectStoreConnectionContext):
     creationDate = dt.astimezone(pytz.utc)
     dt = parse(filecontentDict["LastUpdate"])
     lastUpdateDate = dt.astimezone(pytz.utc)
-    return filecontentDict["Data"], filecontentDict["ObjVer"], creationDate, lastUpdateDate
+    return filecontentDict["Data"], filecontentDict["ObjVer"], creationDate, lastUpdateDate, objectKey
 
 
 class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
@@ -119,7 +119,7 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
     self.objectStore.fileAccessLock.acquire()
     curTimeValue = self.objectStore.externalFns['getCurDateTime']().isoformat()
 
-    (o_objectDICT, o_ObjectVersion, o_creationDate, o_lastUpdateDate) = self.getObjectJSONWithoutLock(objectType, objectKey)
+    (o_objectDICT, o_ObjectVersion, o_creationDate, o_lastUpdateDate, o_objectKey) = self.getObjectJSONWithoutLock(objectType, objectKey)
 
     newObjectVersion = None
     createDate = None
@@ -224,8 +224,8 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
         #print(otd + "/" + curFileName + "->" + getKeyFromFileSystemSafeString(curFileName))
         objectKey = getKeyFromFileSystemSafeString(curFileName)
         #print("OK:" + objectKey)
-        (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = self._getObjectJSON(objectType, objectKey)
-        collectedObjects[objectKey] = (objectDICT, ObjectVersion, creationDate, lastUpdateDate)
+        (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objKey) = self._getObjectJSON(objectType, objectKey)
+        collectedObjects[objectKey] = (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objKey)
 
     return collectedObjects
 

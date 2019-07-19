@@ -81,13 +81,13 @@ class test_objectStoresSQLAlchemy(objectStoresWithPrefix):
     def dbfn(storeConnection):
       #Test creation of record rollback works
       # _no data to start with
-      (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("Test", "1_123")
+      (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objKey) = storeConnection.getObjectJSON("Test", "1_123")
       self.assertJSONStringsEqualWithIgnoredKeys(objectDICT, None, [  ], msg='Object found before it was added')
 
       # insert data
       def someFn(connectionContext):
         connectionContext.saveJSONObject("Test", "1_123", JSONString, None)
-        (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = connectionContext.getObjectJSON("Test", "1_123")
+        (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objKey) = connectionContext.getObjectJSON("Test", "1_123")
         self.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString, [  ], msg='object never added')
         raise dummyException("rollback")
       try:
@@ -96,7 +96,7 @@ class test_objectStoresSQLAlchemy(objectStoresWithPrefix):
         pass
 
       # _no data after rolledback insert start with
-      (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("Test", "1_123")
+      (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objKey) = storeConnection.getObjectJSON("Test", "1_123")
       self.assertJSONStringsEqualWithIgnoredKeys(objectDICT, None, [  ], msg='Found but it should have rolled back')
 
     obj.executeInsideConnectionContext(dbfn)
@@ -111,19 +111,19 @@ class test_objectStoresSQLAlchemy(objectStoresWithPrefix):
       # insert data
       def someFn(connectionContext):
         objVer = connectionContext.saveJSONObject("Test", "1_123", JSONString, None)
-        (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = connectionContext.getObjectJSON("Test", "1_123")
+        (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objKey) = connectionContext.getObjectJSON("Test", "1_123")
         self.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString, [  ], msg='object not added')
         return objVer
       objVer = storeConnection.executeInsideTransaction(someFn)
 
       # _no data to start with
-      (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("Test", "1_123")
+      (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objKey) = storeConnection.getObjectJSON("Test", "1_123")
       self.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString, [  ], msg='Object found before it was added')
 
       # update data
       def someFn(connectionContext):
         connectionContext.saveJSONObject("Test", "1_123", JSONString2, objVer)
-        (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = connectionContext.getObjectJSON("Test", "1_123")
+        (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objKey) = connectionContext.getObjectJSON("Test", "1_123")
         self.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString2, [  ], msg='object not updated')
         raise dummyException("rollback")
       try:
@@ -132,7 +132,7 @@ class test_objectStoresSQLAlchemy(objectStoresWithPrefix):
         pass
 
       # Make sure data has revereted to origional value
-      (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("Test", "1_123")
+      (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objKey) = storeConnection.getObjectJSON("Test", "1_123")
       self.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString, [  ], msg='Did not roll back to previous value')
 
     obj.executeInsideConnectionContext(dbfn)

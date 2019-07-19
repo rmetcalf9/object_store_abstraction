@@ -28,7 +28,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
     pass
 
   def _saveJSONObject(self, objectType, objectKey, JSONString, objectVersion):
-    (curObjectDICT, curObjectVersion, curCreationDate, curLastUpdateDate) = self._getObjectJSON(objectType, objectKey)
+    (curObjectDICT, curObjectVersion, curCreationDate, curLastUpdateDate, curObjectKey) = self._getObjectJSON(objectType, objectKey)
     curTime = self.objectStore.externalFns['getCurDateTime']().isoformat()
 
     if curObjectDICT is None:
@@ -78,7 +78,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
     lastUpdateDate = dt.astimezone(pytz.utc)
     convertedObjectDICT = getObjFromJSONThatWasPutInStore(item['objectDICT'])
 
-    return convertedObjectDICT, item['objectVersion'], creationDate, lastUpdateDate
+    return convertedObjectDICT, item['objectVersion'], creationDate, lastUpdateDate, item['objectKey']
 
   def _removeJSONObject(self, objectType, objectKey, objectVersion, ignoreMissingObject):
     #Object version error only raised when not ignoring missing
@@ -125,7 +125,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
         }
     )
     if "Item" not in response:
-      return None, None, None, None
+      return None, None, None, None, None
 
     return self.__getTupleFromItem(response["Item"])
 

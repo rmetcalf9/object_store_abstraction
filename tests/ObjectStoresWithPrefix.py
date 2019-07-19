@@ -16,14 +16,14 @@ class objectStoresWithPrefix(testHelperSuperClass):
         storeConnection2.executeInsideTransaction(someFn2)
 
         for x in range(1,6):
-          (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("Test", "1_123" + str(x))
+          (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objKey) = storeConnection.getObjectJSON("Test", "1_123" + str(x))
           testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString, [  ], msg='Saved object dosen\'t match')
-          (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection2.getObjectJSON("Test", "1_123" + str(x))
+          (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objKey) = storeConnection2.getObjectJSON("Test", "1_123" + str(x))
           testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, None, [  ], msg='Saved object dosen\'t match')
 
-          (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection.getObjectJSON("Test", "2_123" + str(x))
+          (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objKey) = storeConnection.getObjectJSON("Test", "2_123" + str(x))
           testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, None, [  ], msg='Saved object dosen\'t match')
-          (objectDICT, ObjectVersion, creationDate, lastUpdateDate) = storeConnection2.getObjectJSON("Test", "2_123" + str(x))
+          (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objKey) = storeConnection2.getObjectJSON("Test", "2_123" + str(x))
           testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString, [  ], msg='Saved object dosen\'t match')
       objectStoreType2.executeInsideConnectionContext(dbfn2)
     objectStoreType.executeInsideConnectionContext(dbfn)

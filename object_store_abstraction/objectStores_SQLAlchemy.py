@@ -169,7 +169,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
     lastUpdateDate = dt.astimezone(pytz.utc)
     convertedObjectDICT = getObjFromJSONThatWasPutInStore(row['objectDICT'])
 
-    return convertedObjectDICT, row['objectVersion'], creationDate, lastUpdateDate
+    return convertedObjectDICT, row['objectVersion'], creationDate, lastUpdateDate, row['key']
 
 
   #Return value is objectDICT, ObjectVersion, creationDate, lastUpdateDate
@@ -185,7 +185,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
     result = self._INT_execute(query)
     firstRow = result.fetchone()
     if firstRow is None:
-      return None, None, None, None
+      return None, None, None, None, None
     if result.rowcount != 1:
       raise Exception('_getObjectJSON Wrong number of rows returned for key')
 

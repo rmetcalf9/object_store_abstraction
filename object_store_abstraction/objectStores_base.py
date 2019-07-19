@@ -118,7 +118,7 @@ class ObjectStoreConnectionContext():
   def updateJSONObject(self, objectType, objectKey, updateFn, objectVersion = None):
     self._INT_varifyWeCanMutateData()
 
-    obj, ver, creationDateTime, lastUpdateDateTime = self.getObjectJSON(objectType, objectKey)
+    obj, ver, creationDateTime, lastUpdateDateTime, objKey = self.getObjectJSON(objectType, objectKey)
     if objectVersion is None:
       #If object version is not supplied then assume update will not cause an error
       objectVersion = ver
@@ -129,8 +129,8 @@ class ObjectStoreConnectionContext():
       raise StoringNoneObjectAfterUpdateOperationException
     return self.saveJSONObject(objectType, objectKey, obj, objectVersion)
 
-  #Return value is objectDICT, ObjectVersion, creationDate, lastUpdateDate
-  #Return None, None, None, None if object isn't in store
+  #Return value is objectDICT, ObjectVersion, creationDate, lastUpdateDate, objectKey
+  #Return None, None, None, None, None if object isn't in store
   def getObjectJSON(self, objectType, objectKey):
     return self._getObjectJSON(objectType, objectKey)
 
@@ -156,6 +156,7 @@ class ObjectStoreConnectionContext():
     return self._getPaginatedResult(objectType, sanatizePaginatedParamValues(paginatedParamValues), outputFN)
 
   # filterFN is applied first, then outputFN
+  #  output fn is fed same params as getObjectJSON returns
   def getAllRowsForObjectType(self, objectType, filterFN, outputFN, whereClauseText):
     def defOutput(item):
       return item
