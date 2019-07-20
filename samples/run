@@ -149,6 +149,23 @@ commands.append({
   'fn': deleteLines
 })
 
+def showInfo():
+  store = getAnObjectStoreFromUser("Select object store to use")
+
+  def dbfn2(storeConnection):
+    objectTypes = storeConnection.list_all_objectTypes()
+    print("ObjectType")
+    for objectType in objectTypes:
+      print(objectType)
+    print("\n")
+    print("Total Object Types:", len(objectTypes))
+  store.executeInsideTransaction(dbfn2)
+
+
+commands.append({
+  'Name': 'Show info about data in a store',
+  'fn': showInfo
+})
 
 running = { 'val': True }
 
