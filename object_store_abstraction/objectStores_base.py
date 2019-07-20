@@ -58,6 +58,20 @@ except:
 
 '''
 
+#Utility output functions
+def outputFnJustKeys(item):
+  (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objectKey) = item
+  #print("objectDICT:", objectDICT)
+  #print("ObjectVersion:", ObjectVersion)
+  #print("creationDate:", creationDate)
+  #print("lastUpdateDate:", lastUpdateDate)
+  #print("objectKey:", objectKey)
+  return objectKey
+
+#Output a tuple of the 5 items
+def outputItems(item):
+  return item
+
 class ObjectStoreConnectionContext():
   #if object version is set to none object version checking is turned off
   # object version may be a number or a guid depending on store technology
@@ -149,19 +163,15 @@ class ObjectStoreConnectionContext():
   '''
 
   def getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
-    def defOutput(item):
-      return item
     if outputFN is None:
-      outputFN = defOutput
+      outputFN = outputItems
     return self._getPaginatedResult(objectType, sanatizePaginatedParamValues(paginatedParamValues), outputFN)
 
   # filterFN is applied first, then outputFN
   #  output fn is fed same params as getObjectJSON returns
   def getAllRowsForObjectType(self, objectType, filterFN, outputFN, whereClauseText):
-    def defOutput(item):
-      return item
     if outputFN is None:
-      outputFN = defOutput
+      outputFN = outputItems
     def defFilter(item, whereClauseText):
       return True
     if filterFN is None:
