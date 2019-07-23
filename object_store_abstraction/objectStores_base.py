@@ -69,7 +69,7 @@ def outputFnJustKeys(item):
   return objectKey
 
 #Output a tuple of the 5 items
-def outputItems(item):
+def outputFnItems(item):
   return item
 
 class ObjectStoreConnectionContext():
@@ -164,14 +164,14 @@ class ObjectStoreConnectionContext():
 
   def getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
     if outputFN is None:
-      outputFN = outputItems
+      outputFN = outputFnItems
     return self._getPaginatedResult(objectType, sanatizePaginatedParamValues(paginatedParamValues), outputFN)
 
   # filterFN is applied first, then outputFN
   #  output fn is fed same params as getObjectJSON returns
   def getAllRowsForObjectType(self, objectType, filterFN, outputFN, whereClauseText):
     if outputFN is None:
-      outputFN = outputItems
+      outputFN = outputFnItems
     def defFilter(item, whereClauseText):
       return True
     if filterFN is None:

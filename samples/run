@@ -1,93 +1,16 @@
 #!/usr/bin/python3
-import os
 import sys
-import json
-import datetime
-import pytz
-from object_store_abstraction import createObjectStoreInstance, TryingToCreateExistingObjectExceptionClass
 
-space = "                                 "
-
-
-configs = []
-for f in os.listdir("./datastore_configs"):
-  if os.path.isfile("./datastore_configs/" + f):
-    configs.append({
-      "shortName": f,
-      "full": "./datastore_configs/" + f
-    })
-
-datasets = []
-for f in os.listdir("./sample_data"):
-  if os.path.isfile("./sample_data/" + f):
-    datasets.append({
-      "shortName": f,
-      "full": "./sample_data/" + f
-    })
+import utils
 
 commands = []
 
 print("Start of " + sys.argv[0])
 
-def getCurDateTime():
-  return datetime.datetime.now(pytz.timezone("UTC"))
-
-def userSelectOptionFromList(prompt, list, dispItem):
-  if len(list)==0:
-    raise Exception("No items to select from")
-  if len(list)==1:
-    return 0
-  print(prompt)
-  for n in range(len(list)):
-    print(n, ":", list[n][dispItem])
-
-  inpL = input().strip().upper()
-  if inpL == "Q":
-    exit(0)
-  num = int(inpL)
-
-  valid = False
-  if num > -1:
-    if num < len(list):
-      valid = True
-
-  if not valid:
-    raise Exception("Invalid selection")
-
-  return num
-
-def getAnObjectStoreFromUser(prompt):
-  selectedConfig = userSelectOptionFromList(prompt, configs, "shortName")
-
-  f=open(configs[selectedConfig]["full"], "r")
-  objectStoreConfigDict =  json.loads(f.read())
-  f.close()
-
-  print("Creating object store...")
-
-  fns = {
-    'getCurDateTime': getCurDateTime
-  }
-  objectStore = createObjectStoreInstance(
-    objectStoreConfigDict,
-    fns,
-    detailLogging=False
-  )
-  return objectStore
-
-def getADataset(prompt):
-  selectedDataset = userSelectOptionFromList(prompt, datasets, "shortName")
-  data = []
-  f=open(datasets[selectedDataset]["full"], "r")
-  dateLines = f.readlines()
-  f.close()
-  for x in dateLines:
-    data.append(json.loads(x))
-  return data
 
 def writeLines():
-  store = getAnObjectStoreFromUser("Select object store to use")
-  dataSet = getADataset("Select dataset to test")
+  store = utils.getAnObjectStoreFromUser("Select object store to use")
+  dataSet = utils.getADataset("Select dataset to test")
 
   objectType = "lines"
   i = input("Enter objectType to use or blank for 'lines':")
@@ -122,12 +45,24 @@ commands.append({
 })
 
 def readLines():
-  store = getAnObjectStoreFromUser("Select object store to use")
+  store = utils.getAnObjectStoreFromUser("Select object store to use")
+
+  def dbfn2(storeConnection):
+    return storeConnection.list_all_objectTypes()
+  objectTypeList = store.executeInsideTransaction(dbfn2)
+
+  if len(objectTypeList) == 0:
+    print("No data in this store")
+    return
+  res = utils.userSelectOptionFromList("Which object type for you want to read?", objectTypeList, None)
+
+  objectType = objectTypeList[res]
 
   print("Reading lines...")
 
+
   def dbfn2(storeConnection):
-    return storeConnection.getAllRowsForObjectType("lines", filterFN=None, outputFN=None, whereClauseText=None)
+    return storeConnection.getAllRowsForObjectType(objectType, filterFN=None, outputFN=None, whereClauseText=None)
   lis = store.executeInsideTransaction(dbfn2)
   for x in lis:
     print(x)
@@ -140,17 +75,26 @@ commands.append({
 })
 
 def deleteLines():
-  store = getAnObjectStoreFromUser("Select object store to use")
+  store = utils.getAnObjectStoreFromUser("Select object store to use")
 
   print("Deleting lines...")
 
   def dbfn2(storeConnection):
-    lins = storeConnection.getAllRowsForObjectType("lines", filterFN=None, outputFN=None, whereClauseText=None)
-    for objectDICT, ObjectVersion, creationDate, lastUpdateDate in lins:
-      if "key" not in objectDICT:
-        print("Can't delete as line has no key:", objectDICT)
-      else:
-        storeConnection.removeJSONObject("lines", objectDICT["key"])
+    return storeConnection.list_all_objectTypes()
+  objectTypeList = store.executeInsideTransaction(dbfn2)
+
+  if len(objectTypeList) == 0:
+    print("No data in this store")
+    return
+  res = utils.userSelectOptionFromList("Which object type for you want to delete?", objectTypeList, None)
+
+  objectType = objectTypeList[res]
+
+
+  def dbfn2(storeConnection):
+    lins = storeConnection.getAllRowsForObjectType(objectType, filterFN=None, outputFN=None, whereClauseText=None)
+    for objectDICT, ObjectVersion, creationDate, lastUpdateDate, objectKey in lins:
+      storeConnection.removeJSONObject(objectType, objectKey)
   lis = store.executeInsideTransaction(dbfn2)
 
   print("Done")
@@ -160,24 +104,8 @@ commands.append({
   'fn': deleteLines
 })
 
-def outputFnJustKeys(item):
-  (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objectKey) = item
-  #print("objectDICT:", objectDICT)
-  #print("ObjectVersion:", ObjectVersion)
-  #print("creationDate:", creationDate)
-  #print("lastUpdateDate:", lastUpdateDate)
-  #print("objectKey:", objectKey)
-  return objectKey
-
-
-#This function is now in library I will remove it from here when library is updated
-def outputFnJustKeys(item):
-  (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objectKey) = item
-  return objectKey
-
-
 def showInfo():
-  store = getAnObjectStoreFromUser("Select object store to use")
+  store = utils.getAnObjectStoreFromUser("Select object store to use")
 
   def dbfn2(storeConnection):
     objectTypes = storeConnection.list_all_objectTypes()
@@ -202,150 +130,17 @@ commands.append({
 
 running = { 'val': True }
 
-def quit():
-  running['val'] = False
-
-commands.append({
-  'Name': 'Quit',
-  'fn': quit
-})
-
-def compareTwoStores():
-  storeL = getAnObjectStoreFromUser("Select Left Store to compare")
-  storeR = getAnObjectStoreFromUser("Select Right Store to compare")
-
-  print("Reading Data Store...")
-  def dbfn2(storeConnectionL):
-    def dbfn3(storeConnectionR):
-      data = []
-      objectTypesL = storeConnectionL.list_all_objectTypes()
-      objectTypesR = storeConnectionR.list_all_objectTypes()
-
-
-
-      for objectType in objectTypesL:
-        allKeysL = storeConnectionL.getAllRowsForObjectType(
-          objectType=objectType,
-          filterFN=None,
-          outputFN=outputFnJustKeys,
-          whereClauseText=None
-        )
-
-        stats = {
-          "Name        ": objectType,
-          "InLeft": True,
-          "InRight": False,
-          "t_RowsLeftOnly": -1,
-          "t_RowsRightOnly": -1,
-          "t_RowsBoth": -1,
-          "t_RowsLeft": len(allKeysL),
-          "t_RowsRight": -1
-        }
-        if objectType in objectTypesR:
-          stats["InRight"] = True
-          allKeysR = storeConnectionR.getAllRowsForObjectType(
-            objectType=objectType,
-            filterFN=None,
-            outputFN=outputFnJustKeys,
-            whereClauseText=None
-          )
-          stats["t_RowsLeftOnly"] = 0
-          stats["t_RowsRightOnly"] = 0
-          stats["t_RowsBoth"] = 0
-
-          for key in allKeysL:
-            if key in allKeysR:
-              stats["t_RowsBoth"] = stats["t_RowsBoth"] + 1
-            else:
-              stats["t_RowsLeftOnly"] = stats["t_RowsLeftOnly"] + 1
-
-          for key in allKeysR:
-            if key not in allKeysL:
-              stats["t_RowsRightOnly"] = stats["t_RowsRightOnly"] + 1
-
-          stats["t_RowsRight"] = len(allKeysR)
-
-        else:
-          stats["t_RowsLeftOnly"] = len(allKeysL)
-          stats["t_RowsRightOnly"] = 0
-          stats["t_RowsBoth"] = 0
-          stats["t_RowsRight"] = 0
-
-        data.append(stats)
-
-      #Add objectTypes in Right not left
-      for objectType in objectTypesR:
-        if objectType not in objectTypesL:
-          #Not covered
-          allKeysR = storeConnectionL.getAllRowsForObjectType(
-            objectType=objectType,
-            filterFN=None,
-            outputFN=outputFnJustKeys,
-            whereClauseText=None
-          )
-          stats = {
-            "Name        ": objectType,
-            "InLeft": False,
-            "InRight": True,
-            "t_RowsLeftOnly": 0,
-            "t_RowsRightOnly": len(allKeysR),
-            "t_RowsBoth": 0,
-            "t_RowsLeft": 0,
-            "t_RowsRight": len(allKeysR)
-          }
-          data.append(stats)
-
-      return data
-    return storeR.executeInsideTransaction(dbfn3)
-  data = storeL.executeInsideTransaction(dbfn2)
-
-  print("\n")
-  if len(data)==0:
-    print("No Data")
-    return
-
-  print("Left is ", storeL.type)
-  print("Right is ", storeR.type)
-
-
-  keysInOrder = [
-    "Name        ",
-    "InLeft",
-    "t_RowsLeft",
-    "t_RowsLeftOnly",
-    "t_RowsBoth",
-    "t_RowsRightOnly",
-    "t_RowsRight",
-    "InRight"
-  ]
-
-  for k in keysInOrder:
-    print(k, end="")
-    print(" ", end="")
-  print("")
-  for k in keysInOrder:
-    for x in range(len(k)):
-      print("-", end="")
-    print(" ", end="")
-  print("")
-
-  for x in data:
-    for k in keysInOrder:
-      print((str(x[k]) + space)[:len(k)] + " ", end="")
-    print("")
-
-  print("---\n")
-
-
-commands.append({
-  'Name': 'Compare Two Stores',
-  'fn': compareTwoStores
-})
+from cmdCompareTwoStores import getCommand as compareTwoStores_getCommand
+commands.append(compareTwoStores_getCommand())
+from cmdCaculateMigrationPercentage import getCommand as cmdCaculateMigrationPercentage_getCommand
+commands.append(cmdCaculateMigrationPercentage_getCommand())
+from cmdPreformMigration import getCommand as cmdPreformMigration_getCommand
+commands.append(cmdPreformMigration_getCommand())
 
 
 
 while running['val']:
-  selectedCommand = userSelectOptionFromList("Select command to run:", commands, "Name")
+  selectedCommand = utils.userSelectOptionFromList("Select command to run (q to quit):", commands, "Name")
   commands[selectedCommand]["fn"]()
 
 
