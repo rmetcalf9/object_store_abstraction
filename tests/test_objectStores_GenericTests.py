@@ -451,19 +451,19 @@ def t_removeObjectOnlyRemovesKeyOfSameObjectType(testClass, objectStoreType):
 #   getPaginatedResult Tests
 #*************************************
 
-def addSampleRows2(storeConnection, numRows, bbStringFN, offset=0):
+def addSampleRows2(storeConnection, numRows, bbStringFN, offset=0, objectType="Test1"):
   def someFn(connectionContext):
     for x in range(offset,numRows + offset):
       toInsert = copy.deepcopy(JSONString)
       toInsert['AA'] = x
       toInsert['BB'] = bbStringFN(x)
-      xres = connectionContext.saveJSONObject("Test1", "123" + str(x), toInsert, None)
+      xres = connectionContext.saveJSONObject(objectType, "123" + str(x), toInsert, None)
   storeConnection.executeInsideTransaction(someFn)
 
-def addSampleRows(storeConnection, numRows, bbString='BB', offset=0):
+def addSampleRows(storeConnection, numRows, bbString='BB', offset=0, objectType="Test1"):
   def bbStringFN(x):
     return bbString
-  addSampleRows2(storeConnection, numRows, bbStringFN, offset)
+  addSampleRows2(storeConnection, numRows, bbStringFN, offset, objectType)
 
 def assertCorrectPaginationResult(testClass, result, expectedOffset, expectedPageSize, expectedTotal):
   testClass.assertEqual(result['pagination']['offset'], expectedOffset, msg='Wrong offset in pagination')
