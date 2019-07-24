@@ -69,13 +69,13 @@ single_table_mode should probably be set as there are only 256 tables per AWS ac
 
 # Migrating Datastore
 
-This is a special datastore type which allows data to be live migrated from one data store to another. Two stores are specified and both are connected to. All data reads are produced from the "From" store. All save and remove operations are propergated to both "From" and "To" data stores. This means the following process can be used in doing a migration:
+This is a special datastore type which allows data to be live migrated from one data store to another. Two stores are specified and both are connected to. All data reads are produced from the "From" store. All save and remove operations are propagated to both "From" and "To" data stores. This means the following process can be used in doing a migration:
 
-1. To start with the microservice is running connected to data store A
+1. To start with the micro-service is running connected to data store A
 2. New empty data store B is setup
-3. New version of microservice is deployed in migrating mode with A set as the From store and B set as the to store.
+3. New version of micro-service is deployed in migrating mode with A set as the From store and B set as the to store.
 4. While the new version is running a one off migration job is run which migrates all data. Due to the fact that the system is running in Migrating mode when this job completes data store B is always kept with the most up to date version of the dataset.
-5. A second new version of the microservice is deployed connected to data store B
+5. A second new version of the micro-service is deployed connected to data store B
 
 ```
 {
@@ -86,4 +86,10 @@ This is a special datastore type which allows data to be live migrated from one 
 ```
 
 ## Migration job
-TODO Document migration job
+
+Depending on the datastores used, the amount of data, and other considerations different methods to migrate the data can be used.
+
+ - Migration via app that uses object store - if it has a function to load and resave all records this should effect the migration.
+ - Manual extract of data from the origin store and upload to the target.
+ - Run utility in samples which will preforma a migration. This is a little brittle as it loads all object keys into memory before doing the migration so will not work on larger data sizes.
+ - Develop passive migration program which stays online for a while and migrates records one by one in a throttled manor.
