@@ -66,3 +66,24 @@ Access keys can be obtained following instructions here https://docs.aws.amazon.
 Add "objectPrefix" to prefix tables used.
 
 single_table_mode should probably be set as there are only 256 tables per AWS account
+
+# Migrating Datastore
+
+This is a special datastore type which allows data to be live migrated from one data store to another. Two stores are specified and both are connected to. All data reads are produced from the "From" store. All save and remove operations are propergated to both "From" and "To" data stores. This means the following process can be used in doing a migration:
+
+1. To start with the microservice is running connected to data store A
+2. New empty data store B is setup
+3. New version of microservice is deployed in migrating mode with A set as the From store and B set as the to store.
+4. While the new version is running a one off migration job is run which migrates all data. Due to the fact that the system is running in Migrating mode when this job completes data store B is always kept with the most up to date version of the dataset.
+5. A second new version of the microservice is deployed connected to data store B
+
+```
+{
+  "Type": "Migrating",
+  "From": {**},
+  "To": {**}
+}
+```
+
+## Migration job
+TODO Document migration job
