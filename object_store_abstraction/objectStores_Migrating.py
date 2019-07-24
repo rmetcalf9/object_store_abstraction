@@ -43,6 +43,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
     return self.fromContext._saveJSONObject(objectType, objectKey, JSONString, objectVersion)
 
   def _removeJSONObject(self, objectType, objectKey, objectVersion, ignoreMissingObject):
+    to_objectDICT = None
     to_objectDICT, to_ObjectVersion, to_creationDate, to_lastUpdateDate, to_objectKey = self.toContext._getObjectJSON(objectType, objectKey)
     if to_objectDICT is not None:
       #no need to remove from to stroe if it is not in tostore
