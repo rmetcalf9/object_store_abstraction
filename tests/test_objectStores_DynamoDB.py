@@ -44,7 +44,7 @@ class test_objectStoresDynamoDB(objectStoresWithPrefix):
       print("Skipping SQLAlchemyTests")
       return
     def getObjFn(DynamoDB_LocalDBConfigDict, resetData = True):
-      obj = undertest.ObjectStore_DynamoDB(DynamoDB_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA')
+      obj = undertest.ObjectStore_DynamoDB(DynamoDB_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA', factoryFn=undertest.createObjectStoreInstance)
       if resetData:
         obj.resetDataForTest()
       return obj
@@ -55,7 +55,7 @@ class test_objectStoresDynamoDB(objectStoresWithPrefix):
       print("Skipping SQLAlchemyTests")
       return
     def getObjFn(DynamoDB_LocalDBConfigDict, resetData = True):
-      obj = undertest.ObjectStore_DynamoDB(DynamoDB_LocalDBConfigDict_multiTable, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA')
+      obj = undertest.ObjectStore_DynamoDB(DynamoDB_LocalDBConfigDict_multiTable, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA', factoryFn=undertest.createObjectStoreInstance)
       if resetData:
         obj.resetDataForTest()
       return obj
@@ -66,9 +66,9 @@ class test_objectStoresDynamoDB(objectStoresWithPrefix):
     if SKIPSQLALCHEMYTESTS:
       print("Skipping SQLAlchemyTests")
       return
-    obj = undertest.ObjectStore_DynamoDB(DynamoDB_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA')
+    obj = undertest.ObjectStore_DynamoDB(DynamoDB_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA', factoryFn=undertest.createObjectStoreInstance)
     obj.resetDataForTest()
-    obj2 = undertest.ObjectStore_DynamoDB(DynamoDB_LocalDBConfigDict_withPrefix, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA')
+    obj2 = undertest.ObjectStore_DynamoDB(DynamoDB_LocalDBConfigDict_withPrefix, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA', factoryFn=undertest.createObjectStoreInstance)
     obj2.resetDataForTest()
     self.differentPrefixesDontShareData(self, obj, obj2)
 
@@ -78,7 +78,7 @@ class test_objectStoresDynamoDB(objectStoresWithPrefix):
         print("Skipping SQLAlchemyTests")
         return
 
-      objectStoreType = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA')
+      objectStoreType = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA', factoryFn=undertest.createObjectStoreInstance)
       objectStoreType.resetDataForTest()
       testClass = self
 

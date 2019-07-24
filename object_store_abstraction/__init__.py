@@ -24,6 +24,7 @@ from .objectStores_SQLAlchemy import ObjectStore_SQLAlchemy
 from .objectStores_Memory import ObjectStore_Memory
 from .objectStores_SimpleFileStore import ObjectStore_SimpleFileStore
 from .objectStores_DynamoDB import ObjectStore_DynamoDB
+from .objectStores_Migrating import ObjectStore_Migrating
 
 from ._version import get_versions
 __version__ = get_versions()['version']

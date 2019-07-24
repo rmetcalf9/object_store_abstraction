@@ -54,7 +54,7 @@ class test_objectStoresSQLAlchemy(objectStoresWithPrefix):
       print("Skipping SQLAlchemyTests")
       return
     def getObjFn(SQLAlchemy_LocalDBConfigDict, resetData = True):
-      obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA')
+      obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA', factoryFn=undertest.createObjectStoreInstance)
       if resetData:
         obj.resetDataForTest()
       return obj
@@ -65,9 +65,9 @@ class test_objectStoresSQLAlchemy(objectStoresWithPrefix):
     if SKIPSQLALCHEMYTESTS:
       print("Skipping SQLAlchemyTests")
       return
-    obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA')
+    obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA', factoryFn=undertest.createObjectStoreInstance)
     obj.resetDataForTest()
-    obj2 = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict_withPrefix, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA')
+    obj2 = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict_withPrefix, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA', factoryFn=undertest.createObjectStoreInstance)
     obj2.resetDataForTest()
     self.differentPrefixesDontShareData(self, obj, obj2)
 
@@ -76,7 +76,7 @@ class test_objectStoresSQLAlchemy(objectStoresWithPrefix):
     if SKIPSQLALCHEMYTESTS:
       print("Skipping SQLAlchemyTests")
       return
-    obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA')
+    obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA', factoryFn=undertest.createObjectStoreInstance)
     obj.resetDataForTest()
 
     def dbfn(storeConnection):
@@ -105,7 +105,7 @@ class test_objectStoresSQLAlchemy(objectStoresWithPrefix):
     if SKIPSQLALCHEMYTESTS:
       print("Skipping SQLAlchemyTests")
       return
-    obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA')
+    obj = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA', factoryFn=undertest.createObjectStoreInstance)
     obj.resetDataForTest()
 
     def dbfn(storeConnection):
@@ -143,7 +143,7 @@ class test_objectStoresSQLAlchemy(objectStoresWithPrefix):
       print("Skipping SQLAlchemyTests")
       return
 
-    objectStoreType = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA')
+    objectStoreType = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA', factoryFn=undertest.createObjectStoreInstance)
     objectStoreType.resetDataForTest()
     testClass = self
 
@@ -170,7 +170,7 @@ class test_objectStoresSQLAlchemy(objectStoresWithPrefix):
       print("Skipping SQLAlchemyTests")
       return
 
-    objectStoreType = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=True, type='testSQLA')
+    objectStoreType = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=True, type='testSQLA', factoryFn=undertest.createObjectStoreInstance)
     objectStoreType.resetDataForTest()
     testClass = self
 

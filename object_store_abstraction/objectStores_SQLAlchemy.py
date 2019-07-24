@@ -291,7 +291,7 @@ class ObjectStore_SQLAlchemy(ObjectStore):
   objDataTable = None
   verTable = None
   objectPrefix = None
-  def __init__(self, ConfigDict, externalFns, detailLogging, type):
+  def __init__(self, ConfigDict, externalFns, detailLogging, type, factoryFn):
     super(ObjectStore_SQLAlchemy, self).__init__(externalFns, detailLogging, type)
 
     if detailLogging:

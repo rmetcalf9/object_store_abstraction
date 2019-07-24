@@ -69,7 +69,7 @@ def getAnObjectStoreFromUser(
 
 
   if giveUserOptionToReturnTwoObjectStoresIfItIsMigrateType:
-    if objectStoreConfigDict["Type"]=="Migrate":
+    if objectStoreConfigDict["Type"]=="Migrating":
       objectStoreFromDict = objectStoreConfigDict["From"]
       objectStoreToDict = objectStoreConfigDict["To"]
       print("Creating FROM object store...")

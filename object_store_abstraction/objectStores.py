@@ -2,6 +2,7 @@ from .objectStores_Memory import ObjectStore_Memory
 from .objectStores_SQLAlchemy import ObjectStore_SQLAlchemy
 from .objectStores_SimpleFileStore import ObjectStore_SimpleFileStore
 from .objectStores_DynamoDB import ObjectStore_DynamoDB
+from .objectStores_Migrating import ObjectStore_Migrating
 
 class InvalidObjectStoreConfigMissingTypeClass(Exception):
   pass
@@ -16,7 +17,7 @@ class ObjectStoreConfigNotDictObjectExceptionClass(Exception):
 
 def _createObjectStoreInstanceTypeSpecified(type, configDICT, initFN, externalFns, detailLogging):
   print("Using Object Store Type: " + type)
-  return initFN(configDICT, externalFns, detailLogging, type)
+  return initFN(configDICT, externalFns, detailLogging, type, createObjectStoreInstance)
 
 #Based on applicaiton options create an instance of objectStore to be used
 def createObjectStoreInstance(
@@ -45,6 +46,8 @@ def createObjectStoreInstance(
     return _createObjectStoreInstanceTypeSpecified("SimpleFileStore", objectStoreConfigDict, ObjectStore_SimpleFileStore, externalFns, detailLogging)
   if objectStoreConfigDict["Type"] == "DynamoDB":
     return _createObjectStoreInstanceTypeSpecified("DynamoDB", objectStoreConfigDict, ObjectStore_DynamoDB, externalFns, detailLogging)
+  if objectStoreConfigDict["Type"] == "Migrating":
+    return _createObjectStoreInstanceTypeSpecified("Migrating", objectStoreConfigDict, ObjectStore_Migrating, externalFns, detailLogging)
 
   print("Trying to create object store type " + objectStoreConfigDict["Type"])
   raise InvalidObjectStoreConfigUnknownTypeException

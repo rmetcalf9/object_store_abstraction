@@ -18,7 +18,7 @@ class objectStoresSimpleFileStore(testHelperSuperClass):
     def getObjFn(ConfigDict, resetData = True):
       #print("AAA", ConfigDict)
       #self.AssertTrue(False);
-      obj = undertest.ObjectStore_SimpleFileStore(ConfigDict, self.getObjectStoreExternalFns(), False, type='testSFS')
+      obj = undertest.ObjectStore_SimpleFileStore(ConfigDict, self.getObjectStoreExternalFns(), False, type='testSFS', factoryFn=undertest.createObjectStoreInstance)
       if resetData:
         obj.resetDataForTest()
       # print("Test_SFS 23: Resetting")

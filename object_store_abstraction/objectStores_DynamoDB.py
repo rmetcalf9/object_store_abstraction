@@ -245,7 +245,7 @@ class ObjectStore_DynamoDB(ObjectStore):
   def getTableName(self, objectType):
     return self.objectPrefix + '_objData_' + objectType
 
-  def __init__(self, configJSON, externalFns, detailLogging, type):
+  def __init__(self, configJSON, externalFns, detailLogging, type, factoryFn):
     super(ObjectStore_DynamoDB, self).__init__(externalFns, detailLogging, type)
 
     self.singleTableModeObjectTypeCache = {}
