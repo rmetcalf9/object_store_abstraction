@@ -1,0 +1,2 @@
+pytz==2018.4
+object_store_abstraction==0.3.2

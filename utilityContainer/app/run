@@ -2,11 +2,23 @@
 import sys
 
 import utils
+from object_store_abstraction import TryingToCreateExistingObjectExceptionClass
+
 
 commands = []
 
 print("Start of " + sys.argv[0])
 
+
+def listPossibleStores():
+  for x in utils.configs:
+    print(x["shortName"] + " (" + x["abspath"]  + ")")
+  print("Done")
+
+commands.append({
+  'Name': 'List Possible Stores',
+  'fn': listPossibleStores
+})
 
 def writeLines():
   store = utils.getAnObjectStoreFromUser("Select object store to use")
@@ -70,7 +82,7 @@ def readLines():
   print("Done")
 
 commands.append({
-  'Name': 'Read text file and read back',
+  'Name': 'Read data fro mstore',
   'fn': readLines
 })
 

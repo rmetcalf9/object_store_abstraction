@@ -18,10 +18,12 @@ fns = {
 def fileIsObjectStoreConfig(fil):
   statinfo = os.stat(fil)
   if statinfo.st_size < (1024 * 500): #less than 500 kb in size
+    print("Checking config for ", fil)
     try:
       f=open(fil, "r")
       objectStoreConfigDict =  json.loads(f.read())
       f.close()
+      print(" JSON OK - now creating object")
       objectStoreFrom = createObjectStoreInstance(
         objectStoreConfigDict,
         fns,
@@ -30,14 +32,17 @@ def fileIsObjectStoreConfig(fil):
       if objectStoreFrom is None:
         return False
     except Exception as err:
+      print(" Objectstore creation errored:")
       print(err) # for the repr
       print(str(err)) # for just the message
       print(err.args) # the arguments that the exception has been called with.
+      print("---------")
       return False #If something went wrong ignore the file
     return True
   return False
 
 configs = []
+datasets = []
 #for f in os.listdir("./datastore_configs"):
 #  if os.path.isfile("./datastore_configs/" + f):
 #    configs.append({
@@ -45,25 +50,39 @@ configs = []
 #      "full": "./datastore_configs/" + f
 #    })
 
-dirs_to_scan_for_datastore_config_json_files = ["/var/run/secrets/", "/", "./", "./datastore_configs/"]
+dirs_to_scan_for_datastore_config_json_files = [
+  "/var/run/secrets/",
+  "/",
+  "./",
+  "./datastore_configs/",
+  "/app/datastore_configs/"
+]
 for dirToScan in dirs_to_scan_for_datastore_config_json_files:
   if os.path.isdir(dirToScan):
     for f in os.listdir(dirToScan):
       if os.path.isfile(dirToScan + f):
-        if fileIsObjectStoreConfig(dirToScan + f):
-          configs.append({
-            "shortName": "FS:" + f,
-            "full": dirToScan + f
-          })
+        abspath = os.path.abspath(dirToScan + f)
+        dup = False
+        for x in configs:
+          if x["abspath"] == abspath:
+            dup = True
+        if not dup:
+          if fileIsObjectStoreConfig(dirToScan + f):
+            configs.append({
+              "shortName": "FS:" + f,
+              "full": dirToScan + f,
+              "abspath": abspath
+            })
 
-
-datasets = []
-for f in os.listdir("./sample_data"):
-  if os.path.isfile("./sample_data/" + f):
-    datasets.append({
-      "shortName": f,
-      "full": "./sample_data/" + f
-    })
+dirs_to_scan_for_sample_data_files = ["./sample_data/", "/app/sample_data/"]
+for dirToScan in dirs_to_scan_for_sample_data_files:
+  if os.path.isdir(dirToScan):
+    for f in os.listdir(dirToScan):
+      if os.path.isfile(dirToScan + f):
+        datasets.append({
+          "shortName": f,
+          "full": dirToScan + f
+        })
 
 
 def userSelectOptionFromList(prompt, list, dispItem):
