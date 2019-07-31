@@ -10,7 +10,7 @@ Test this store using the utility. You can query data
 
 ## Deploy Microservice to use migration object store secret
 
-Make sure you check it is working
+Make sure you check it is working. You can do this by running migration percentage and seeing if it is going up.
 
 ## Use utility to run migration
 
