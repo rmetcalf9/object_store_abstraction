@@ -126,10 +126,10 @@ def showInfo():
       allKeys = storeConnection.getAllRowsForObjectType(
         objectType=objectType,
         filterFN=None,
-        outputFN=outputFnJustKeys,
+        outputFN=utils.outputFnJustKeys,
         whereClauseText=None
       )
-      print((objectType + space)[:10] + " " + str(len(allKeys)))
+      print((objectType + utils.space)[:30] + " " + str(len(allKeys)))
     print("\n")
     print("Total Object Types:", len(objectTypes))
   store.executeInsideTransaction(dbfn2)

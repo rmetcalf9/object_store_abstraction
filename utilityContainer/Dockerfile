@@ -19,12 +19,12 @@ RUN apk add --no-cache bash python3 curl python3-dev build-base linux-headers pc
 
 CMD ["/keep_alive.sh"]
 
-#docker build -t metcarob/object_store_abstraction_utility:0.0.1 .
+#docker build -t metcarob/object_store_abstraction_utility:0.0.2 .
 
 #Running standalone
-#docker run --rm -it metcarob/object_store_abstraction_utility:0.0.1 /app/run
+#docker run --rm -it metcarob/object_store_abstraction_utility:0.0.2 /app/run
 
 #Running connected to store configured in secret
-#docker service create --name object_store_abstraction_utility_serv --secret saas_user_management_system_objectstore_config metcarob/object_store_abstraction_utility:0.0.1
+#docker service create --name object_store_abstraction_utility_serv --secret saas_user_management_system_objectstore_config_mig_to_dynamodb --secret saas_user_management_system_objectstore_config_dynamodb --secret saas_user_management_system_objectstore_config metcarob/object_store_abstraction_utility:0.0.2
 #docker exec -it object_store_abstraction_utility_serv.1.XXXX /app/run
 #docker service rm object_store_abstraction_utility_serv
