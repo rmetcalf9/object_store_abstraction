@@ -6,14 +6,56 @@ from object_store_abstraction import createObjectStoreInstance, TryingToCreateEx
 
 space = "                                 "
 
+def getCurDateTime():
+  return datetime.datetime.now(pytz.timezone("UTC"))
+
+
+fns = {
+  'getCurDateTime': getCurDateTime
+}
+
+
+def fileIsObjectStoreConfig(fil):
+  statinfo = os.stat(fil)
+  if statinfo.st_size < (1024 * 500): #less than 500 kb in size
+    try:
+      f=open(fil, "r")
+      objectStoreConfigDict =  json.loads(f.read())
+      f.close()
+      objectStoreFrom = createObjectStoreInstance(
+        objectStoreConfigDict,
+        fns,
+        detailLogging=False
+      )
+      if objectStoreFrom is None:
+        return False
+    except Exception as err:
+      print(err) # for the repr
+      print(str(err)) # for just the message
+      print(err.args) # the arguments that the exception has been called with.
+      return False #If something went wrong ignore the file
+    return True
+  return False
 
 configs = []
-for f in os.listdir("./datastore_configs"):
-  if os.path.isfile("./datastore_configs/" + f):
-    configs.append({
-      "shortName": f,
-      "full": "./datastore_configs/" + f
-    })
+#for f in os.listdir("./datastore_configs"):
+#  if os.path.isfile("./datastore_configs/" + f):
+#    configs.append({
+#      "shortName": "DataStore:" + f,
+#      "full": "./datastore_configs/" + f
+#    })
+
+dirs_to_scan_for_datastore_config_json_files = ["/var/run/secrets/", "/", "./", "./datastore_configs/"]
+for dirToScan in dirs_to_scan_for_datastore_config_json_files:
+  if os.path.isdir(dirToScan):
+    for f in os.listdir(dirToScan):
+      if os.path.isfile(dirToScan + f):
+        if fileIsObjectStoreConfig(dirToScan + f):
+          configs.append({
+            "shortName": "FS:" + f,
+            "full": dirToScan + f
+          })
+
 
 datasets = []
 for f in os.listdir("./sample_data"):
@@ -23,9 +65,6 @@ for f in os.listdir("./sample_data"):
       "full": "./sample_data/" + f
     })
 
-
-def getCurDateTime():
-  return datetime.datetime.now(pytz.timezone("UTC"))
 
 def userSelectOptionFromList(prompt, list, dispItem):
   if len(list)==0:
@@ -62,11 +101,6 @@ def getAnObjectStoreFromUser(
   f=open(configs[selectedConfig]["full"], "r")
   objectStoreConfigDict =  json.loads(f.read())
   f.close()
-
-  fns = {
-    'getCurDateTime': getCurDateTime
-  }
-
 
   if giveUserOptionToReturnTwoObjectStoresIfItIsMigrateType:
     if objectStoreConfigDict["Type"]=="Migrating":
