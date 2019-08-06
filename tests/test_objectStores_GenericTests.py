@@ -92,7 +92,7 @@ def t_saveFailsWithInvalidObjectVersionFirstSave(testClass, objectStoreType):
     ##Taken out of assertRaises so I can see stack trace of other exception
     #savedVer = connectionContext.saveJSONObject("Test", "123", JSONString, objVerIDToSaveAs)
     with testClass.assertRaises(Exception) as context:
-      savedVer = connectionContext.saveJSONObject("Test", "123", JSONString, objVerIDToSaveAs)
+      savedVer = connectionContext.saveJSONObject("Test", "123", copy.deepcopy(JSONString), objVerIDToSaveAs)
     testClass.checkGotRightException(context,SuppliedObjectVersionWhenCreatingException)
   objectStoreType.executeInsideTransaction(someFn)
 
@@ -101,13 +101,13 @@ def t_saveFailsWithInvalidObjectVersionSecondSave(testClass, objectStoreType):
 
   def dbfn(storeConnection):
     def someFn(connectionContext):
-      return storeConnection.saveJSONObject("Test", "123", JSONString, None)
+      return storeConnection.saveJSONObject("Test", "123", copy.deepcopy(JSONString), None)
     savedVer = storeConnection.executeInsideTransaction(someFn)
 
     def someFn2(connectionContext):
       gContext = None
       with testClass.assertRaises(Exception) as context:
-        savedVer = storeConnection.saveJSONObject("Test", "123", JSONString, objVerIDToSaveAs)
+        savedVer = storeConnection.saveJSONObject("Test", "123", copy.deepcopy(JSONString), objVerIDToSaveAs)
       testClass.checkGotRightException(context,WrongObjectVersionException)
     storeConnection.executeInsideTransaction(someFn2)
   objectStoreType.executeInsideConnectionContext(dbfn)
@@ -115,7 +115,7 @@ def t_saveFailsWithInvalidObjectVersionSecondSave(testClass, objectStoreType):
 def t_singleSaveAndRetrieveCommittedTransaction(testClass, objectStoreType):
   def dbfn(storeConnection):
     def someFn(connectionContext):
-      savedVer = connectionContext.saveJSONObject("Test", "123", JSONString, None)
+      savedVer = connectionContext.saveJSONObject("Test", "123", copy.deepcopy(JSONString), None)
     savedVer = storeConnection.executeInsideTransaction(someFn)
 
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objectKey) = storeConnection.getObjectJSON("Test", "123")
@@ -125,7 +125,7 @@ def t_singleSaveAndRetrieveCommittedTransaction(testClass, objectStoreType):
 
 def t_singleSaveAndRetrieveUncommittedTransaction(testClass, objectStoreType):
   def someFn(connectionContext):
-    savedVer = connectionContext.saveJSONObject("Test", "123", JSONString, None)
+    savedVer = connectionContext.saveJSONObject("Test", "123", copy.deepcopy(JSONString), None)
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objectKey) = connectionContext.getObjectJSON("Test", "123")
     testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString, [  ], msg='Saved object dosen\'t match')
     testClass.assertJSONStringsEqualWithIgnoredKeys(objectKey, "123", [  ], msg='Returned objectkey wrong')
@@ -136,7 +136,7 @@ def t_saveObjectsInSingleTransaction(testClass, objectStoreType):
     def someFn(connectionContext):
       lastSavedVer = None
       for x in range(1,6):
-        savedVer = connectionContext.saveJSONObject("Test", "123", JSONString, lastSavedVer)
+        savedVer = connectionContext.saveJSONObject("Test", "123", copy.deepcopy(JSONString), lastSavedVer)
         testClass.assertEqual(savedVer, x, msg="Return value of saveJSONObject is not correct")
         lastSavedVer = savedVer
     storeConnection.executeInsideTransaction(someFn)
@@ -149,7 +149,7 @@ def t_saveObjectsInSingleTransaction(testClass, objectStoreType):
 def t_creationOfNewObjectNotAffectingOtherObjectTypeWithSameKey(testClass, objectStoreType):
   def dbfn(storeConnection):
     def someFn(connectionContext):
-      savedVer = connectionContext.saveJSONObject("Test1", "123", JSONString, None)
+      savedVer = connectionContext.saveJSONObject("Test1", "123", copy.deepcopy(JSONString), None)
     savedVer = storeConnection.executeInsideTransaction(someFn)
 
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objectKey) = storeConnection.getObjectJSON("Test1", "123")
@@ -164,14 +164,14 @@ def t_saveObjectsInMutipleTransactions(testClass, objectStoreType):
     lastSavedVer = None
     for x in range(1,6):
       def someFn(connectionContext):
-        savedVer = connectionContext.saveJSONObject("Test", "123", JSONString, lastSavedVer)
+        savedVer = connectionContext.saveJSONObject("Test", "123", copy.deepcopy(JSONString), lastSavedVer)
         testClass.assertEqual(savedVer, x)
         return savedVer
       lastSavedVer = storeConnection.executeInsideTransaction(someFn)
 
     #Check object was saved correctly
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objectKey) = storeConnection.getObjectJSON("Test", "123")
-    testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString, [  ], msg='Saved object dosen\'t match')
+    testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, copy.deepcopy(JSONString), [  ], msg='Saved object dosen\'t match')
   objectStoreType.executeInsideConnectionContext(dbfn)
 
 def t_creationDateSetCorrectly(testClass, objectStoreType):
@@ -191,7 +191,7 @@ def t_creationDateSetCorrectly(testClass, objectStoreType):
 def t_createExistingObjectFails(testClass, objectStoreType):
   def dbfn(storeConnection):
     def someFn(connectionContext):
-      return connectionContext.saveJSONObject("Test", "123", JSONString, None)
+      return connectionContext.saveJSONObject("Test", "123", copy.deepcopy(JSONString), None)
     savedVer = storeConnection.executeInsideTransaction(someFn)
 
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objectKey) = storeConnection.getObjectJSON("Test", "123")
@@ -206,8 +206,8 @@ def t_supportsDifferentObjectTypes(testClass, objectStoreType):
   def dbfn(storeConnection):
     ##TODO Confirm this test
     def someFn(connectionContext):
-      a = connectionContext.saveJSONObject("TestType1", "123", JSONString, None)
-      b = connectionContext.saveJSONObject("TestType2", "123", JSONString2, None)
+      a = connectionContext.saveJSONObject("TestType1", "123", copy.deepcopy(JSONString), None)
+      b = connectionContext.saveJSONObject("TestType2", "123", copy.deepcopy(JSONString2), None)
     savedVer = storeConnection.executeInsideTransaction(someFn)
 
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objectKey) = storeConnection.getObjectJSON("TestType1", "123")
@@ -224,7 +224,7 @@ def t_secondSaveObjectSendStringObjectVer(testClass, objectStoreType):
     savedVer = storeConnection.executeInsideTransaction(someFn)
 
     def someFn2(connectionContext):
-      savedVer2 = storeConnection.saveJSONObject("Test", "123", JSONString, str(savedVer))
+      savedVer2 = storeConnection.saveJSONObject("Test", "123", copy.deepcopy(JSONString), str(savedVer))
     storeConnection.executeInsideTransaction(someFn2)
   objectStoreType.executeInsideConnectionContext(dbfn)
 
@@ -236,11 +236,11 @@ def t_updateToDifferentJSONWorks(testClass, objectStoreType):
   def dbfn(storeConnection):
     lastSavedVer = None
     def someFn(connectionContext):
-      savedVer = connectionContext.saveJSONObject("Test", "123", JSONString, lastSavedVer)
+      savedVer = connectionContext.saveJSONObject("Test", "123", copy.deepcopy(JSONString), lastSavedVer)
       return savedVer
     lastSavedVer = storeConnection.executeInsideTransaction(someFn)
     def someFn2(connectionContext):
-      savedVer = connectionContext.saveJSONObject("Test", "123", JSONString2, lastSavedVer)
+      savedVer = connectionContext.saveJSONObject("Test", "123", copy.deepcopy(JSONString2), lastSavedVer)
       return savedVer
     lastSavedVer = storeConnection.executeInsideTransaction(someFn2)
 
@@ -257,7 +257,7 @@ def t_updateDateSetCorrectly(testClass, objectStoreType):
     incTime = testDateTime
     for x in range(1,6):
       testClass.setTestingDateTime(incTime)
-      savedVer = connectionContext.saveJSONObject("Test", "123", JSONString, lastVersion)
+      savedVer = connectionContext.saveJSONObject("Test", "123", copy.deepcopy(JSONString), lastVersion)
       objDict, ver, creationDateTime, lastUpdateDateTime, objectKey = connectionContext._getObjectJSON("Test", "123")
       testClass.assertEqual(objDict, JSONString)
       testClass.assertEqual(ver, savedVer)
@@ -279,7 +279,7 @@ def t_differentKeys(testClass, objectStoreType):
 
     #update 3rd object to alternative data
     def someFn(connectionContext):
-      connectionContext.saveJSONObject("Test", "1_123" + str(3), JSONString2, objKeyMap["1_123" + str(3)])
+      connectionContext.saveJSONObject("Test", "1_123" + str(3), copy.deepcopy(JSONString2), objKeyMap["1_123" + str(3)])
     storeConnection.executeInsideTransaction(someFn)
 
     for x in range(1,6):
@@ -293,7 +293,7 @@ def t_differentKeys(testClass, objectStoreType):
 def t_updateUsingFunctionOutsideOfTransactionFails(testClass, objectStoreType):
   def dbfn(storeConnection):
     def someFn(connectionContext):
-      return connectionContext.saveJSONObject("Test", "123", JSONString, None)
+      return connectionContext.saveJSONObject("Test", "123", copy.deepcopy(JSONString), None)
     savedVer = storeConnection.executeInsideTransaction(someFn)
 
     def updateFn(obj, connectionContext):
@@ -308,11 +308,11 @@ def t_updateUsingFunctionOutsideOfTransactionFails(testClass, objectStoreType):
 def t_updateUsingFunction(testClass, objectStoreType):
   def dbfn(storeConnection):
     def someFn(connectionContext):
-      return connectionContext.saveJSONObject("Test", "123", JSONString, None)
+      return connectionContext.saveJSONObject("Test", "123", copy.deepcopy(JSONString), None)
     savedVer = storeConnection.executeInsideTransaction(someFn)
 
     def updateFn(obj, connectionContext):
-      testClass.assertJSONStringsEqualWithIgnoredKeys(JSONString, obj, [  ], msg='Saved object dosen\'t match')
+      testClass.assertJSONStringsEqualWithIgnoredKeys(copy.deepcopy(JSONString), obj, [  ], msg='Saved object dosen\'t match')
       return JSONString2
 
     def someFn(connectionContext):
@@ -320,7 +320,7 @@ def t_updateUsingFunction(testClass, objectStoreType):
     storeConnection.executeInsideTransaction(someFn)
 
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objectKey) = storeConnection.getObjectJSON("Test", "123")
-    testClass.assertJSONStringsEqualWithIgnoredKeys(JSONString2, objectDICT, [  ], msg='object was not updated')
+    testClass.assertJSONStringsEqualWithIgnoredKeys(copy.deepcopy(JSONString2), objectDICT, [  ], msg='object was not updated')
   objectStoreType.executeInsideConnectionContext(dbfn)
 
 def t_updateUpdatesCorrectObjecTypet(testClass, objectStoreType):
