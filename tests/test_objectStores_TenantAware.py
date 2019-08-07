@@ -13,6 +13,9 @@ ConfigDict = {}
 testTenant1 = "testTenant1"
 testTenant2 = "testTenant2"
 
+tenant1ObjectsToUse = ["objT1","objT2","objT3","objT4"]
+tenant2ObjectsToUse = ["objT2","objT3","objT4", "objT5"]
+
 def generateExpectedResultList(tenantName, baseJSON):
   expectedRes = []
   for x in range(0,10):
@@ -77,8 +80,8 @@ class local_helpers(testHelperSuperClass):
 
   def setupUnevenData(self):
     objectStoreType = self.generateSimpleMemoryObjectStore()
-    self.setupSomeTestData(objectStoreType, testTenant1, JSONString, ["objT1","objT2","objT3","objT4"])
-    self.setupSomeTestData(objectStoreType, testTenant2, JSONString2, ["objT2","objT3","objT4", "objT5"])
+    self.setupSomeTestData(objectStoreType, testTenant1, JSONString, tenant1ObjectsToUse)
+    self.setupSomeTestData(objectStoreType, testTenant2, JSONString2, tenant2ObjectsToUse)
     return objectStoreType
 
 @wipd
@@ -298,4 +301,13 @@ class test_objectStoresTenantAware(local_helpers):
 
     objectStoreType.executeInsideConnectionContext(testTenant2, dbfn2)
 
-#list_all_objectTypes
+  def test_list_all_objectTypes(self):
+    objectStoreType = self.setupUnevenData()
+
+    def getObjTpeLis(context):
+      return context.list_all_objectTypes()
+    t1ObjectLis = objectStoreType.executeInsideConnectionContext(testTenant1, getObjTpeLis)
+    t2ObjectLis = objectStoreType.executeInsideConnectionContext(testTenant2, getObjTpeLis)
+
+    self.assertTrue(objectsEqual(t1ObjectLis, tenant1ObjectsToUse), msg="Wrong object list supplied for Tenant1 got - " + str(t1ObjectLis))
+    self.assertTrue(objectsEqual(t2ObjectLis, tenant2ObjectsToUse), msg="Wrong object list supplied for Tenant2 got - " + str(t2ObjectLis))

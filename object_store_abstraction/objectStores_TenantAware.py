@@ -56,7 +56,13 @@ class TenantAwareConnectionContext():
     return self.objectStoreContext.getAllRowsForObjectType(self.__INT__getDirivedObjectType(objectType), filterFN, outputFN, whereClauseText)
 
   def list_all_objectTypes(self):
-    raise Exception("Tenant aware version not implemented")
+    res = []
+    resAllTenants = self.objectStoreContext.list_all_objectTypes()
+    stcheck = self.tenantName + objectTypeSeperator
+    for x in resAllTenants:
+      if x.startswith(stcheck):
+        res.append(x[len(stcheck):])
+    return res
 
   def _close(self):
     return self.objectStoreContext._close()
