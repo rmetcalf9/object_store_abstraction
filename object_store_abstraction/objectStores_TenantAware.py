@@ -53,7 +53,7 @@ class TenantAwareConnectionContext():
     return self.objectStoreContext.getPaginatedResult(self.__INT__getDirivedObjectType(objectType), paginatedParamValues, outputFN)
 
   def getAllRowsForObjectType(self, objectType, filterFN, outputFN, whereClauseText):
-    raise Exception("Tenant aware version not implemented")
+    return self.objectStoreContext.getAllRowsForObjectType(self.__INT__getDirivedObjectType(objectType), filterFN, outputFN, whereClauseText)
 
   def list_all_objectTypes(self):
     raise Exception("Tenant aware version not implemented")

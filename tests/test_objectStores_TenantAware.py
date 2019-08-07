@@ -63,6 +63,12 @@ class local_helpers(testHelperSuperClass):
     objectStore.executeInsideTransaction(tenantName, someFn)
 
 
+  def setupUnevenData(self):
+    objectStoreType = self.generateSimpleMemoryObjectStore()
+    self.setupSomeTestData(objectStoreType, testTenant1, JSONString, ["objT1","objT2","objT3","objT4"])
+    self.setupSomeTestData(objectStoreType, testTenant2, JSONString2, ["objT2","objT3","objT4", "objT5"])
+    return objectStoreType
+
 @wipd
 class test_objectStoresTenantAware(local_helpers):
 
@@ -80,9 +86,7 @@ class test_objectStoresTenantAware(local_helpers):
     objectStoreType.executeInsideConnectionContext(testTenant1, dbfn)
 
   def test_writenDataDifferentBetweenTenantsEvenWithSameObjectKey(self):
-    objectStoreType = self.generateSimpleMemoryObjectStore()
-    self.setupSomeTestData(objectStoreType, testTenant1, JSONString, ["objT1","objT2","objT3","objT4"])
-    self.setupSomeTestData(objectStoreType, testTenant2, JSONString2, ["objT2","objT3","objT4", "objT5"])
+    objectStoreType = self.setupUnevenData()
 
     #Check objT1 correct in testTenant1
     self.assertObjectTypeDataCorrectViaGETOnly(objectStoreType, testTenant1, "objT1", JSONString)
@@ -98,3 +102,132 @@ class test_objectStoresTenantAware(local_helpers):
     self.assertObjectTypeDataCorrectViaGETOnly(objectStoreType, testTenant1, "objT5", JSONString, shouldBePresent=False)
     #Check objT5 correct in testTenant2
     self.assertObjectTypeDataCorrectViaGETOnly(objectStoreType, testTenant2, "objT5", JSONString2)
+
+  def test_getAllRowsForObjectType(self):
+    objectStoreType = self.setupUnevenData()
+
+    def dbfn1(storeConnection):
+      def outputFN(item):
+        return item[0]
+      filterFN = None
+
+      resALL = storeConnection.getAllRowsForObjectType("objT1", filterFN, outputFN, None)
+
+      expectedRes = []
+      for x in range(0,10):
+        expectedJSON = copy.deepcopy(JSONString)
+        expectedJSON['AA'] = x
+        expectedJSON['BB'] = "bbStringFN(x)"
+        expectedRes.append(expectedJSON)
+      expectedJSON = copy.deepcopy(JSONString)
+      expectedJSON['AA'] = "123" + testTenant1
+      expectedJSON['BB'] = "bbStringFN(x)"
+      expectedRes.append(expectedJSON)
+
+      x = 0
+      actualResSorted = []
+      while x < 11:
+        actualResSorted.append(resALL[x])
+        x = x + 1
+
+      self.assertEqual(actualResSorted, expectedRes)
+
+      resALL = storeConnection.getAllRowsForObjectType("objT2", filterFN, outputFN, None)
+
+      expectedRes = []
+      for x in range(0,10):
+        expectedJSON = copy.deepcopy(JSONString)
+        expectedJSON['AA'] = x
+        expectedJSON['BB'] = "bbStringFN(x)"
+        expectedRes.append(expectedJSON)
+      expectedJSON = copy.deepcopy(JSONString)
+      expectedJSON['AA'] = "123" + testTenant1
+      expectedJSON['BB'] = "bbStringFN(x)"
+      expectedRes.append(expectedJSON)
+
+      x = 0
+      actualResSorted = []
+      while x < 11:
+        actualResSorted.append(resALL[x])
+        x = x + 1
+
+      self.assertEqual(actualResSorted, expectedRes)
+
+      resALL = storeConnection.getAllRowsForObjectType("objT5", filterFN, outputFN, None)
+
+      expectedRes = []
+      x = 0
+      actualResSorted = []
+      while x < 0:
+        actualResSorted.append(resALL[x])
+        x = x + 1
+
+      self.assertEqual(actualResSorted, expectedRes)
+    objectStoreType.executeInsideConnectionContext(testTenant1, dbfn1)
+
+    def dbfn2(storeConnection):
+      def outputFN(item):
+        return item[0]
+      filterFN = None
+
+      resALL = storeConnection.getAllRowsForObjectType("objT1", filterFN, outputFN, None)
+
+      expectedRes = []
+      x = 0
+      actualResSorted = []
+      while x < 0:
+        actualResSorted.append(resALL[x])
+        x = x + 1
+
+      self.assertEqual(actualResSorted, expectedRes)
+
+      resALL = storeConnection.getAllRowsForObjectType("objT2", filterFN, outputFN, None)
+
+      expectedRes = []
+      for x in range(0,10):
+        expectedJSON = copy.deepcopy(JSONString2)
+        expectedJSON['AA'] = x
+        expectedJSON['BB'] = "bbStringFN(x)"
+        expectedRes.append(expectedJSON)
+      expectedJSON = copy.deepcopy(JSONString2)
+      expectedJSON['AA'] = "123" + testTenant2
+      expectedJSON['BB'] = "bbStringFN(x)"
+      expectedRes.append(expectedJSON)
+
+      x = 0
+      actualResSorted = []
+      while x < 11:
+        actualResSorted.append(resALL[x])
+        x = x + 1
+      self.assertEqual(actualResSorted, expectedRes)
+
+
+      resALL = storeConnection.getAllRowsForObjectType("objT5", filterFN, outputFN, None)
+
+      expectedRes = []
+      for x in range(0,10):
+        expectedJSON = copy.deepcopy(JSONString2)
+        expectedJSON['AA'] = x
+        expectedJSON['BB'] = "bbStringFN(x)"
+        expectedRes.append(expectedJSON)
+      expectedJSON = copy.deepcopy(JSONString2)
+      expectedJSON['AA'] = "123" + testTenant2
+      expectedJSON['BB'] = "bbStringFN(x)"
+      expectedRes.append(expectedJSON)
+
+      x = 0
+      actualResSorted = []
+      while x < 11:
+        actualResSorted.append(resALL[x])
+        x = x + 1
+      self.assertEqual(actualResSorted, expectedRes)
+
+    objectStoreType.executeInsideConnectionContext(testTenant2, dbfn2)
+
+#removeJSONObject
+
+#updateJSONObject
+
+#getPaginatedResult
+
+#list_all_objectTypes
