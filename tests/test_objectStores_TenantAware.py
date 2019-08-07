@@ -10,6 +10,12 @@ ConfigDict = {}
 testTenant1 = "testTenant1"
 testTenant2 = "testTenant2"
 
+def getAlteredJSONString(x, srcJSON):
+  res = copy.deepcopy(srcJSON)
+  res['AA'] = x
+  res['BB'] = "bbStringFN(x)"
+  return res
+
 class local_helpers(testHelperSuperClass):
   def generateSimpleMemoryObjectStore(self):
     memStore = undertest.ObjectStore_Memory(ConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testMEM', factoryFn=undertest.createObjectStoreInstance)
@@ -17,14 +23,10 @@ class local_helpers(testHelperSuperClass):
 
   def setupSomeTestDataForObjectType(self, connectionContext, tenantName, objectType, baseStr):
     for x in range(0,10):
-      toInsert = copy.deepcopy(baseStr)
-      toInsert['AA'] = x
-      toInsert['BB'] = "bbStringFN(x)"
+      toInsert = getAlteredJSONString(x, baseStr)
       xres = connectionContext.saveJSONObject(objectType, "123" + str(x), toInsert, None)
     #Add object with special tenant spercific key
-    toInsert = copy.deepcopy(baseStr)
-    toInsert['AA'] = "123" + tenantName
-    toInsert['BB'] = "bbStringFN(x)"
+    toInsert = getAlteredJSONString("123" + tenantName, baseStr)
     xres = connectionContext.saveJSONObject(objectType, "123" + tenantName, toInsert, None)
 
   def assertObjectTypeDataCorrectViaGETOnly(self, objectStore, tenantName, objectType, baseStr, shouldBePresent=True):
@@ -32,8 +34,7 @@ class local_helpers(testHelperSuperClass):
     def someFn(connectionContext):
       for x in range(0,10):
         objectKey = "123" + str(x)
-        expectedJSON = copy.deepcopy(baseStr)
-        expectedJSON['AA'] = x
+        expectedJSON = getAlteredJSONString(x, baseStr)
         expectedJSON['BB'] = "bbStringFN(x)"
         (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objectKey) = connectionContext.getObjectJSON(objectType, objectKey)
         if shouldBePresent:
@@ -43,9 +44,7 @@ class local_helpers(testHelperSuperClass):
         else:
           self.assertEqual(objectDICT, None)
       objectKey = "123" + tenantName
-      expectedJSON = copy.deepcopy(baseStr)
-      expectedJSON['AA'] = "123" + tenantName
-      expectedJSON['BB'] = "bbStringFN(x)"
+      expectedJSON = getAlteredJSONString("123" + tenantName, baseStr)
       (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objectKey) = connectionContext.getObjectJSON(objectType, objectKey)
       if shouldBePresent:
         if objectDICT is None:
@@ -115,13 +114,9 @@ class test_objectStoresTenantAware(local_helpers):
 
       expectedRes = []
       for x in range(0,10):
-        expectedJSON = copy.deepcopy(JSONString)
-        expectedJSON['AA'] = x
-        expectedJSON['BB'] = "bbStringFN(x)"
+        expectedJSON = getAlteredJSONString(x, JSONString)
         expectedRes.append(expectedJSON)
-      expectedJSON = copy.deepcopy(JSONString)
-      expectedJSON['AA'] = "123" + testTenant1
-      expectedJSON['BB'] = "bbStringFN(x)"
+      expectedJSON = getAlteredJSONString("123" + testTenant1, JSONString)
       expectedRes.append(expectedJSON)
 
       x = 0
@@ -136,13 +131,9 @@ class test_objectStoresTenantAware(local_helpers):
 
       expectedRes = []
       for x in range(0,10):
-        expectedJSON = copy.deepcopy(JSONString)
-        expectedJSON['AA'] = x
-        expectedJSON['BB'] = "bbStringFN(x)"
+        expectedJSON = getAlteredJSONString(x, JSONString)
         expectedRes.append(expectedJSON)
-      expectedJSON = copy.deepcopy(JSONString)
-      expectedJSON['AA'] = "123" + testTenant1
-      expectedJSON['BB'] = "bbStringFN(x)"
+      expectedJSON = getAlteredJSONString("123" + testTenant1, JSONString)
       expectedRes.append(expectedJSON)
 
       x = 0
@@ -185,13 +176,9 @@ class test_objectStoresTenantAware(local_helpers):
 
       expectedRes = []
       for x in range(0,10):
-        expectedJSON = copy.deepcopy(JSONString2)
-        expectedJSON['AA'] = x
-        expectedJSON['BB'] = "bbStringFN(x)"
+        expectedJSON = getAlteredJSONString(x, JSONString2)
         expectedRes.append(expectedJSON)
-      expectedJSON = copy.deepcopy(JSONString2)
-      expectedJSON['AA'] = "123" + testTenant2
-      expectedJSON['BB'] = "bbStringFN(x)"
+      expectedJSON = getAlteredJSONString("123" + testTenant2, JSONString2)
       expectedRes.append(expectedJSON)
 
       x = 0
@@ -206,13 +193,9 @@ class test_objectStoresTenantAware(local_helpers):
 
       expectedRes = []
       for x in range(0,10):
-        expectedJSON = copy.deepcopy(JSONString2)
-        expectedJSON['AA'] = x
-        expectedJSON['BB'] = "bbStringFN(x)"
+        expectedJSON = getAlteredJSONString(x, JSONString2)
         expectedRes.append(expectedJSON)
-      expectedJSON = copy.deepcopy(JSONString2)
-      expectedJSON['AA'] = "123" + testTenant2
-      expectedJSON['BB'] = "bbStringFN(x)"
+      expectedJSON = getAlteredJSONString("123" + testTenant2, JSONString2)
       expectedRes.append(expectedJSON)
 
       x = 0
@@ -229,7 +212,7 @@ class test_objectStoresTenantAware(local_helpers):
     objectType = "objT3"
     objectKey = "123" + str(3)
 
-    def someFn(storeConnection):
+    def someFn1(storeConnection):
       #Remove object that is in both Tenant1 and testTenant2 from Tenant1
       newVer = storeConnection.removeJSONObject(objectType, objectKey, 1, False)
 
@@ -238,16 +221,44 @@ class test_objectStoresTenantAware(local_helpers):
       if objectDICT is not None:
         self.assertTrue(False, msg="Object not deleted from Tenant1")
 
-    objectStoreType.executeInsideTransaction(testTenant1, someFn)
+    objectStoreType.executeInsideTransaction(testTenant1, someFn1)
 
-    def someFn(storeConnection):
+    def someFn2(storeConnection):
       #Check object is still in tenant2
       (objectDICT, ObjectVersion, creationDate, lastUpdateDate, _) = storeConnection.getObjectJSON(objectType, objectKey)
       if objectDICT is None:
         self.assertTrue(False, msg="Object was deleted from Tenant2")
-    objectStoreType.executeInsideConnectionContext(testTenant2, someFn)
+    objectStoreType.executeInsideConnectionContext(testTenant2, someFn2)
 
-#updateJSONObject
+  def test_updateJSONObject(self):
+    objectStoreType = self.setupUnevenData()
+    objectType = "objT4"
+    objectKey = "123" + str(5)
+
+    newObjJSON = copy.deepcopy(JSONString)
+    newObjJSON['BB'] = "something has been changed!!!"
+
+    def someFn1(storeConnection):
+      #Get object in tenant1 to get objectversion
+      (objectDICT, ObjectVersion, creationDate, lastUpdateDate, _) = storeConnection.getObjectJSON(objectType, objectKey)
+
+      #Update object in Tenant1
+      def updateFn(obj, connectionContext):
+        self.assertJSONStringsEqualWithIgnoredKeys(obj, getAlteredJSONString(5, JSONString), [  ], msg='inside updateFN passed obj dosen\'t match')
+        return newObjJSON
+      newVer = storeConnection.updateJSONObject(objectType, objectKey, updateFn, ObjectVersion)
+
+      #Make sure object is updated in Tenant1
+      (objectDICT2, _, creationDate, lastUpdateDate, _) = storeConnection.getObjectJSON(objectType, objectKey)
+      self.assertJSONStringsEqualWithIgnoredKeys(objectDICT2, copy.deepcopy(newObjJSON), [  ], msg='object was not updated')
+
+    objectStoreType.executeInsideTransaction(testTenant1, someFn1)
+
+    def someFn2(storeConnection):
+      #Make sure object has origional value in Tenant2
+      (objectDICT3, _, creationDate, lastUpdateDate, _) = storeConnection.getObjectJSON(objectType, objectKey)
+      self.assertJSONStringsEqualWithIgnoredKeys(objectDICT3, getAlteredJSONString(5, JSONString2), [  ], msg='object was updated in wrong tenant')
+    objectStoreType.executeInsideConnectionContext(testTenant2, someFn2)
 
 #getPaginatedResult
 
