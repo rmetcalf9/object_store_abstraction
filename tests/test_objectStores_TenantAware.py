@@ -224,7 +224,28 @@ class test_objectStoresTenantAware(local_helpers):
 
     objectStoreType.executeInsideConnectionContext(testTenant2, dbfn2)
 
-#removeJSONObject
+  def test_removeJSONObject(self):
+    objectStoreType = self.setupUnevenData()
+    objectType = "objT3"
+    objectKey = "123" + str(3)
+
+    def someFn(storeConnection):
+      #Remove object that is in both Tenant1 and testTenant2 from Tenant1
+      newVer = storeConnection.removeJSONObject(objectType, objectKey, 1, False)
+
+      #Check object is not in Tenant1
+      (objectDICT, ObjectVersion, creationDate, lastUpdateDate, _) = storeConnection.getObjectJSON(objectType, objectKey)
+      if objectDICT is not None:
+        self.assertTrue(False, msg="Object not deleted from Tenant1")
+
+    objectStoreType.executeInsideTransaction(testTenant1, someFn)
+
+    def someFn(storeConnection):
+      #Check object is still in tenant2
+      (objectDICT, ObjectVersion, creationDate, lastUpdateDate, _) = storeConnection.getObjectJSON(objectType, objectKey)
+      if objectDICT is None:
+        self.assertTrue(False, msg="Object was deleted from Tenant2")
+    objectStoreType.executeInsideConnectionContext(testTenant2, someFn)
 
 #updateJSONObject
 
