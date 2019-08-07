@@ -467,7 +467,7 @@ def addSampleRows(storeConnection, numRows, bbString='BB', offset=0, objectType=
 
 def assertCorrectPaginationResult(testClass, result, expectedOffset, expectedPageSize, expectedTotal):
   testClass.assertEqual(result['pagination']['offset'], expectedOffset, msg='Wrong offset in pagination')
-  testClass.assertEqual(result['pagination']['pagesize'], expectedPageSize, msg='Wrong offset in pagination')
+  testClass.assertEqual(result['pagination']['pagesize'], expectedPageSize, msg='Wrong pagesize in pagination')
   if result['pagination']['total'] != expectedTotal:
     testClass.assertEqual(result['pagination']['total'], (expectedOffset + expectedPageSize + 1), msg='Total is wrong, should be actual total (' + str(expectedTotal) + ') or one more than can be displayed in this page')
 

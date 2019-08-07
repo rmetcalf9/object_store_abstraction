@@ -2,13 +2,26 @@ from TestHelperSuperClass import testHelperSuperClass, wipd
 
 import object_store_abstraction as undertest
 
-from test_objectStores_GenericTests import JSONString, JSONString2
+from test_objectStores_GenericTests import JSONString, JSONString2, assertCorrectPaginationResult
 import copy
+import json
+from python_Testing_Utilities import objectsEqual
+
 
 ConfigDict = {}
 
 testTenant1 = "testTenant1"
 testTenant2 = "testTenant2"
+
+def generateExpectedResultList(tenantName, baseJSON):
+  expectedRes = []
+  for x in range(0,10):
+    expectedJSON = getAlteredJSONString(x, baseJSON)
+    expectedRes.append(expectedJSON)
+  expectedJSON = getAlteredJSONString("123" + tenantName, baseJSON)
+  expectedRes.append(expectedJSON)
+  return expectedRes
+
 
 def getAlteredJSONString(x, srcJSON):
   res = copy.deepcopy(srcJSON)
@@ -112,12 +125,7 @@ class test_objectStoresTenantAware(local_helpers):
 
       resALL = storeConnection.getAllRowsForObjectType("objT1", filterFN, outputFN, None)
 
-      expectedRes = []
-      for x in range(0,10):
-        expectedJSON = getAlteredJSONString(x, JSONString)
-        expectedRes.append(expectedJSON)
-      expectedJSON = getAlteredJSONString("123" + testTenant1, JSONString)
-      expectedRes.append(expectedJSON)
+      expectedRes = generateExpectedResultList(testTenant1, JSONString)
 
       x = 0
       actualResSorted = []
@@ -129,12 +137,7 @@ class test_objectStoresTenantAware(local_helpers):
 
       resALL = storeConnection.getAllRowsForObjectType("objT2", filterFN, outputFN, None)
 
-      expectedRes = []
-      for x in range(0,10):
-        expectedJSON = getAlteredJSONString(x, JSONString)
-        expectedRes.append(expectedJSON)
-      expectedJSON = getAlteredJSONString("123" + testTenant1, JSONString)
-      expectedRes.append(expectedJSON)
+      expectedRes = generateExpectedResultList(testTenant1, JSONString)
 
       x = 0
       actualResSorted = []
@@ -174,12 +177,7 @@ class test_objectStoresTenantAware(local_helpers):
 
       resALL = storeConnection.getAllRowsForObjectType("objT2", filterFN, outputFN, None)
 
-      expectedRes = []
-      for x in range(0,10):
-        expectedJSON = getAlteredJSONString(x, JSONString2)
-        expectedRes.append(expectedJSON)
-      expectedJSON = getAlteredJSONString("123" + testTenant2, JSONString2)
-      expectedRes.append(expectedJSON)
+      expectedRes = generateExpectedResultList(testTenant2, JSONString2)
 
       x = 0
       actualResSorted = []
@@ -191,12 +189,7 @@ class test_objectStoresTenantAware(local_helpers):
 
       resALL = storeConnection.getAllRowsForObjectType("objT5", filterFN, outputFN, None)
 
-      expectedRes = []
-      for x in range(0,10):
-        expectedJSON = getAlteredJSONString(x, JSONString2)
-        expectedRes.append(expectedJSON)
-      expectedJSON = getAlteredJSONString("123" + testTenant2, JSONString2)
-      expectedRes.append(expectedJSON)
+      expectedRes = generateExpectedResultList(testTenant2, JSONString2)
 
       x = 0
       actualResSorted = []
@@ -260,6 +253,49 @@ class test_objectStoresTenantAware(local_helpers):
       self.assertJSONStringsEqualWithIgnoredKeys(objectDICT3, getAlteredJSONString(5, JSONString2), [  ], msg='object was updated in wrong tenant')
     objectStoreType.executeInsideConnectionContext(testTenant2, someFn2)
 
-#getPaginatedResult
+  def test_getPaginatedResult(self):
+    objectStoreType = self.setupUnevenData()
+    objectType = "objT3"
+    objectType2 = "objT1"
+
+    #assert Paginated result from Tenant1 is correct for objectType in both (not double results)
+    def dbfn(storeConnection):
+      def outputFN(item):
+        return item[0]
+      paginatedParamValues = {
+        'offset': 0,
+        'pagesize': 20,
+        'query': '',
+        'sort': None
+      }
+      res = storeConnection.getPaginatedResult(objectType, paginatedParamValues, outputFN)
+      expectedRes = generateExpectedResultList(testTenant1, JSONString)
+      assertCorrectPaginationResult(self, res, 0, 20, 11)
+
+      a = list(map(lambda x: json.dumps(x), res['result']))
+      b = list(map(lambda x: json.dumps(x), expectedRes))
+      self.assertTrue(objectsEqual(a, b), msg="Wrong result")
+
+    objectStoreType.executeInsideConnectionContext(testTenant1, dbfn)
+
+    #TODO assert Paginated result from Tenant2 is correct for objectType in tenant1 only objT1 (should get 0 rows)
+    def dbfn2(storeConnection):
+      def outputFN(item):
+        return item[0]
+      paginatedParamValues = {
+        'offset': 0,
+        'pagesize': 20,
+        'query': '',
+        'sort': None
+      }
+      res = storeConnection.getPaginatedResult(objectType2, paginatedParamValues, outputFN)
+      expectedRes = []
+      assertCorrectPaginationResult(self, res, 0, 20, 0)
+
+      a = list(map(lambda x: json.dumps(x), res['result']))
+      b = list(map(lambda x: json.dumps(x), expectedRes))
+      self.assertTrue(objectsEqual(a, b), msg="Wrong result")
+
+    objectStoreType.executeInsideConnectionContext(testTenant2, dbfn2)
 
 #list_all_objectTypes
