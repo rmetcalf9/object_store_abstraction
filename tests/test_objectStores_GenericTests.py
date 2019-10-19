@@ -644,7 +644,16 @@ def t_UpdateFilter(testClass, objectStoreType):
     for x in range(0,5):
       expectedRes.append({"AA": x, "BB": "yyYYyyy", "CC": {"CC.AA": "AA", "CC.BB": "BB", "CC.CC": "CC"}})
     assertCorrectPaginationResult(testClass, res, 0, 10, 5)
-    testClass.assertJSONStringsEqualWithIgnoredKeys(res['result'], expectedRes, [  ], msg='Wrong result')
+    #order dosen't matter in this result
+    for curRes in res['result']:
+      found = False
+      for x in range(0, len(expectedRes)):
+        if objectsEqual(expectedRes[x],curRes):
+          found = True
+          del expectedRes[x]
+          break
+      print(found, curRes)
+    testClass.assertEqual(0, len(expectedRes), msg="Not all expected results were in the response")
   objectStoreType.executeInsideConnectionContext(dbfn)
 
 def t_filterAllResultsOut(testClass, objectStoreType):

@@ -58,8 +58,10 @@ def getPaginatedResult(
   sort,
   filterFN
 ):
+  def getSortKeyValueFn(item, sortkeyName):
+    return outputFN(item)[sortkeyName]
   return getPaginatedResultUsingIterator (
-    iteratorObj=PaginatedResultIteratorFromDictWithAttrubtesAsKeysClass(list, query, sort, filterFN),
+    iteratorObj=PaginatedResultIteratorFromDictWithAttrubtesAsKeysClass(list, query, sort, filterFN, getSortKeyValueFn),
     outputFN=outputFN,
     offset=offset,
     pagesize=pagesize
@@ -79,18 +81,19 @@ def getPaginatedResultUsingIterator(
   output = []
   totalRowsOutput = 0
   curPos = 0
-  continueLooking = iteratorObj.hasMore()
+  continueLooking = True
   while continueLooking:
     obj = iteratorObj.next()
-    curPos = curPos + 1
-    if curPos > offset:
-      output.append(outputFN(obj))
-      totalRowsOutput = totalRowsOutput + 1
-    if not iteratorObj.hasMore():
+    if obj is None:
       continueLooking = False
-    if totalRowsOutput >= pagesize:
-      continueLooking = False
-      curPos = curPos + 1 # show that there is more to query
+    else:
+      curPos = curPos + 1
+      if curPos > offset:
+        output.append(outputFN(obj))
+        totalRowsOutput = totalRowsOutput + 1
+      if totalRowsOutput >= pagesize:
+        continueLooking = False
+        curPos = curPos + 1 # show that there is more to query
 
   return {
     'pagination': {

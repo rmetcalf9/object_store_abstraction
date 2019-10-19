@@ -1,4 +1,4 @@
-from TestHelperSuperClass import testHelperSuperClass
+import TestHelperSuperClass
 
 import object_store_abstraction as undertest
 import copy
@@ -12,8 +12,8 @@ ConfigDict = {
   "BaseLocation": "./tests/SimpleFileStore"
 }
 
-
-class objectStoresSimpleFileStore(testHelperSuperClass):
+@TestHelperSuperClass.wipd
+class objectStoresSimpleFileStore(TestHelperSuperClass.testHelperSuperClass):
   def test_genericSimpleFileStoreTests(self):
     def getObjFn(ConfigDict, resetData = True):
       #print("AAA", ConfigDict)

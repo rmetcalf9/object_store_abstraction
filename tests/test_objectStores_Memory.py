@@ -9,7 +9,7 @@ import test_objectStores_GenericTests as genericTests
 
 ConfigDict = {}
 
-@TestHelperSuperClass.wipd
+#@TestHelperSuperClass.wipd
 class test_objectStoresMemory(TestHelperSuperClass.testHelperSuperClass):
   def test_genericTests(self):
     def getObjFn(ConfigDict, resetData = True):
