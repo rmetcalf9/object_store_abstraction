@@ -84,7 +84,7 @@ class local_helpers(testHelperSuperClass):
     self.setupSomeTestData(objectStoreType, testTenant2, JSONString2, tenant2ObjectsToUse)
     return objectStoreType
 
-@wipd
+#@wipd
 class test_objectStoresTenantAware(local_helpers):
 
   def test_basicTest(self):

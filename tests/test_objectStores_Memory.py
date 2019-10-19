@@ -1,4 +1,4 @@
-from TestHelperSuperClass import testHelperSuperClass
+import TestHelperSuperClass
 
 import object_store_abstraction as undertest
 import copy
@@ -9,7 +9,8 @@ import test_objectStores_GenericTests as genericTests
 
 ConfigDict = {}
 
-class test_objectStoresMemory(testHelperSuperClass):
+#@TestHelperSuperClass.wipd
+class test_objectStoresMemory(TestHelperSuperClass.testHelperSuperClass):
   def test_genericTests(self):
     def getObjFn(ConfigDict, resetData = True):
       return undertest.ObjectStore_Memory(ConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testMEM', factoryFn=undertest.createObjectStoreInstance)
