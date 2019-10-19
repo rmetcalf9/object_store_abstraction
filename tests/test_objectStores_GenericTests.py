@@ -913,3 +913,75 @@ def t_fullDescendingSortWorks(testClass, objectStoreType):
 
 
     objectStoreType.executeInsideConnectionContext(dbfn)
+
+  def t_startDescendingSortWorks(testClass, objectStoreType):
+    def bbStringFN(x):
+      return str(x)
+
+    def outputFN(item):
+      return item[0]
+
+    def dbfn(storeConnection):
+      # Adding row in no order
+      addSampleRow(storeConnection, 1, bbStringFN, objectType="Test1")
+      addSampleRow(storeConnection, 8, bbStringFN, objectType="Test1")
+      addSampleRow(storeConnection, 3, bbStringFN, objectType="Test1")
+      addSampleRow(storeConnection, 4, bbStringFN, objectType="Test1")
+      addSampleRow(storeConnection, 5, bbStringFN, objectType="Test1")
+      addSampleRow(storeConnection, 6, bbStringFN, objectType="Test1")
+      addSampleRow(storeConnection, 2, bbStringFN, objectType="Test1")
+      addSampleRow(storeConnection, 7, bbStringFN, objectType="Test1")
+      addSampleRow(storeConnection, 9, bbStringFN, objectType="Test1")
+
+      paginatedParamValues = {
+        'offset': 0,
+        'pagesize': 3,
+        'query': '',
+        'sort': 'AA:desc'
+      }
+      res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN)
+
+      expectedOrder = [9,8,7]
+      idx = 0
+      for x in res["result"]:
+        testClass.assertEqual(x["AA"], expectedOrder[idx], msg="Returned idx " + str(idx) + " wrong")
+        idx = idx + 1
+
+
+    objectStoreType.executeInsideConnectionContext(dbfn)
+
+  def t_midDescendingSortWorks(testClass, objectStoreType):
+    def bbStringFN(x):
+      return str(x)
+
+    def outputFN(item):
+      return item[0]
+
+    def dbfn(storeConnection):
+      # Adding row in no order
+      addSampleRow(storeConnection, 1, bbStringFN, objectType="Test1")
+      addSampleRow(storeConnection, 8, bbStringFN, objectType="Test1")
+      addSampleRow(storeConnection, 3, bbStringFN, objectType="Test1")
+      addSampleRow(storeConnection, 4, bbStringFN, objectType="Test1")
+      addSampleRow(storeConnection, 5, bbStringFN, objectType="Test1")
+      addSampleRow(storeConnection, 6, bbStringFN, objectType="Test1")
+      addSampleRow(storeConnection, 2, bbStringFN, objectType="Test1")
+      addSampleRow(storeConnection, 7, bbStringFN, objectType="Test1")
+      addSampleRow(storeConnection, 9, bbStringFN, objectType="Test1")
+
+      paginatedParamValues = {
+        'offset': 4,
+        'pagesize': 3,
+        'query': '',
+        'sort': 'AA:desc'
+      }
+      res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN)
+
+      expectedOrder = [6,5,4]
+      idx = 0
+      for x in res["result"]:
+        testClass.assertEqual(x["AA"], expectedOrder[idx], msg="Returned idx " + str(idx) + " wrong")
+        idx = idx + 1
+
+
+    objectStoreType.executeInsideConnectionContext(dbfn)

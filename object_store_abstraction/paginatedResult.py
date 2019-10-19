@@ -47,6 +47,40 @@ def sanatizePaginatedParamValues(origValues):
     'sort': sort,
   }
 
+#iterator gets, query, filterFN and sort
+
+def getPaginatedResultUsingIterator(
+  iteratorObj,
+  outputFN,
+  offset,
+  pagesize
+):
+  def internalFilterFN(obj):
+    return filterFn(obj)
+
+  output = []
+  curIdx = 0
+  continueLooking = iteratorObj.hasMore()
+  while continueLooking:
+    obj = iteratorObj.next()
+    output.append(outputFN(obj))
+    curIdx = curIdx + 1
+    if not iteratorObj.hasMore():
+      continueLooking = False
+    if curIdx > pageSize:
+      continueLooking = False
+
+  return {
+    'pagination': {
+      'offset': offset,
+      'pagesize': pagesize,
+      'total': curIdx
+    },
+    'result': output
+  }
+
+  raise Exception("Not Implemented")
+
 def getPaginatedResult(
   list,
   outputFN,
