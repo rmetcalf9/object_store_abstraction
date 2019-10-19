@@ -1,5 +1,6 @@
 #Function to return paginated result for query
 from sortedcontainers import SortedDict
+from .paginatedResultIterator import PaginatedResultIteratorFromDictWithAttrubtesAsKeysClass
 
 def isValue(val):
   if val is None:
@@ -48,6 +49,23 @@ def sanatizePaginatedParamValues(origValues):
   }
 
 #iterator gets, query, filterFN and sort
+def getPaginatedResult(
+  list,
+  outputFN,
+  offset,
+  pagesize,
+  query,
+  sort,
+  filterFN
+):
+  return getPaginatedResultUsingIterator (
+    iteratorObj=PaginatedResultIteratorFromDictWithAttrubtesAsKeysClass(list, query, sort, filterFN),
+    outputFN=outputFN,
+    offset=offset,
+    pagesize=pagesize
+  )
+
+
 
 def getPaginatedResultUsingIterator(
   iteratorObj,
@@ -59,29 +77,31 @@ def getPaginatedResultUsingIterator(
     return filterFn(obj)
 
   output = []
-  curIdx = 0
+  totalRowsOutput = 0
+  curPos = 0
   continueLooking = iteratorObj.hasMore()
   while continueLooking:
     obj = iteratorObj.next()
-    output.append(outputFN(obj))
-    curIdx = curIdx + 1
+    curPos = curPos + 1
+    if curPos > offset:
+      output.append(outputFN(obj))
+      totalRowsOutput = totalRowsOutput + 1
     if not iteratorObj.hasMore():
       continueLooking = False
-    if curIdx > pageSize:
+    if totalRowsOutput >= pagesize:
       continueLooking = False
+      curPos = curPos + 1 # show that there is more to query
 
   return {
     'pagination': {
       'offset': offset,
       'pagesize': pagesize,
-      'total': curIdx
+      'total': curPos
     },
     'result': output
   }
 
-  raise Exception("Not Implemented")
-
-def getPaginatedResult(
+def getPaginatedResultOLD(
   list,
   outputFN,
   offset,
