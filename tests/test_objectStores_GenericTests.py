@@ -474,6 +474,21 @@ def addSampleRows(storeConnection, numRows, bbString='BB', offset=0, objectType=
     return bbString
   addSampleRows2(storeConnection, numRows, bbStringFN, offset, objectType)
 
+def add9OutOfOrderSampleRows(storeConnection, objectType="Test1"):
+  def bbStringFN(x):
+    return str(x)
+
+  addSampleRow(storeConnection, 1, bbStringFN, objectType)
+  addSampleRow(storeConnection, 8, bbStringFN, objectType)
+  addSampleRow(storeConnection, 3, bbStringFN, objectType)
+  addSampleRow(storeConnection, 4, bbStringFN, objectType)
+  addSampleRow(storeConnection, 5, bbStringFN, objectType)
+  addSampleRow(storeConnection, 6, bbStringFN, objectType)
+  addSampleRow(storeConnection, 2, bbStringFN, objectType)
+  addSampleRow(storeConnection, 7, bbStringFN, objectType)
+  addSampleRow(storeConnection, 9, bbStringFN, objectType)
+
+
 def assertCorrectPaginationResult(testClass, result, expectedOffset, expectedPageSize, expectedTotal):
   testClass.assertEqual(result['pagination']['offset'], expectedOffset, msg='Wrong offset in pagination')
   testClass.assertEqual(result['pagination']['pagesize'], expectedPageSize, msg='Wrong pagesize in pagination')
@@ -821,23 +836,12 @@ def tt_listAllObjectTypes_MutipleTypesSaveAndLoad(testClass, getObjFn, ConfigDic
   obj2.executeInsideTransaction(dbfn)
 
 def t_fullAsscendingSortWorks(testClass, objectStoreType):
-  def bbStringFN(x):
-    return str(x)
-
   def outputFN(item):
     return item[0]
 
   def dbfn(storeConnection):
     # Adding row in no order
-    addSampleRow(storeConnection, 1, bbStringFN, objectType="Test1")
-    addSampleRow(storeConnection, 8, bbStringFN, objectType="Test1")
-    addSampleRow(storeConnection, 3, bbStringFN, objectType="Test1")
-    addSampleRow(storeConnection, 4, bbStringFN, objectType="Test1")
-    addSampleRow(storeConnection, 5, bbStringFN, objectType="Test1")
-    addSampleRow(storeConnection, 6, bbStringFN, objectType="Test1")
-    addSampleRow(storeConnection, 2, bbStringFN, objectType="Test1")
-    addSampleRow(storeConnection, 7, bbStringFN, objectType="Test1")
-    addSampleRow(storeConnection, 9, bbStringFN, objectType="Test1")
+    add9OutOfOrderSampleRows(storeConnection)
 
     paginatedParamValues = {
       'offset': 0,
@@ -857,23 +861,12 @@ def t_fullAsscendingSortWorks(testClass, objectStoreType):
   objectStoreType.executeInsideConnectionContext(dbfn)
 
 def t_fullDescendingSortWorks(testClass, objectStoreType):
-  def bbStringFN(x):
-    return str(x)
-
   def outputFN(item):
     return item[0]
 
   def dbfn(storeConnection):
     # Adding row in no order
-    addSampleRow(storeConnection, 1, bbStringFN, objectType="Test1")
-    addSampleRow(storeConnection, 8, bbStringFN, objectType="Test1")
-    addSampleRow(storeConnection, 3, bbStringFN, objectType="Test1")
-    addSampleRow(storeConnection, 4, bbStringFN, objectType="Test1")
-    addSampleRow(storeConnection, 5, bbStringFN, objectType="Test1")
-    addSampleRow(storeConnection, 6, bbStringFN, objectType="Test1")
-    addSampleRow(storeConnection, 2, bbStringFN, objectType="Test1")
-    addSampleRow(storeConnection, 7, bbStringFN, objectType="Test1")
-    addSampleRow(storeConnection, 9, bbStringFN, objectType="Test1")
+    add9OutOfOrderSampleRows(storeConnection)
 
     paginatedParamValues = {
       'offset': 0,
@@ -893,23 +886,12 @@ def t_fullDescendingSortWorks(testClass, objectStoreType):
   objectStoreType.executeInsideConnectionContext(dbfn)
 
   def t_partDescendingSortWorks(testClass, objectStoreType):
-    def bbStringFN(x):
-      return str(x)
-
     def outputFN(item):
       return item[0]
 
     def dbfn(storeConnection):
       # Adding row in no order
-      addSampleRow(storeConnection, 1, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 8, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 3, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 4, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 5, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 6, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 2, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 7, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 9, bbStringFN, objectType="Test1")
+      add9OutOfOrderSampleRows(storeConnection)
 
       paginatedParamValues = {
         'offset': 5,
@@ -929,23 +911,12 @@ def t_fullDescendingSortWorks(testClass, objectStoreType):
     objectStoreType.executeInsideConnectionContext(dbfn)
 
   def t_startDescendingSortWorks(testClass, objectStoreType):
-    def bbStringFN(x):
-      return str(x)
-
     def outputFN(item):
       return item[0]
 
     def dbfn(storeConnection):
       # Adding row in no order
-      addSampleRow(storeConnection, 1, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 8, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 3, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 4, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 5, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 6, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 2, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 7, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 9, bbStringFN, objectType="Test1")
+      add9OutOfOrderSampleRows(storeConnection)
 
       paginatedParamValues = {
         'offset': 0,
@@ -965,23 +936,12 @@ def t_fullDescendingSortWorks(testClass, objectStoreType):
     objectStoreType.executeInsideConnectionContext(dbfn)
 
   def t_midDescendingSortWorks(testClass, objectStoreType):
-    def bbStringFN(x):
-      return str(x)
-
     def outputFN(item):
       return item[0]
 
     def dbfn(storeConnection):
       # Adding row in no order
-      addSampleRow(storeConnection, 1, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 8, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 3, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 4, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 5, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 6, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 2, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 7, bbStringFN, objectType="Test1")
-      addSampleRow(storeConnection, 9, bbStringFN, objectType="Test1")
+      add9OutOfOrderSampleRows(storeConnection)
 
       paginatedParamValues = {
         'offset': 4,
