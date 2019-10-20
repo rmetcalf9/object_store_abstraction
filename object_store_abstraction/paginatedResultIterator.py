@@ -29,7 +29,7 @@ class PaginatedResultIteratorBaseClass():
     return a
 
   def _next(self):
-    raise Exception("Not Implemented")
+    raise Exception("_next is Not Implemented")
 
 class PaginatedResultIteratorFromDictWithAttrubtesAsKeysClass(PaginatedResultIteratorBaseClass):
   dict = None

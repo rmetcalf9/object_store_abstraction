@@ -493,12 +493,13 @@ def assertCorrectPaginationResult(testClass, result, expectedOffset, expectedPag
   testClass.assertEqual(result['pagination']['offset'], expectedOffset, msg='Wrong offset in pagination')
   testClass.assertEqual(result['pagination']['pagesize'], expectedPageSize, msg='Wrong pagesize in pagination')
   if result['pagination']['total'] != expectedTotal:
-    print("           Total was:", result['pagination']['total'])
-    print("          Offset was:", result['pagination']['offset'])
-    print("       Page Size was:", result['pagination']['pagesize'])
-    print("  num Actual results:", len(result['result']))
-    print("    expectedPageSize:", expectedPageSize)
-    testClass.assertEqual(result['pagination']['total'], (expectedOffset + expectedPageSize + 1), msg='Total is wrong, should be actual total (' + str(expectedTotal) + ') or one more than can be displayed in this page')
+    if result['pagination']['total'] != (expectedOffset + expectedPageSize + 1):
+      print("           Total was:", result['pagination']['total'])
+      print("          Offset was:", result['pagination']['offset'])
+      print("       Page Size was:", result['pagination']['pagesize'])
+      print("  num Actual results:", len(result['result']))
+      print("    expectedPageSize:", expectedPageSize)
+      testClass.assertEqual(result['pagination']['total'], (expectedOffset + expectedPageSize + 1), msg='Total is wrong, should be actual total (' + str(expectedTotal) + ') or one more than can be displayed in this page')
 
 def t_getPaginatedResultsNoData(testClass, objectStoreType):
   def dbfn(storeConnection):
@@ -581,9 +582,11 @@ def t_getPaginatedResultsFiveRowsPagesize2offset0(testClass, objectStoreType):
 
     a = list(map(lambda x: json.dumps(x), res['result']))
     b = list(map(lambda x: json.dumps(x), expectedRes))
-    print("  actual:", a)
-    print("expected:", b)
-    testClass.assertTrue(objectsEqual(a, b), msg="Wrong result")
+    passed = objectsEqual(a, b)
+    if not passed:
+      print("  actual:", a)
+      print("expected:", b)
+    testClass.assertTrue(passed, msg="Wrong result")
 
   objectStoreType.executeInsideConnectionContext(dbfn)
 
@@ -667,7 +670,6 @@ def t_UpdateFilter(testClass, objectStoreType):
           found = True
           del expectedRes[x]
           break
-      print(found, curRes)
     testClass.assertEqual(0, len(expectedRes), msg="Not all expected results were in the response")
   objectStoreType.executeInsideConnectionContext(dbfn)
 
@@ -841,7 +843,8 @@ def t_fullAsscendingSortWorks(testClass, objectStoreType):
 
   def dbfn(storeConnection):
     # Adding row in no order
-    add9OutOfOrderSampleRows(storeConnection)
+    add9OutOfOrderSampleRows(storeConnection, objectType="Test1")
+    add9OutOfOrderSampleRows(storeConnection, objectType="Test2")
 
     paginatedParamValues = {
       'offset': 0,
@@ -866,7 +869,8 @@ def t_fullDescendingSortWorks(testClass, objectStoreType):
 
   def dbfn(storeConnection):
     # Adding row in no order
-    add9OutOfOrderSampleRows(storeConnection)
+    add9OutOfOrderSampleRows(storeConnection, objectType="Test1")
+    add9OutOfOrderSampleRows(storeConnection, objectType="Test2")
 
     paginatedParamValues = {
       'offset': 0,
@@ -891,7 +895,8 @@ def t_partDescendingSortWorks(testClass, objectStoreType):
 
   def dbfn(storeConnection):
     # Adding row in no order
-    add9OutOfOrderSampleRows(storeConnection)
+    add9OutOfOrderSampleRows(storeConnection, objectType="Test1")
+    add9OutOfOrderSampleRows(storeConnection, objectType="Test2")
 
     paginatedParamValues = {
       'offset': 5,
@@ -916,7 +921,8 @@ def t_startDescendingSortWorks(testClass, objectStoreType):
 
   def dbfn(storeConnection):
     # Adding row in no order
-    add9OutOfOrderSampleRows(storeConnection)
+    add9OutOfOrderSampleRows(storeConnection, objectType="Test1")
+    add9OutOfOrderSampleRows(storeConnection, objectType="Test2")
 
     paginatedParamValues = {
       'offset': 0,
@@ -940,7 +946,8 @@ def t_midDescendingSortWorks(testClass, objectStoreType):
 
   def dbfn(storeConnection):
     # Adding row in no order
-    add9OutOfOrderSampleRows(storeConnection)
+    add9OutOfOrderSampleRows(storeConnection, objectType="Test1")
+    add9OutOfOrderSampleRows(storeConnection, objectType="Test2")
 
     paginatedParamValues = {
       'offset': 4,
@@ -960,14 +967,15 @@ def t_midDescendingSortWorks(testClass, objectStoreType):
 
 #Filter function only True
 def t_filterByFunctionOnlyTrue(testClass, objectStoreType):
-  def filterFn(item):
+  def filterFn(item, text):
     return True
   def outputFN(item):
     return item[0]
 
   def dbfn(storeConnection):
     # Adding row in no order
-    add9OutOfOrderSampleRows(storeConnection)
+    add9OutOfOrderSampleRows(storeConnection, objectType="Test1")
+    add9OutOfOrderSampleRows(storeConnection, objectType="Test2")
 
     paginatedParamValues = {
       'offset': 4,
@@ -976,7 +984,7 @@ def t_filterByFunctionOnlyTrue(testClass, objectStoreType):
       'sort': 'AA:desc'
     }
     res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN, filterFn)
-
+    print("Res:", res)
     expectedOrder = [6,5,4]
     idx = 0
     for x in res["result"]:
@@ -987,7 +995,7 @@ def t_filterByFunctionOnlyTrue(testClass, objectStoreType):
 '''
 #Filter function only False
 def t_filterByFunctionOnlyTrue(testClass, objectStoreType):
-  def filterFn(item):
+  def filterFn(item, text):
     return False
   def outputFN(item):
     return item[0]

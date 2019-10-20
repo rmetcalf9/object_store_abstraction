@@ -5,6 +5,7 @@ import base64
 from dateutil.parser import parse
 import pytz
 from .paginatedResult import getPaginatedResult
+from .paginatedResultIterator import PaginatedResultIteratorBaseClass
 
 import shutil #For remove dir and contents
 
@@ -248,6 +249,9 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
           outputLis.append(superObj[curKey])
     return list(map(outputFN, outputLis))
 
+  def _getPaginatedResultIterator(self, query, sort, filterFN, getSortKeyValueFn, objectType):
+    return Iterator(query, sort, filterFN, getSortKeyValueFn, self, objectType)
+
 
 # Class that will store objects as directoryies and files in the file system
 class ObjectStore_SimpleFileStore(ObjectStore):
@@ -314,3 +318,42 @@ class ObjectStore_SimpleFileStore(ObjectStore):
 
   def _getConnectionContext(self):
     return ConnectionContext(self)
+
+class Iterator(PaginatedResultIteratorBaseClass):
+  objectKeys = None
+  objects = None # load the objects - only required if we are sorting
+  curIdx = None
+  simpleFileStoreConnectionContext = None
+  objectType = None
+  def __init__(self, query, sort, filterFN, getSortKeyValueFn, simpleFileStoreConnectionContext, objectType):
+    PaginatedResultIteratorBaseClass.__init__(self, query, filterFN)
+    self.simpleFileStoreConnectionContext = simpleFileStoreConnectionContext
+    self.objectType = objectType
+    self.objectFiles = []
+    otd = simpleFileStoreConnectionContext.getObjectTypeDirectory(objectType, createObjectDir=False)
+    objFilenames = []
+    if otd is not None:
+      objFilenames = localScanDir(otd, False)
+    self.objectKeys = []
+    for curObjFilename in objFilenames:
+      self.objectKeys.append(getKeyFromFileSystemSafeString(curObjFilename))
+
+    if sort is not None:
+      raise Exception("Sort specified - not able")
+      # Load all objects into object array then sort them in order of key
+
+    self.curIdx = 0
+
+    #print(self.objectFiles)
+
+  def _next(self):
+    self.curIdx = self.curIdx + 1
+    if self.curIdx > len(self.objectKeys):
+      return None
+
+    #print("OK:" + objectKey)
+    if self.objects is None:
+      return self.simpleFileStoreConnectionContext._getObjectJSON(self.objectType, self.objectKeys[self.curIdx-1])
+    else:
+      # All objects were loaded so just output the object
+      return self.objects[self.objectKeys[self.curIdx-1]]

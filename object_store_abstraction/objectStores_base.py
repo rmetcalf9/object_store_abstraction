@@ -178,7 +178,8 @@ class ObjectStoreConnectionContext():
         query=paginatedParamValues['query'],
         sort=paginatedParamValues['sort'],
         filterFN=filterFn,
-        getSortKeyValueFn=getSortKeyValueFn
+        getSortKeyValueFn=getSortKeyValueFn,
+        objectType=objectType
       ),
       outputFN=outputFN,
       offset=paginatedParamValues['offset'],
@@ -205,7 +206,7 @@ class ObjectStoreConnectionContext():
     raise Exception('_getObjectJSON Not Overridden')
   def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
     raise Exception('_getPaginatedResult Not Overridden')
-  def _getPaginatedResultIterator(self, query, sort, filterFN, getSortKeyValueFn):
+  def _getPaginatedResultIterator(self, query, sort, filterFN, getSortKeyValueFn, objectType):
     raise Exception('_getPaginatedResultIterator Not Overridden')
 
   #should return a fresh transaction context
