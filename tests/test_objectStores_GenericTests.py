@@ -7,7 +7,7 @@
 import datetime
 import pytz
 import copy
-from python_Testing_Utilities import objectsEqual
+import python_Testing_Utilities
 import json
 
 #import exceptions
@@ -451,6 +451,8 @@ def t_removeObjectOnlyRemovesKeyOfSameObjectType(testClass, objectStoreType):
 #   getPaginatedResult Tests
 #*************************************
 
+# Sample rows are zero based
+
 def addSampleRow(storeConnection, num, bbStringFN, objectType="Test1"):
   def someFn(connectionContext):
     toInsert = copy.deepcopy(JSONString)
@@ -486,7 +488,7 @@ def add9OutOfOrderSampleRows(storeConnection, objectType="Test1"):
   addSampleRow(storeConnection, 6, bbStringFN, objectType)
   addSampleRow(storeConnection, 2, bbStringFN, objectType)
   addSampleRow(storeConnection, 7, bbStringFN, objectType)
-  addSampleRow(storeConnection, 9, bbStringFN, objectType)
+  addSampleRow(storeConnection, 0, bbStringFN, objectType)
 
 
 def assertCorrectPaginationResult(testClass, result, expectedOffset, expectedPageSize, expectedTotal):
@@ -534,9 +536,23 @@ def t_getPaginatedResultsFiveRowsInOneHit(testClass, objectStoreType):
       expectedRes.append({"AA": x, "BB": "BB", "CC": {"CC.AA": "AA", "CC.BB": "BB", "CC.CC": "CC"}})
     assertCorrectPaginationResult(testClass, res, 0, 10, 5)
 
-    a = list(map(lambda x: json.dumps(x), res['result']))
-    b = list(map(lambda x: json.dumps(x), expectedRes))
-    testClass.assertTrue(objectsEqual(a, b), msg="Wrong result")
+    #Results may be in anyorder as there is no sort
+    for curResult in res["result"]:
+      found = False
+      for expectedIdx in range(0,len(expectedRes)):
+        if python_Testing_Utilities.objectsEqual(expectedRes[expectedIdx], curResult):
+          found = True
+          del expectedRes[expectedIdx]
+          break
+      testClass.assertTrue(found, msg="Could not find " + str(curResult) + " in expected")
+
+    #python_Testing_Utilities.assertObjectsEqual(
+    #  unittestTestCaseClass=testClass,
+    #  first=res['result'],
+    #  second=expectedRes,
+    #  msg="Wrong Result",
+    #  ignoredRootKeys=[]
+    #)
 
   objectStoreType.executeInsideConnectionContext(dbfn)
 
@@ -555,11 +571,13 @@ def t_getPaginatedResultsFiveRowsInOneHitWithPagesize(testClass, objectStoreType
     expectedRes = []
     for x in range(0,5):
       expectedRes.append({"AA": x, "BB": "BB", "CC": {"CC.AA": "AA", "CC.BB": "BB", "CC.CC": "CC"}})
-    assertCorrectPaginationResult(testClass, res, 0, 5, 5)
+    assertCorrectPaginationResult(testClass, res, 0, 5, 5) #total must be 5 as there are NO more rows
+
+    testClass.assertEqual(len(expectedRes),len(res["result"]),msg="Wrong number of results returned")
 
     a = list(map(lambda x: json.dumps(x), res['result']))
     b = list(map(lambda x: json.dumps(x), expectedRes))
-    testClass.assertTrue(objectsEqual(a, b), msg="Wrong result")
+    testClass.assertTrue(python_Testing_Utilities.objectsEqual(a, b), msg="Wrong result")
 
   objectStoreType.executeInsideConnectionContext(dbfn)
 
@@ -582,7 +600,7 @@ def t_getPaginatedResultsFiveRowsPagesize2offset0(testClass, objectStoreType):
 
     a = list(map(lambda x: json.dumps(x), res['result']))
     b = list(map(lambda x: json.dumps(x), expectedRes))
-    passed = objectsEqual(a, b)
+    passed = python_Testing_Utilities.objectsEqual(a, b)
     if not passed:
       print("  actual:", a)
       print("expected:", b)
@@ -596,16 +614,16 @@ def t_getPaginatedResultsFiveRowsPagesize2offset2(testClass, objectStoreType):
     def outputFN(item):
       return item[0]
     paginatedParamValues = {
-      'offset': 2,
+      'offset': 2, #skip first 2, so output 3,4
       'pagesize': 2,
       'query': '',
       'sort': 'AA'
     }
     res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN)
     expectedRes = []
-    for x in range(2,4):
+    for x in range(2,4): #[2,3] (zero based)
       expectedRes.append({"AA": x, "BB": "BB", "CC": {"CC.AA": "AA", "CC.BB": "BB", "CC.CC": "CC"}})
-    assertCorrectPaginationResult(testClass, res, 2, 2, 3) # Changed from 5 as when we use iterator total is not correct
+    assertCorrectPaginationResult(testClass, res, 2, 2, 4) # Changed from 5 as when we use iterator total is not correct
     testClass.assertJSONStringsEqualWithIgnoredKeys(res['result'], expectedRes, [  ], msg='Wrong result')
   objectStoreType.executeInsideConnectionContext(dbfn)
 
@@ -666,7 +684,7 @@ def t_UpdateFilter(testClass, objectStoreType):
     for curRes in res['result']:
       found = False
       for x in range(0, len(expectedRes)):
-        if objectsEqual(expectedRes[x],curRes):
+        if python_Testing_Utilities.objectsEqual(expectedRes[x],curRes):
           found = True
           del expectedRes[x]
           break
@@ -798,7 +816,7 @@ def t_listAllObjectTypes_MutipleTypes(testClass, objectStoreType):
 
     objTypes = storeConnection.list_all_objectTypes()
     expectedLis = ["Test1", "Test2", "Test3", "Test4", "Test5"]
-    if not objectsEqual(objTypes, expectedLis):
+    if not python_Testing_Utilities.objectsEqual(objTypes, expectedLis):
       print("Got list:", objTypes)
       print("Expected list:", expectedLis)
       testClass.assertTrue(objectsEqual(objTypes, expectedLis), msg="Wrong result")
@@ -816,7 +834,7 @@ def tt_listAllObjectTypes_MutipleTypesSaveAndLoad(testClass, getObjFn, ConfigDic
 
     objTypes = storeConnection.list_all_objectTypes()
     expectedLis = ["Test1", "Test2", "Test3", "Test4", "Test5"]
-    if not objectsEqual(objTypes, expectedLis):
+    if not python_Testing_Utilities.objectsEqual(objTypes, expectedLis):
       print("Got list:", objTypes)
       print("Expected list:", expectedLis)
       testClass.assertTrue(objectsEqual(objTypes, expectedLis), msg="Wrong result")
@@ -829,7 +847,7 @@ def tt_listAllObjectTypes_MutipleTypesSaveAndLoad(testClass, getObjFn, ConfigDic
   def dbfn(storeConnection):
     objTypes = storeConnection.list_all_objectTypes()
     expectedLis = ["Test1", "Test2", "Test3", "Test4", "Test5"]
-    if not objectsEqual(objTypes, expectedLis):
+    if not python_Testing_Utilities.objectsEqual(objTypes, expectedLis):
       print("Got list:", objTypes)
       print("Expected list:", expectedLis)
       testClass.assertTrue(objectsEqual(objTypes, expectedLis), msg="Object list not retrived on DB reload")
@@ -853,8 +871,7 @@ def t_fullAsscendingSortWorks(testClass, objectStoreType):
       'sort': 'AA'
     }
     res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN)
-
-    expectedOrder = [1,2,3,4,5,6,7,8,9]
+    expectedOrder = [0,1,2,3,4,5,6,7,8]
     idx = 0
     for x in res["result"]:
       testClass.assertEqual(x["AA"], expectedOrder[idx], msg="Returned idx " + str(idx) + " wrong")
@@ -880,7 +897,7 @@ def t_fullDescendingSortWorks(testClass, objectStoreType):
     }
     res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN)
 
-    expectedOrder = [9,8,7,6,5,4,3,2,1]
+    expectedOrder = [8,7,6,5,4,3,2,1,0]
     idx = 0
     for x in res["result"]:
       testClass.assertEqual(x["AA"], expectedOrder[idx], msg="Returned idx " + str(idx) + " wrong")
@@ -906,7 +923,7 @@ def t_partDescendingSortWorks(testClass, objectStoreType):
     }
     res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN)
 
-    expectedOrder = [4,3,2,1]
+    expectedOrder = [3,2,1,0]
     idx = 0
     for x in res["result"]:
       testClass.assertEqual(x["AA"], expectedOrder[idx], msg="Returned idx " + str(idx) + " wrong")
@@ -932,7 +949,7 @@ def t_startDescendingSortWorks(testClass, objectStoreType):
     }
     res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN)
 
-    expectedOrder = [9,8,7]
+    expectedOrder = [8,7,6] #Remember zero based
     idx = 0
     for x in res["result"]:
       testClass.assertEqual(x["AA"], expectedOrder[idx], msg="Returned idx " + str(idx) + " wrong")
@@ -950,7 +967,7 @@ def t_midDescendingSortWorks(testClass, objectStoreType):
     add9OutOfOrderSampleRows(storeConnection, objectType="Test2")
 
     paginatedParamValues = {
-      'offset': 4,
+      'offset': 3,
       'pagesize': 3,
       'query': '',
       'sort': 'AA:desc'
@@ -978,14 +995,45 @@ def t_filterByFunctionOnlyTrue(testClass, objectStoreType):
     add9OutOfOrderSampleRows(storeConnection, objectType="Test2")
 
     paginatedParamValues = {
+      'offset': 0,
+      'pagesize': 10,
+      'query': '',
+      'sort': 'AA:desc'
+    }
+    res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN, filterFn)
+    # print("Res:", res)
+    expectedOrder = [8,7,6,5,4,3,2,1,0]
+    idx = 0
+    for x in res["result"]:
+      testClass.assertEqual(x["AA"], expectedOrder[idx], msg="Returned idx " + str(idx) + " wrong")
+      idx = idx + 1
+
+  objectStoreType.executeInsideConnectionContext(dbfn)
+
+def t_filterByFunctionOnlyTruePaginated(testClass, objectStoreType):
+  def filterFn(item, text):
+    return True
+  def outputFN(item):
+    return item[0]
+
+  def dbfn(storeConnection):
+    # Adding row in no order
+    add9OutOfOrderSampleRows(storeConnection, objectType="Test1")
+    add9OutOfOrderSampleRows(storeConnection, objectType="Test2")
+
+    paginatedParamValues = {
       'offset': 4,
       'pagesize': 3,
       'query': '',
       'sort': 'AA:desc'
     }
     res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN, filterFn)
-    print("Res:", res)
-    expectedOrder = [6,5,4]
+    print("Res:", res["result"])
+
+    # Full result comming back = [8,7,6,5,4,3,2,1,0]
+    # Offset 4 (skip first 4) = [4,3,2,1,0]
+    # page size 3 = [4,3,2]
+    expectedOrder = [4,3,2]
     idx = 0
     for x in res["result"]:
       testClass.assertEqual(x["AA"], expectedOrder[idx], msg="Returned idx " + str(idx) + " wrong")
@@ -994,7 +1042,7 @@ def t_filterByFunctionOnlyTrue(testClass, objectStoreType):
   objectStoreType.executeInsideConnectionContext(dbfn)
 '''
 #Filter function only False
-def t_filterByFunctionOnlyTrue(testClass, objectStoreType):
+def t_filterByFunctionOnlyTruePaginated(testClass, objectStoreType):
   def filterFn(item, text):
     return False
   def outputFN(item):

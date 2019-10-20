@@ -1,5 +1,12 @@
 from .paginatedResult import sanatizePaginatedParamValues, getPaginatedResultUsingIterator
 
+#Definition of Offset
+# offset is the number to skip before outputing
+# e.g. for 1,2,3,4,5,6,7,8,9 and pagesize 3
+#  offset 0 is default and outputs 1,2,3
+#  offset 1                outputs 2,3,4
+#  offset 2                outputs 3,4,5
+
 # Code to save JSON objects into a store.
 #  Allows abstraction of particular store
 #  This is the baseClass other stores inherit from
