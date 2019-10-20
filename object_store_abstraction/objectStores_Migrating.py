@@ -62,6 +62,9 @@ class ConnectionContext(ObjectStoreConnectionContext):
   def _getAllRowsForObjectType(self, objectType, filterFN, outputFN, whereClauseText):
     return self.fromContext._getAllRowsForObjectType(objectType, filterFN, outputFN, whereClauseText)
 
+  def _getPaginatedResultIterator(self, query, sort, filterFN, getSortKeyValueFn, objectType):
+    return self.fromContext._getPaginatedResultIterator(query, sort, filterFN, getSortKeyValueFn, objectType)
+
 # Class that will store objects in memory only
 class ObjectStore_Migrating(ObjectStore):
   fromStore = None
