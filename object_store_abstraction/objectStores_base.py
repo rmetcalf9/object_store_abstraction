@@ -1,4 +1,4 @@
-from .paginatedResult import sanatizePaginatedParamValues
+from .paginatedResult import sanatizePaginatedParamValues, getPaginatedResultUsingIterator
 
 # Code to save JSON objects into a store.
 #  Allows abstraction of particular store
@@ -32,6 +32,9 @@ TriedToDeleteMissingObjectException = TriedToDeleteMissingObjectExceptionClass("
 class TryingToCreateExistingObjectExceptionClass(Exception):
   pass
 TryingToCreateExistingObjectException = TryingToCreateExistingObjectExceptionClass("Tried to create an object that already exists")
+
+def defaultGetSortKeyValueFn(item, sortkeyName):
+  return outputFN(item)[sortkeyName]
 
 '''
 Calling pattern for connection where obj is and instance of ObjectStore:
@@ -162,10 +165,25 @@ class ObjectStoreConnectionContext():
     loadedData = storeConnection.executeInsideTransaction(someFn)
   '''
 
-  def getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
+  def getPaginatedResult(self, objectType, paginatedParamValues, outputFN, filterFn=None, getSortKeyValueFn=None):
     if outputFN is None:
       outputFN = outputFnItems
-    return self._getPaginatedResult(objectType, sanatizePaginatedParamValues(paginatedParamValues), outputFN)
+    sanatizedPaginatedParamValues = sanatizePaginatedParamValues(paginatedParamValues)
+    if filterFn is None:
+      return self._getPaginatedResult(objectType, sanatizedPaginatedParamValues, outputFN)
+    if getSortKeyValueFn is None:
+      getSortKeyValueFn = defaultGetSortKeyValueFn
+    return getPaginatedResultUsingIterator (
+      iteratorObj=self._getPaginatedResultIterator(
+        query=paginatedParamValues['query'],
+        sort=paginatedParamValues['sort'],
+        filterFN=filterFn,
+        getSortKeyValueFn=getSortKeyValueFn
+      ),
+      outputFN=outputFN,
+      offset=paginatedParamValues['offset'],
+      pagesize=paginatedParamValues['pagesize']
+    )
 
   # filterFN is applied first, then outputFN
   #  output fn is fed same params as getObjectJSON returns
@@ -187,6 +205,8 @@ class ObjectStoreConnectionContext():
     raise Exception('_getObjectJSON Not Overridden')
   def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
     raise Exception('_getPaginatedResult Not Overridden')
+  def _getPaginatedResultIterator(self, query, sort, filterFN, getSortKeyValueFn):
+    raise Exception('_getPaginatedResultIterator Not Overridden')
 
   #should return a fresh transaction context
   def _startTransaction(self):
