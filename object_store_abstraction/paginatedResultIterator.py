@@ -11,10 +11,12 @@ class PaginatedResultIteratorBaseClass():
     self.filterFn = filterFn
 
   def includeResult(self, res):
+    if res is None:
+      return True # we get a none at the end - it's the stop signal
     if self.whereClauses is None:
       if self.filterFn is None:
         return True
-      return self.filterFn(res, None) # FIlter function with no where clauses
+      return self.filterFn(res, None) # Filter function with no where clauses
     for curClause in self.whereClauses:
       if not self.filterFn(res, curClause):
         return False

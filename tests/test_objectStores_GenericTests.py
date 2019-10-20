@@ -1040,7 +1040,7 @@ def t_filterByFunctionOnlyTruePaginated(testClass, objectStoreType):
       idx = idx + 1
 
   objectStoreType.executeInsideConnectionContext(dbfn)
-'''
+
 #Filter function only False
 def t_filterByFunctionOnlyTruePaginated(testClass, objectStoreType):
   def filterFn(item, text):
@@ -1060,8 +1060,38 @@ def t_filterByFunctionOnlyTruePaginated(testClass, objectStoreType):
     }
     res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN, filterFn)
 
-    self.assertEqual(0, len(res["result"]), msg="Wrong number of results")
+    testClass.assertEqual(0, len(res["result"]), msg="Wrong number of results")
 
   objectStoreType.executeInsideConnectionContext(dbfn)
-'''
+
 #Filter function x mod 3
+def t_filterByFunctionXMod3True(testClass, objectStoreType):
+  def filterFn(item, text):
+    if (item[0]["AA"] % 3) == 0:
+      return True
+    return False
+  def outputFN(item):
+    return item[0]
+
+  def dbfn(storeConnection):
+    # Adding row in no order
+    add9OutOfOrderSampleRows(storeConnection)
+
+    paginatedParamValues = {
+      'offset': 0,
+      'pagesize': 10,
+      'query': '',
+      'sort': 'AA:desc'
+    }
+    res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN, filterFn)
+
+    testClass.assertEqual(3, len(res["result"]), msg="Wrong number of results")
+
+    expectedOrder = [6,3,0]
+    idx = 0
+    for x in res["result"]:
+      testClass.assertEqual(x["AA"], expectedOrder[idx], msg="Returned idx " + str(idx) + " wrong")
+      idx = idx + 1
+
+
+  objectStoreType.executeInsideConnectionContext(dbfn)
