@@ -31,6 +31,45 @@ class PaginatedResultIteratorBaseClass():
   def _next(self):
     raise Exception("_next is Not Implemented")
 
+def sortListOfKeysToDictBySortString(listOfKeys, dictOfData, sortString, getSortKeyValueFn):
+  def getSortTuple(key):
+    #sort keys are case sensitive
+    kk = key.split(":")
+    if len(kk)==0:
+      raise Exception('Invalid sort key')
+    elif len(kk)==1:
+      return {'name': kk[0], 'desc': False}
+    elif len(kk)==2:
+      if kk[1].lower() == 'desc':
+        return {'name': kk[0], 'desc': True}
+      elif kk[1].lower() == 'asc':
+        return {'name': kk[0], 'desc': False}
+    raise Exception('Invalid sort key - ' + key)
+
+  def genSortKeyGenFn(listBeingSorted, sortkey):
+    def sortKeyGenFn(ite):
+      try:
+        # print(sortkey)
+        # print(outputFN(listBeingSorted[ite])[sortkey])
+        ret = getSortKeyValueFn(listBeingSorted[ite], sortkey)
+        if ret is None:
+          return ''
+        if isinstance(ret, int):
+          return ('000000000000000000000000000000000000000000000000000' + str(ret))[-50:]
+        if isinstance(ret, bool):
+          if ret:
+            return 'True'
+          return 'False'
+        return ret
+      except KeyError:
+        raise Exception('Sort key ' + sortkey + ' not found')
+    return sortKeyGenFn
+
+  # sort by every sort key one at a time starting with the least significant
+  for curSortKey in sortString.split(",")[::-1]:
+    sk = getSortTuple(curSortKey)
+    listOfKeys.sort(key=genSortKeyGenFn(dictOfData, sk['name']), reverse=sk['desc'])
+
 class PaginatedResultIteratorFromDictWithAttrubtesAsKeysClass(PaginatedResultIteratorBaseClass):
   dict = None
   curIdx = None
@@ -45,43 +84,7 @@ class PaginatedResultIteratorFromDictWithAttrubtesAsKeysClass(PaginatedResultIte
       self.listOfKeys.append(cur)
 
     if sort is not None:
-      def getSortTuple(key):
-        #sort keys are case sensitive
-        kk = key.split(":")
-        if len(kk)==0:
-          raise Exception('Invalid sort key')
-        elif len(kk)==1:
-          return {'name': kk[0], 'desc': False}
-        elif len(kk)==2:
-          if kk[1].lower() == 'desc':
-            return {'name': kk[0], 'desc': True}
-          elif kk[1].lower() == 'asc':
-            return {'name': kk[0], 'desc': False}
-        raise Exception('Invalid sort key - ' + key)
-
-      def genSortKeyGenFn(listBeingSorted, sortkey):
-        def sortKeyGenFn(ite):
-          try:
-            # print(sortkey)
-            # print(outputFN(listBeingSorted[ite])[sortkey])
-            ret = getSortKeyValueFn(listBeingSorted[ite], sortkey)
-            if ret is None:
-              return ''
-            if isinstance(ret, int):
-              return ('000000000000000000000000000000000000000000000000000' + str(ret))[-50:]
-            if isinstance(ret, bool):
-              if ret:
-                return 'True'
-              return 'False'
-            return ret
-          except KeyError:
-            raise Exception('Sort key ' + sortkey + ' not found')
-        return sortKeyGenFn
-
-      # sort by every sort key one at a time starting with the least significant
-      for curSortKey in sort.split(",")[::-1]:
-        sk = getSortTuple(curSortKey)
-        self.listOfKeys.sort(key=genSortKeyGenFn(self.dict, sk['name']), reverse=sk['desc'])
+      sortListOfKeysToDictBySortString(self.listOfKeys, self.dict, sort, getSortKeyValueFn)
 
   #def hasMore(self):
   #  return self.curIdx < len(self.listOfKeys)

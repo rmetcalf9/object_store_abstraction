@@ -5,7 +5,7 @@ import base64
 from dateutil.parser import parse
 import pytz
 from .paginatedResult import getPaginatedResult
-from .paginatedResultIterator import PaginatedResultIteratorBaseClass
+from .paginatedResultIterator import PaginatedResultIteratorBaseClass, sortListOfKeysToDictBySortString
 
 import shutil #For remove dir and contents
 
@@ -339,8 +339,13 @@ class Iterator(PaginatedResultIteratorBaseClass):
       self.objectKeys.append(getKeyFromFileSystemSafeString(curObjFilename))
 
     if sort is not None:
-      raise Exception("Sort specified - not able")
-      # Load all objects into object array then sort them in order of key
+      # Load all objects into dict indexed by key
+      self.objects = {}
+      for curKey in self.objectKeys:
+        self.objects[curKey] = self.simpleFileStoreConnectionContext._getObjectJSON(self.objectType, curKey)
+
+      sortListOfKeysToDictBySortString(self.objectKeys, self.objects, sort, getSortKeyValueFn)
+
 
     self.curIdx = 0
 
@@ -350,6 +355,7 @@ class Iterator(PaginatedResultIteratorBaseClass):
     self.curIdx = self.curIdx + 1
     if self.curIdx > len(self.objectKeys):
       return None
+
 
     #print("OK:" + objectKey)
     if self.objects is None:

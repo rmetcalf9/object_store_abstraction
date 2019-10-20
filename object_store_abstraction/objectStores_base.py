@@ -33,8 +33,10 @@ class TryingToCreateExistingObjectExceptionClass(Exception):
   pass
 TryingToCreateExistingObjectException = TryingToCreateExistingObjectExceptionClass("Tried to create an object that already exists")
 
-def defaultGetSortKeyValueFn(item, sortkeyName):
-  return outputFN(item)[sortkeyName]
+def getDefaultGetSortKeyValueFn(outputFN):
+  def defaultGetSortKeyValueFn(item, sortkeyName):
+    return outputFN(item)[sortkeyName]
+  return defaultGetSortKeyValueFn
 
 '''
 Calling pattern for connection where obj is and instance of ObjectStore:
@@ -172,7 +174,7 @@ class ObjectStoreConnectionContext():
     if filterFn is None:
       return self._getPaginatedResult(objectType, sanatizedPaginatedParamValues, outputFN)
     if getSortKeyValueFn is None:
-      getSortKeyValueFn = defaultGetSortKeyValueFn
+      getSortKeyValueFn = getDefaultGetSortKeyValueFn(outputFN)
     return getPaginatedResultUsingIterator (
       iteratorObj=self._getPaginatedResultIterator(
         query=paginatedParamValues['query'],
