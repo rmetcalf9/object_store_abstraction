@@ -146,7 +146,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
     )
     result = self._INT_execute(query)
     if result.rowcount != 1:
-      print('Result count is ', result.rowcount)
+      #print('Result count is ', result.rowcount)
       raise Exception('_saveJSONObject wrong number of rows updated')
     return newObjectVersion
 
@@ -307,7 +307,7 @@ class ObjectStore_SQLAlchemy(ObjectStore):
 
     connect_args = None
     if "ssl_ca" in ConfigDict:
-      print("ssl_ca:", ConfigDict['ssl_ca'])
+      #print("ssl_ca:", ConfigDict['ssl_ca'])
       if not os.path.isfile(ConfigDict['ssl_ca']):
         raise Exception("Supplied ssl_ca dosen't exist")
       connect_args = {

@@ -1,4 +1,5 @@
 from ObjectStoresWithPrefix import objectStoresWithPrefix, JSONString, JSONString2
+import TestHelperSuperClass
 
 '''
 These tests require a local mysql database
@@ -48,6 +49,7 @@ SQLAlchemy_LocalDBConfigDict_withPrefix["objectPrefix"] ="testPrefix"
 class dummyException(Exception):
   pass
 
+@TestHelperSuperClass.wipd
 class test_objectStoresSQLAlchemy(objectStoresWithPrefix):
   def test_genericTests(self):
     if SKIPSQLALCHEMYTESTS:
@@ -170,7 +172,7 @@ class test_objectStoresSQLAlchemy(objectStoresWithPrefix):
       print("Skipping SQLAlchemyTests")
       return
 
-    objectStoreType = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=True, type='testSQLA', factoryFn=undertest.createObjectStoreInstance)
+    objectStoreType = undertest.ObjectStore_SQLAlchemy(SQLAlchemy_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA', factoryFn=undertest.createObjectStoreInstance)
     objectStoreType.resetDataForTest()
     testClass = self
 
