@@ -22,7 +22,7 @@ migratingStoresStartingAmounts = {
   "MigrationTestObj3": 10
 }
 
-@TestHelperSuperClass.wipd
+#@TestHelperSuperClass.wipd
 class test_objectStoresMigrating(TestHelperSuperClass.testHelperSuperClass):
   def setupTwoMemoryStoresReadyForAMigration(self, extfns):
     migratingStore = undertest.ObjectStore_Migrating(copy.deepcopy(ConfigDict), extfns, detailLogging=False, type='testMIG', factoryFn=undertest.createObjectStoreInstance)

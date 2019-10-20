@@ -947,8 +947,9 @@ def t_startDescendingSortWorks(testClass, objectStoreType):
       'query': '',
       'sort': 'AA:desc'
     }
+    print("***********")
     res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN)
-
+    print(res)
     expectedOrder = [8,7,6] #Remember zero based
     idx = 0
     for x in res["result"]:

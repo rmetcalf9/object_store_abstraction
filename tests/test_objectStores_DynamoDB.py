@@ -1,4 +1,5 @@
 from ObjectStoresWithPrefix import objectStoresWithPrefix
+import TestHelperSuperClass
 
 import copy
 import datetime
@@ -37,8 +38,8 @@ DynamoDB_LocalDBConfigDict_multiTable = {
   "single_table_mode": "false"
 }
 
-
 class test_objectStoresDynamoDB(objectStoresWithPrefix):
+  @TestHelperSuperClass.wipd
   def test_genericTests(self):
     if SKIPSQLALCHEMYTESTS:
       print("Skipping SQLAlchemyTests")

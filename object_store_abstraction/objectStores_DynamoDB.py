@@ -2,6 +2,7 @@
 
 from .objectStores_base import ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException, ObjectStoreConfigError
 from .paginatedResult import getPaginatedResult
+from .paginatedResultIterator import PaginatedResultIteratorBaseClass, sortListOfKeysToDictBySortString, PaginatedResultIteratorFromDictWithAttrubtesAsKeysClass
 
 from boto3 import Session as AWSSession
 from botocore.config import Config
@@ -76,7 +77,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
     )
     return newObjectVersion
 
-  def __getTupleFromItem(self, item):
+  def getTupleFromItem(self, item):
     dt = parse(item['creationDate'])
     creationDate = dt.astimezone(pytz.utc)
     dt = parse(item['lastUpdateData'])
@@ -131,34 +132,28 @@ class ConnectionContext(ObjectStoreConnectionContext):
     if "Item" not in response:
       return None, None, None, None, None
 
-    return self.__getTupleFromItem(response["Item"])
+    return self.getTupleFromItem(response["Item"])
 
 
   def __getAllRowsForObjectType(self, objectType, offset, pagesize):
+    it = Iterator(None, None, None, self, objectType)
     srcData = {}
-
-
-    response = {'LastEvaluatedKey': 'setToStartLoop'}
-    numFetched = 0
-    fetching = True
-    while ('LastEvaluatedKey' in response) and (fetching == True):
-      response = self.objectStore.getTable(objectType).scan(
-          FilterExpression=Key('partition_key').begins_with(objectType),
-      )
-      for curItem in response['Items']:
-        if fetching:
-          numFetched = numFetched + 1
-          srcData[curItem['objectKey']] = self.__getTupleFromItem(curItem)
-          if offset != None: # allows this to work in non-pagination mode
-            if numFetched > (offset + pagesize): #Total caculation will be off when we don't go thorough entire dataset
-                                # but invalid figure will be always be one over as we fetch one past in all cases
-              fetching = False
+    curItem=it._next()
+    while curItem is not None:
+      srcData[curItem[4]] = curItem
+      curItem=it._next()
 
     return srcData
 
   def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
     #https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb.html?highlight=delete_item#paginators
-    srcData = self.__getAllRowsForObjectType(objectType, paginatedParamValues['offset'], paginatedParamValues['pagesize'])
+    srcData = []
+    if paginatedParamValues['sort'] is None:
+      srcData = self.__getAllRowsForObjectType(objectType, paginatedParamValues['offset'], paginatedParamValues['pagesize'])
+    else:
+      # We are doing deep inspection sorting so we must get all the data
+      # TODO could improve this by getting DynamoDB to understand sort somehow
+      srcData = self.__getAllRowsForObjectType(objectType, None, None)
 
     #paginatedParamValues['query'],
     #paginatedParamValues['offset'],
@@ -211,6 +206,13 @@ class ConnectionContext(ObjectStoreConnectionContext):
     if self.objectStore.singleTableMode:
       return self._list_all_objectTypes_singleTableMode()
     return self._list_all_objectTypes_multiTableMode()
+
+  def _getPaginatedResultIterator(self, query, sort, filterFN, getSortKeyValueFn, objectType):
+    if sort is None:
+      return Iterator(query, filterFN, getSortKeyValueFn, self, objectType)
+    else:
+      dict = self.__getAllRowsForObjectType(objectType, None, None)
+      return PaginatedResultIteratorFromDictWithAttrubtesAsKeysClass(dict, query, sort, filterFN, getSortKeyValueFn)
 
 # Class that will store objects
 class ObjectStore_DynamoDB(ObjectStore):
@@ -345,3 +347,66 @@ class ObjectStore_DynamoDB(ObjectStore):
 
   def _getConnectionContext(self):
     return ConnectionContext(self)
+
+class Iterator(PaginatedResultIteratorBaseClass):
+  #https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GettingStarted.Python.04.html#GettingStarted.Python.04.Scan
+  dynamoDBStoreConnectionContext = None
+  objectType = None
+
+  curResponse = None
+  curResponseIdx = None
+
+  def __init__(self, query, filterFN, getSortKeyValueFn, dynamoDBStoreConnectionContext, objectType):
+    PaginatedResultIteratorBaseClass.__init__(self, query, filterFN)
+    self.dynamoDBStoreConnectionContext = dynamoDBStoreConnectionContext
+    self.objectType = objectType
+
+    # Get first page
+    self.curResponseIdx = 0
+    self.curResponse = self.dynamoDBStoreConnectionContext.objectStore.getTable(self.objectType).scan(
+        FilterExpression=Key('partition_key').begins_with(self.objectType),
+    )
+
+    #self.objectKeys = list(self.memoryStoreConnectionContext.objectStore._INT_getDictForObjectType(objectType).keys())
+
+  def _next(self):
+    if len(self.curResponse['Items']) == 0:
+      return None
+    if self.curResponseIdx < len(self.curResponse['Items']):
+      self.curResponseIdx = self.curResponseIdx + 1
+      return self.dynamoDBStoreConnectionContext.getTupleFromItem(
+        self.curResponse['Items'][self.curResponseIdx-1]
+      )
+
+    if 'LastEvaluatedKey' not in self.curResponse:
+      return None
+
+    # If we are here we have already output the last item in the current response
+    #  get next response
+    self.curResponseIdx = 0
+    self.curResponse = self.dynamoDBStoreConnectionContext.objectStore.getTable(self.objectType).scan(
+        FilterExpression=Key('partition_key').begins_with(self.objectType),
+        ExclusiveStartKey=self.curResponse['LastEvaluatedKey']
+    )
+
+    # We can call ourselves again which will result in the first row of the _next
+    # batch being returned
+    return self.next()
+
+'''
+    response = {'LastEvaluatedKey': 'setToStartLoop'}
+    numFetched = 0
+    fetching = True
+    while ('LastEvaluatedKey' in response) and (fetching == True):
+      response = self.objectStore.getTable(objectType).scan(
+          FilterExpression=Key('partition_key').begins_with(objectType),
+      )
+      for curItem in response['Items']:
+        if fetching:
+          numFetched = numFetched + 1
+          srcData[curItem['objectKey']] = self.getTupleFromItem(curItem)
+          if offset != None: # allows this to work in non-pagination mode
+            if numFetched > (offset + pagesize): #Total caculation will be off when we don't go thorough entire dataset
+                                # but invalid figure will be always be one over as we fetch one past in all cases
+              fetching = False
+'''
