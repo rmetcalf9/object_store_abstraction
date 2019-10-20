@@ -1,5 +1,6 @@
 from .objectStores_base import ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException
 from .paginatedResult import getPaginatedResult
+from .paginatedResultIterator import PaginatedResultIteratorBaseClass, sortListOfKeysToDictBySortString
 
 class ConnectionContext(ObjectStoreConnectionContext):
   objectStore = None
@@ -91,6 +92,8 @@ class ConnectionContext(ObjectStoreConnectionContext):
           outputLis.append(superObj[curKey])
     return list(map(outputFN, outputLis))
 
+  def _getPaginatedResultIterator(self, query, sort, filterFN, getSortKeyValueFn, objectType):
+    return Iterator(query, sort, filterFN, getSortKeyValueFn, self, objectType)
 
 # Class that will store objects in memory only
 class ObjectStore_Memory(ObjectStore):
@@ -108,3 +111,25 @@ class ObjectStore_Memory(ObjectStore):
 
   def _getConnectionContext(self):
     return ConnectionContext(self)
+
+class Iterator(PaginatedResultIteratorBaseClass):
+  objectKeys = None
+  curIdx = None
+  memoryStoreConnectionContext = None
+  objectType = None
+
+  def __init__(self, query, sort, filterFN, getSortKeyValueFn, memoryStoreConnectionContext, objectType):
+    PaginatedResultIteratorBaseClass.__init__(self, query, filterFN)
+    self.memoryStoreConnectionContext = memoryStoreConnectionContext
+    self.objectType = objectType
+    self.curIdx = 0
+
+    self.objectKeys = list(self.memoryStoreConnectionContext.objectStore._INT_getDictForObjectType(objectType).keys())
+    if sort is not None:
+      sortListOfKeysToDictBySortString(self.objectKeys, self.memoryStoreConnectionContext.objectStore._INT_getDictForObjectType(objectType), sort, getSortKeyValueFn)
+
+  def _next(self):
+    self.curIdx = self.curIdx + 1
+    if self.curIdx > len(self.objectKeys):
+      return None
+    return self.memoryStoreConnectionContext._getObjectJSON(self.objectType, self.objectKeys[self.curIdx-1])
