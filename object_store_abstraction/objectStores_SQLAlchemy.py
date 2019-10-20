@@ -251,12 +251,25 @@ class ConnectionContext(ObjectStoreConnectionContext):
     return srcData
 
   def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
-    srcData = self.__getObjectTypeListFromDBUsingQuery(
-      objectType,
-      paginatedParamValues['query'],
-      paginatedParamValues['offset'],
-      paginatedParamValues['pagesize']
-    )
+    srcData = {}
+    if paginatedParamValues['sort'] is None:
+      srcData = self.__getObjectTypeListFromDBUsingQuery(
+        objectType,
+        paginatedParamValues['query'],
+        paginatedParamValues['offset'],
+        paginatedParamValues['pagesize']
+      )
+    else:
+      # Sort requires inspection of data. We must retrieve all data for it to work
+      # this requires a full load of data if sorting is required otherwise some rows
+      # won't be in order. This is one reason to move away from generic objectStore
+      # library
+      srcData = self.__getObjectTypeListFromDBUsingQuery(
+        objectType,
+        paginatedParamValues['query'],
+        None,
+        None
+      )
 
     return getPaginatedResult(
       list=srcData,
