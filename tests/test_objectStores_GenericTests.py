@@ -663,7 +663,7 @@ def t_getPaginatedResultsFiveRowsPagesize2offset10(testClass, objectStoreType):
     testClass.assertJSONStringsEqualWithIgnoredKeys(res['result'], expectedRes, [  ], msg='Wrong result')
   objectStoreType.executeInsideConnectionContext(dbfn)
 
-def t_UpdateFilter(testClass, objectStoreType):
+def t_FilterByQuery(testClass, objectStoreType):
   def dbfn(storeConnection):
     addSampleRows(storeConnection, 5, 'yyYYyyy')
     addSampleRows(storeConnection, 5, 'xxxxxxx', 5)
@@ -1094,4 +1094,38 @@ def t_filterByFunctionXMod3True(testClass, objectStoreType):
       idx = idx + 1
 
 
+  objectStoreType.executeInsideConnectionContext(dbfn)
+
+
+def t_FilterByQueryAndFunction(testClass, objectStoreType):
+  def filterFn(item, text):
+    if (item[0]["AA"] % 3) == 0:
+      return True
+    return False
+  def dbfn(storeConnection):
+    addSampleRows(storeConnection, 5, 'yyYYyyy')
+    addSampleRows(storeConnection, 5, 'xxxxxxx', 5)
+    def outputFN(item):
+      return item[0]
+    paginatedParamValues = {
+      'offset': 0,
+      'pagesize': 10,
+      'query': 'yyyyyyy',
+      'sort': None
+    }
+    res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN, filterFn)
+    expectedRes = []
+    for x in range(0,5):
+      if x % 3 == 0:
+        expectedRes.append({"AA": x, "BB": "yyYYyyy", "CC": {"CC.AA": "AA", "CC.BB": "BB", "CC.CC": "CC"}})
+    assertCorrectPaginationResult(testClass, res, 0, 10, 4)
+    #order dosen't matter in this result
+    for curRes in res['result']:
+      found = False
+      for x in range(0, len(expectedRes)):
+        if python_Testing_Utilities.objectsEqual(expectedRes[x],curRes):
+          found = True
+          del expectedRes[x]
+          break
+    testClass.assertEqual(0, len(expectedRes), msg="Not all expected results were in the response")
   objectStoreType.executeInsideConnectionContext(dbfn)
