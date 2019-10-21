@@ -1043,7 +1043,6 @@ def t_filterByFunctionOnlyTruePaginated(testClass, objectStoreType):
 #Filter function only False
 def t_filterByFunctionOnlyTruePaginated(testClass, objectStoreType):
   def filterFn(item, text):
-    print("filCall")
     return False
   def outputFN(item):
     return item[0]
@@ -1058,7 +1057,6 @@ def t_filterByFunctionOnlyTruePaginated(testClass, objectStoreType):
       'query': '',
       'sort': 'AA:desc'
     }
-    print("TTT")
     res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN, filterFn)
 
     testClass.assertEqual(0, len(res["result"]), msg="Wrong number of results")
@@ -1118,7 +1116,7 @@ def t_FilterByQueryAndFunction(testClass, objectStoreType):
     for x in range(0,5):
       if x % 3 == 0:
         expectedRes.append({"AA": x, "BB": "yyYYyyy", "CC": {"CC.AA": "AA", "CC.BB": "BB", "CC.CC": "CC"}})
-    assertCorrectPaginationResult(testClass, res, 0, 10, 4)
+    assertCorrectPaginationResult(testClass, res, 0, 10, 2) #2 or 3 should be returned
     #order dosen't matter in this result
     for curRes in res['result']:
       found = False

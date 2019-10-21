@@ -138,10 +138,10 @@ class ConnectionContext(ObjectStoreConnectionContext):
   def __getAllRowsForObjectType(self, objectType, offset, pagesize):
     it = Iterator(None, None, None, self, objectType)
     srcData = {}
-    curItem=it._next()
+    curItem=it.next()
     while curItem is not None:
       srcData[curItem[4]] = curItem
-      curItem=it._next()
+      curItem=it.next()
 
     return srcData
 

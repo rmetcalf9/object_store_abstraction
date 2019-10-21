@@ -210,45 +210,12 @@ class ConnectionContext(ObjectStoreConnectionContext):
 
   def __getObjectTypeListFromDBUsingQuery(self, objectType, queryString, offset, pagesize):
     # TODO refactor to use iterator
-    self.objectStore.detailLog('__getObjectTypeListFromDBUsingQuery')
-    self.objectStore.detailLog('   objectType:' + str(objectType))
-    self.objectStore.detailLog('  queryString:' + str(queryString))
-    whereclauseToUse = self.objectStore.objDataTable.c.type==objectType
-    if queryString is not None:
-      if queryString != '':
-        self.objectStore.detailLog('   **Adding where clause**')
-        whereclauseToUse = and_(
-          whereclauseToUse,
-          self.objectStore.objDataTable.c.objectDICT.ilike('%' + queryString + '%')
-        )
-    query = self.objectStore.objDataTable.select(
-      whereclause=whereclauseToUse,
-      order_by=self.objectStore.objDataTable.c.key
-    )
-    '''
-     SELECT "_objData".id, "_objData".type, "_objData".key, "_objData"."objectDICT", "_objData"."objectVersion", "_objData"."creationDate", "_objData"."lastUpdateDate", "_objData"."creationDate_iso8601", "_objData"."lastUpdateDate_iso8601"
-     FROM "_objData"
-     WHERE "_objData".type = 'Test1' AND lower("_objData"."objectDICT") LIKE lower('%''AA'': 3%') ORDER BY "_objData".key
-    '''
-
-    #print("\n---------\nwhereclauseToUse:", whereclauseToUse)
-    #print("query:", literalquery(query))
-    result =  self._INT_execute(query)
-
+    iterator = Iterator(queryString, None, None, self, objectType)
     srcData = {}
-    fetching = True
-    numFetched = 0
-    while (fetching):
-      row = result.fetchone()
-      numFetched = numFetched + 1
-      if row is None:
-        fetching = False
-      else:
-        srcData[row['key']] = self._INT_getTupleFromRow(row)
-      if offset != None: # allows this to work in non-pagination mode
-        if numFetched > (offset + pagesize): #Total caculation will be off when we don't go thorough entire dataset
-                            # but invalid figure will be always be one over as we fetch one past in all cases
-          fetching = False
+    curItem=iterator.next()
+    while curItem is not None:
+      srcData[curItem[4]] = curItem
+      curItem=iterator.next()
     return srcData
 
   def _getPaginatedResult(self, objectType, paginatedParamValues, outputFN):
@@ -304,12 +271,10 @@ class ConnectionContext(ObjectStoreConnectionContext):
     if sort is None:
       return iterator
     srcData = {}
-    curItem=iterator._next()
+    curItem=iterator.next()
     while curItem is not None:
       srcData[curItem[4]] = curItem
-      curItem=iterator._next()
-
-    print("A _getPaginatedResultIterator srcData", srcData)
+      curItem=iterator.next()
 
     # All filtering is already done, this iterator just sorts
     dict, query, sort, filterFN, getSortKeyValueFn
@@ -428,6 +393,12 @@ class Iterator(PaginatedResultIteratorBaseClass):
   result = None
 
   def __init__(self, query, filterFN, getSortKeyValueFn, sqlAlchemyStoreConnectionContext, objectType):
+    if query is not None:
+      # This mode deals with queries without a filter function
+      if filterFN is None:
+        def defFilterFn(item, whereClause):
+          return True
+        filterFN = defFilterFn
     PaginatedResultIteratorBaseClass.__init__(self, query, filterFN)
     self.sqlAlchemyStoreConnectionContext = sqlAlchemyStoreConnectionContext
     self.objectType = objectType
