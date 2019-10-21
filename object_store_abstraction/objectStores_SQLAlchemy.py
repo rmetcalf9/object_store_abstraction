@@ -8,7 +8,7 @@ import logging
 from .paginatedResult import getPaginatedResult
 
 from .makeDictJSONSerializable import getJSONtoPutInStore, getObjFromJSONThatWasPutInStore
-from .paginatedResultIterator import PaginatedResultIteratorBaseClass, sortListOfKeysToDictBySortString
+from .paginatedResultIterator import PaginatedResultIteratorBaseClass, sortListOfKeysToDictBySortString, PaginatedResultIteratorFromDictWithAttrubtesAsKeysClass
 
 ###---------- Code to get actual query being run
 '''
@@ -209,6 +209,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
     return results
 
   def __getObjectTypeListFromDBUsingQuery(self, objectType, queryString, offset, pagesize):
+    # TODO refactor to use iterator
     self.objectStore.detailLog('__getObjectTypeListFromDBUsingQuery')
     self.objectStore.detailLog('   objectType:' + str(objectType))
     self.objectStore.detailLog('  queryString:' + str(queryString))
@@ -299,10 +300,26 @@ class ConnectionContext(ObjectStoreConnectionContext):
     self.connection.close()
 
   def _getPaginatedResultIterator(self, query, sort, filterFN, getSortKeyValueFn, objectType):
+    iterator = Iterator(query, filterFN, getSortKeyValueFn, self, objectType)
     if sort is None:
-      return Iterator(query, sort, filterFN, getSortKeyValueFn, self, objectType)
-    else:
-      raise Exception("Sorted iteration not Implemented")
+      return iterator
+    srcData = {}
+    curItem=iterator._next()
+    while curItem is not None:
+      srcData[curItem[4]] = curItem
+      curItem=iterator._next()
+
+    print("A _getPaginatedResultIterator srcData", srcData)
+
+    # All filtering is already done, this iterator just sorts
+    dict, query, sort, filterFN, getSortKeyValueFn
+    return PaginatedResultIteratorFromDictWithAttrubtesAsKeysClass(
+      dict=srcData,
+      query=None,
+      sort=sort,
+      filterFN=None,
+      getSortKeyValueFn=getSortKeyValueFn
+    )
 
 
 class ObjectStore_SQLAlchemy(ObjectStore):
@@ -408,8 +425,52 @@ class ObjectStore_SQLAlchemy(ObjectStore):
 class Iterator(PaginatedResultIteratorBaseClass):
   sqlAlchemyStoreConnectionContext = None
   objectType = None
+  result = None
 
-  def __init__(self, query, sort, filterFN, getSortKeyValueFn, sqlAlchemyStoreConnectionContext, objectType):
+  def __init__(self, query, filterFN, getSortKeyValueFn, sqlAlchemyStoreConnectionContext, objectType):
     PaginatedResultIteratorBaseClass.__init__(self, query, filterFN)
     self.sqlAlchemyStoreConnectionContext = sqlAlchemyStoreConnectionContext
     self.objectType = objectType
+
+    self.sqlAlchemyStoreConnectionContext.objectStore.detailLog('__getObjectTypeListFromDBUsingQuery')
+    self.sqlAlchemyStoreConnectionContext.objectStore.detailLog('   objectType:' + str(self.objectType))
+    self.sqlAlchemyStoreConnectionContext.objectStore.detailLog('  query:' + str(query))
+    whereclauseToUse = self.sqlAlchemyStoreConnectionContext.objectStore.objDataTable.c.type==self.objectType
+    if query is not None:
+      if query != '':
+        self.sqlAlchemyStoreConnectionContext.objectStore.detailLog('   **Adding where clause**')
+        whereclauseToUse = and_(
+          whereclauseToUse,
+          self.sqlAlchemyStoreConnectionContext.objectStore.objDataTable.c.objectDICT.ilike('%' + query + '%')
+        )
+    queryObj = self.sqlAlchemyStoreConnectionContext.objectStore.objDataTable.select(
+      whereclause=whereclauseToUse,
+      order_by=self.sqlAlchemyStoreConnectionContext.objectStore.objDataTable.c.key
+    )
+    # print("SQLAlch Itr queryObj", queryObj)
+    self.result =  self.sqlAlchemyStoreConnectionContext._INT_execute(queryObj)
+
+  def _next(self):
+    row = self.result.fetchone()
+    if row is None:
+      return None
+    return self.sqlAlchemyStoreConnectionContext._INT_getTupleFromRow(row)
+
+'''
+
+    srcData = {}
+    fetching = True
+    numFetched = 0
+    while (fetching):
+      row = result.fetchone()
+      numFetched = numFetched + 1
+      if row is None:
+        fetching = False
+      else:
+        srcData[row['key']] = self._INT_getTupleFromRow(row)
+      if offset != None: # allows this to work in non-pagination mode
+        if numFetched > (offset + pagesize): #Total caculation will be off when we don't go thorough entire dataset
+                            # but invalid figure will be always be one over as we fetch one past in all cases
+          fetching = False
+    return srcData
+  '''

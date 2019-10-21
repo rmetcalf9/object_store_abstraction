@@ -1043,6 +1043,7 @@ def t_filterByFunctionOnlyTruePaginated(testClass, objectStoreType):
 #Filter function only False
 def t_filterByFunctionOnlyTruePaginated(testClass, objectStoreType):
   def filterFn(item, text):
+    print("filCall")
     return False
   def outputFN(item):
     return item[0]
@@ -1057,6 +1058,7 @@ def t_filterByFunctionOnlyTruePaginated(testClass, objectStoreType):
       'query': '',
       'sort': 'AA:desc'
     }
+    print("TTT")
     res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN, filterFn)
 
     testClass.assertEqual(0, len(res["result"]), msg="Wrong number of results")
@@ -1083,7 +1085,6 @@ def t_filterByFunctionXMod3True(testClass, objectStoreType):
       'sort': 'AA:desc'
     }
     res = storeConnection.getPaginatedResult("Test1", paginatedParamValues, outputFN, filterFn)
-
     testClass.assertEqual(3, len(res["result"]), msg="Wrong number of results")
 
     expectedOrder = [6,3,0]
