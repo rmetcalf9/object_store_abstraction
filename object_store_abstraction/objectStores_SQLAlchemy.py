@@ -246,7 +246,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
       pagesize=paginatedParamValues['pagesize'],
       query=paginatedParamValues['query'],
       sort=paginatedParamValues['sort'],
-      filterFN=self._filterFN_allowAll
+      filterFN=self.filterFN_allowAll
     )
 
   def _getAllRowsForObjectType(self, objectType, filterFN, outputFN, whereClauseText):

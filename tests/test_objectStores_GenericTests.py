@@ -1096,11 +1096,14 @@ def t_filterByFunctionXMod3True(testClass, objectStoreType):
 
 
 def t_FilterByQueryAndFunction(testClass, objectStoreType):
-  def filterFn(item, text):
-    if (item[0]["AA"] % 3) == 0:
-      return True
-    return False
   def dbfn(storeConnection):
+    def filterFn(item, text):
+      if not storeConnection.filterFN_basicTextInclusion(item, text):
+        return False
+      if (item[0]["AA"] % 3) == 0:
+        return True
+      return False
+
     addSampleRows(storeConnection, 5, 'yyYYyyy')
     addSampleRows(storeConnection, 5, 'xxxxxxx', 5)
     def outputFN(item):

@@ -49,7 +49,7 @@ SQLAlchemy_LocalDBConfigDict_withPrefix["objectPrefix"] ="testPrefix"
 class dummyException(Exception):
   pass
 
-@TestHelperSuperClass.wipd
+#@TestHelperSuperClass.wipd
 class test_objectStoresSQLAlchemy(objectStoresWithPrefix):
   def test_genericTests(self):
     if SKIPSQLALCHEMYTESTS:

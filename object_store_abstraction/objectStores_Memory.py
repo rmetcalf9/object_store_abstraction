@@ -80,14 +80,14 @@ class ConnectionContext(ObjectStoreConnectionContext):
       pagesize=paginatedParamValues['pagesize'],
       query=paginatedParamValues['query'],
       sort=paginatedParamValues['sort'],
-      filterFN=self._filterFN_basicTextInclusion
+      filterFN=self.filterFN_basicTextInclusion
     )
 
   def _getAllRowsForObjectType(self, objectType, filterFN, outputFN, whereClauseText):
     superObj = self.__getAllRowsForObjectType(objectType)
     outputLis = []
     for curKey in superObj:
-      if self._filterFN_basicTextInclusion(superObj[curKey], whereClauseText):
+      if self.filterFN_basicTextInclusion(superObj[curKey], whereClauseText):
         if filterFN(superObj[curKey], whereClauseText):
           outputLis.append(superObj[curKey])
     return list(map(outputFN, outputLis))

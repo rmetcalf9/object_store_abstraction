@@ -233,7 +233,7 @@ class ObjectStoreConnectionContext():
   def _close(self):
     pass
 
-  def _filterFN_basicTextInclusion(self, item, whereClauseText):
+  def filterFN_basicTextInclusion(self, item, whereClauseText):
     #baseapp passes in whereClauseText as all upper case
     if whereClauseText is None:
       return True
@@ -244,7 +244,7 @@ class ObjectStoreConnectionContext():
     #  we also need to consider removing spaces from consideration
     return whereClauseText in str(item).upper()
 
-  def _filterFN_allowAll(self, item, whereClauseText):
+  def filterFN_allowAll(self, item, whereClauseText):
     return True
 
   #This won't work via a cache since not all objectTypes are read
