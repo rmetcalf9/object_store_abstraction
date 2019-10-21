@@ -8,7 +8,7 @@ import logging
 from .paginatedResult import getPaginatedResult
 
 from .makeDictJSONSerializable import getJSONtoPutInStore, getObjFromJSONThatWasPutInStore
-
+from .paginatedResultIterator import PaginatedResultIteratorBaseClass, sortListOfKeysToDictBySortString
 
 ###---------- Code to get actual query being run
 '''
@@ -298,6 +298,12 @@ class ConnectionContext(ObjectStoreConnectionContext):
   def _close(self):
     self.connection.close()
 
+  def _getPaginatedResultIterator(self, query, sort, filterFN, getSortKeyValueFn, objectType):
+    if sort is None:
+      return Iterator(query, sort, filterFN, getSortKeyValueFn, self, objectType)
+    else:
+      raise Exception("Sorted iteration not Implemented")
+
 
 class ObjectStore_SQLAlchemy(ObjectStore):
   engine = None
@@ -398,3 +404,12 @@ class ObjectStore_SQLAlchemy(ObjectStore):
 
   def _getConnectionContext(self):
     return ConnectionContext(self)
+
+class Iterator(PaginatedResultIteratorBaseClass):
+  sqlAlchemyStoreConnectionContext = None
+  objectType = None
+
+  def __init__(self, query, sort, filterFN, getSortKeyValueFn, sqlAlchemyStoreConnectionContext, objectType):
+    PaginatedResultIteratorBaseClass.__init__(self, query, filterFN)
+    self.sqlAlchemyStoreConnectionContext = sqlAlchemyStoreConnectionContext
+    self.objectType = objectType
