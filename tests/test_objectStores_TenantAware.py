@@ -1,4 +1,4 @@
-from TestHelperSuperClass import testHelperSuperClass, wipd
+import TestHelperSuperClass
 
 import object_store_abstraction as undertest
 
@@ -32,7 +32,7 @@ def getAlteredJSONString(x, srcJSON):
   res['BB'] = "bbStringFN(x)"
   return res
 
-class local_helpers(testHelperSuperClass):
+class local_helpers(TestHelperSuperClass.testHelperSuperClass):
   def generateSimpleMemoryObjectStore(self):
     memStore = undertest.ObjectStore_Memory(ConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testMEM', factoryFn=undertest.createObjectStoreInstance)
     return undertest.ObjectStore_TenantAware(memStore)
@@ -84,7 +84,7 @@ class local_helpers(testHelperSuperClass):
     self.setupSomeTestData(objectStoreType, testTenant2, JSONString2, tenant2ObjectsToUse)
     return objectStoreType
 
-#@wipd
+#@TestHelperSuperClass.wipd
 class test_objectStoresTenantAware(local_helpers):
 
   def test_basicTest(self):
@@ -118,6 +118,7 @@ class test_objectStoresTenantAware(local_helpers):
     #Check objT5 correct in testTenant2
     self.assertObjectTypeDataCorrectViaGETOnly(objectStoreType, testTenant2, "objT5", JSONString2)
 
+  @TestHelperSuperClass.wipd
   def test_getAllRowsForObjectType(self):
     objectStoreType = self.setupUnevenData()
 
