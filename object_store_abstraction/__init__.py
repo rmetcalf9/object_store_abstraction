@@ -30,6 +30,11 @@ from .objectStores_DynamoDB import ObjectStore_DynamoDB
 from .objectStores_Migrating import ObjectStore_Migrating
 from .objectStores_TenantAware import ObjectStore_TenantAware
 
+#Allowing reuse of iterator
+from .paginatedResult import sanatizePaginatedParamValues
+from .paginatedResult import getPaginatedResultUsingIterator
+from .paginatedResultIterator import PaginatedResultIteratorBaseClass
+
 from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
