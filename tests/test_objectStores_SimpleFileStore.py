@@ -145,6 +145,9 @@ class objectStoresSimpleFileStore(TestHelperSuperClass.testHelperSuperClass):
     storeConnection.executeInsideTransaction(someFn)
 
 
+    storeConnection2 = undertest.createObjectStoreInstance(ConfigDict, self.getObjectStoreExternalFns())
+
+
     def someFn(connectionContext):
       #print(self.jobs[jobGUID]._caculatedDict(self.appObj))
       newObjectVersion = connectionContext.removeJSONObject(
@@ -152,10 +155,10 @@ class objectStoresSimpleFileStore(TestHelperSuperClass.testHelperSuperClass):
         keyToTest
       )
       self.assertEqual(newObjectVersion, None)
-    storeConnection.executeInsideTransaction(someFn)
+    storeConnection2.executeInsideTransaction(someFn)
 
     def someFn(connectionContext):
       #print(self.jobs[jobGUID]._caculatedDict(self.appObj))
       obj, objVersion, creationDateTime, lastUpdateDateTime, objKey = connectionContext.getObjectJSON(objectType,keyToTest)
       self.assertEqual(obj, None)
-    storeConnection.executeInsideTransaction(someFn)
+    storeConnection2.executeInsideTransaction(someFn)
