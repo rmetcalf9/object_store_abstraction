@@ -120,7 +120,7 @@ class objectStoresSimpleFileStore(TestHelperSuperClass.testHelperSuperClass):
     ##self.assertTrue(False)
 
   @TestHelperSuperClass.wipd
-  def test_ObjectKeyCharacters(self):
+  def test_ObjectRemovalInNewInstance(self):
     objectType = "chartnames"
     keyToTest = "usr::linkvisAutoconfigTestUser/:_/untitle  dsdsWITHPACES"
     someDict = { "d": "d"}

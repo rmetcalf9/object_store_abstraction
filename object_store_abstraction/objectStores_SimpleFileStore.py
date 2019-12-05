@@ -294,6 +294,12 @@ class ObjectStore_SimpleFileStore(ObjectStore):
     except:
       raise ObjectStoreConfigError("APIAPP_OBJECTSTORECONFIG SimpleFileStore ERROR - Write test to base location failed")
 
+    # Scan base directory and load in all known object types
+    subDirs = localScanDir(directoryToScan=self.baseLocation, OnlyReturnDirectories=True)
+    for curDir in subDirs:
+      if curDir.startswith(directoryNamePrefix):
+        self.setKnownObjectType(getKeyFromFileSystemSafeString(curDir[len(directoryNamePrefix):]))
+
   def _INT_getDictForObjectType(self, objectType):
     if objectType not in self.objectData:
       #print("Creating dict for " + objectType)
