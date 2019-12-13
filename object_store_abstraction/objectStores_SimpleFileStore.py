@@ -78,9 +78,8 @@ class ConnectionContextSimpleFileStorePrivateFns(ObjectStoreConnectionContext):
     return dirString
 
   def _list_all_objectTypes(self):
-    self.objectStore.fileAccessLock.acquire()
-    lis = localScanDir(self.objectStore.baseLocation, OnlyReturnDirectories=True)
-    self.objectStore.fileAccessLock.release()
+    with self.objectStore.fileAccessLock:
+      lis = localScanDir(self.objectStore.baseLocation, OnlyReturnDirectories=True)
     results = []
     for x in lis:
       if x.startswith(directoryNamePrefix):
@@ -127,47 +126,45 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
 
 
   def _saveJSONObject(self, objectType, objectKey, JSONString, objectVersion):
-    self.objectStore.fileAccessLock.acquire()
-    curTimeValue = self.objectStore.externalFns['getCurDateTime']().isoformat()
+    with self.objectStore.fileAccessLock:
+      curTimeValue = self.objectStore.externalFns['getCurDateTime']().isoformat()
 
-    (o_objectDICT, o_ObjectVersion, o_creationDate, o_lastUpdateDate, o_objectKey) = self.getObjectJSONWithoutLock(objectType, objectKey)
+      (o_objectDICT, o_ObjectVersion, o_creationDate, o_lastUpdateDate, o_objectKey) = self.getObjectJSONWithoutLock(objectType, objectKey)
 
-    newObjectVersion = None
-    createDate = None
-    updateDate = None
+      newObjectVersion = None
+      createDate = None
+      updateDate = None
 
-    if o_ObjectVersion is None:
-      # Object dosen't exist we are creating it
-      if objectVersion is not None:
-        raise SuppliedObjectVersionWhenCreatingException
-      newObjectVersion = 1
-      createDate = curTimeValue
-      updateDate = curTimeValue
-    else:
-      # OBject exists we are updating it
-      if objectVersion is None:
-        raise TryingToCreateExistingObjectException
-      #print("1:", str(objectVersion), ":", o_ObjectVersion, ":")
-      if (int(str(objectVersion)) != int(o_ObjectVersion)):
-        raise WrongObjectVersionException
-      newObjectVersion = int(objectVersion) + 1
-      createDate = o_creationDate.isoformat()
-      updateDate = curTimeValue
+      if o_ObjectVersion is None:
+        # Object dosen't exist we are creating it
+        if objectVersion is not None:
+          raise SuppliedObjectVersionWhenCreatingException
+        newObjectVersion = 1
+        createDate = curTimeValue
+        updateDate = curTimeValue
+      else:
+        # OBject exists we are updating it
+        if objectVersion is None:
+          raise TryingToCreateExistingObjectException
+        #print("1:", str(objectVersion), ":", o_ObjectVersion, ":")
+        if (int(str(objectVersion)) != int(o_ObjectVersion)):
+          raise WrongObjectVersionException
+        newObjectVersion = int(objectVersion) + 1
+        createDate = o_creationDate.isoformat()
+        updateDate = curTimeValue
 
-    DictToSave = {
-      "Data": JSONString,
-      "ObjVer": newObjectVersion,
-      "Create": createDate,
-      "LastUpdate": updateDate
-    }
+      DictToSave = {
+        "Data": JSONString,
+        "ObjVer": newObjectVersion,
+        "Create": createDate,
+        "LastUpdate": updateDate
+      }
 
-    fileName = self.getObjectFile(objectType, objectKey, True)
+      fileName = self.getObjectFile(objectType, objectKey, True)
 
-    target = open(fileName, 'w') #w mode overwrites file content
-    target.write(str(DictToSave))
-    target.close()
-
-    self.objectStore.fileAccessLock.release()
+      target = open(fileName, 'w') #w mode overwrites file content
+      target.write(str(DictToSave))
+      target.close()
     return newObjectVersion
 
   def _removeJSONObject(self, objectType, objectKey, objectVersion, ignoreMissingObject):
@@ -175,38 +172,33 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
       if ignoreMissingObject:
         return None
       raise TriedToDeleteMissingObjectException
-    self.objectStore.fileAccessLock.acquire()
+    with self.objectStore.fileAccessLock:
+      #Simple way of doing it - call a get and see what is returned
+      #(o_objectDICT, o_ObjectVersion, o_creationDate, o_lastUpdateDate) = self.getObjectJSONWithoutLock(objectType, objectKey)
+      #if o_objectDICT is None:
+      #  if ignoreMissingObject:
+      #    return None
+      #  raise TriedToDeleteMissingObjectException
 
-    #Simple way of doing it - call a get and see what is returned
-    #(o_objectDICT, o_ObjectVersion, o_creationDate, o_lastUpdateDate) = self.getObjectJSONWithoutLock(objectType, objectKey)
-    #if o_objectDICT is None:
-    #  if ignoreMissingObject:
-    #    return None
-    #  raise TriedToDeleteMissingObjectException
+      #It is more efficient to check the file exists - we don't need to get it
+      fileName = self.getObjectFile(objectType, objectKey, True)
+      if fileName is None:
+        if ignoreMissingObject:
+          return None
+        raise TriedToDeleteMissingObjectException
+      if not os.path.exists(fileName):
+        if ignoreMissingObject:
+          return None
+        raise TriedToDeleteMissingObjectException
 
-    #It is more efficient to check the file exists - we don't need to get it
-    fileName = self.getObjectFile(objectType, objectKey, True)
-    if fileName is None:
-      if ignoreMissingObject:
-        return None
-      raise TriedToDeleteMissingObjectException
-    if not os.path.exists(fileName):
-      if ignoreMissingObject:
-        return None
-      raise TriedToDeleteMissingObjectException
-
-
-    os.remove(fileName)
-
-    self.objectStore.fileAccessLock.release()
+      os.remove(fileName)
     return None
 
   #Return value is objectDICT, ObjectVersion, creationDate, lastUpdateDate
   #Return None, None, None, None if object isn't in store
   def _getObjectJSON(self, objectType, objectKey):
-    self.objectStore.fileAccessLock.acquire()
-    a = self.getObjectJSONWithoutLock(objectType, objectKey)
-    self.objectStore.fileAccessLock.release()
+    with self.objectStore.fileAccessLock:
+      a = self.getObjectJSONWithoutLock(objectType, objectKey)
     return a
 
 
@@ -257,6 +249,9 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
 class ObjectStore_SimpleFileStore(ObjectStore):
   baseLocation = ""
   fileAccessLock = None #Make sure we do one operation at a time
+  # using with when accessing see https://www.bogotobogo.com/python/Multithread/python_multithreading_Using_Locks_with_statement_Context_Manager.php
+  #  this deals properly with exceptions
+
   knownExistingObjectTypes = None #reduce os.dir exist calls by storeing objects we know have a dir
 
   def isKnownObjectType(self, objectType):
@@ -316,11 +311,10 @@ class ObjectStore_SimpleFileStore(ObjectStore):
         if curDir.startswith(directoryNamePrefix):
           shutil.rmtree(self.baseLocation + "/" + curDir)
 
-    self.fileAccessLock.acquire()
-    self.knownExistingObjectTypes = {}
-    # print("SFS 279: reseting all known types")
-    self.executeInsideTransaction(someFn)
-    self.fileAccessLock.release()
+    with self.fileAccessLock:
+      self.knownExistingObjectTypes = {}
+      # print("SFS 279: reseting all known types")
+      self.executeInsideTransaction(someFn)
 
   def _getConnectionContext(self):
     return ConnectionContext(self)
