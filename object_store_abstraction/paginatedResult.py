@@ -105,3 +105,36 @@ def getPaginatedResultUsingIterator(
     },
     'result': output
   }
+
+def getPaginatedResultUsingPythonIterator(
+  iteratorObj,
+  outputFN,
+  offset,
+  pagesize
+):
+  output = []
+  totalRowsOutput = 0
+  curPos = 0
+  for x in iteratorObj:
+    if curPos >= offset:
+      output.append(outputFN(x))
+      totalRowsOutput = totalRowsOutput + 1
+      if totalRowsOutput >= pagesize:
+        curPos = curPos + 2 # show that there is more to query
+        return {
+          'pagination': {
+            'offset': offset,
+            'pagesize': pagesize,
+            'total': curPos
+          },
+          'result': output
+        }
+    curPos = curPos + 1
+  return {
+    'pagination': {
+      'offset': offset,
+      'pagesize': pagesize,
+      'total': curPos
+    },
+    'result': output
+  }

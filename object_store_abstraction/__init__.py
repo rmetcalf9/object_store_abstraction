@@ -34,6 +34,7 @@ from .objectStores_TenantAware import ObjectStore_TenantAware
 from .paginatedResult import sanatizePaginatedParamValues
 from .paginatedResult import getPaginatedResultUsingIterator
 from .paginatedResultIterator import PaginatedResultIteratorBaseClass
+from .paginatedResult import getPaginatedResultUsingPythonIterator
 
 from ._version import get_versions
 __version__ = get_versions()['version']

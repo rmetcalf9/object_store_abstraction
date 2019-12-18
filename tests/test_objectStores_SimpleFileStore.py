@@ -119,7 +119,6 @@ class objectStoresSimpleFileStore(TestHelperSuperClass.testHelperSuperClass):
     storeConnection.executeInsideTransaction(someFn)
     ##self.assertTrue(False)
 
-  @TestHelperSuperClass.wipd
   def test_ObjectRemovalInNewInstance(self):
     objectType = "chartnames"
     keyToTest = "usr::linkvisAutoconfigTestUser/:_/untitle  dsdsWITHPACES"

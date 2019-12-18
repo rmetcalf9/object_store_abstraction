@@ -14,9 +14,9 @@ import os
     except Exception as err:
       print(err) # for the repr
       print(str(err)) # for just the message
-      print(err.args) # the arguments that the exception has been called with. 
+      print(err.args) # the arguments that the exception has been called with.
       raise(InvalidObjectStoreConfigInvalidJSONException)
-    
+
     fns = {
       'getCurDateTime': self.getCurDateTime,
       'getPaginatedResult': self.getPaginatedResult
@@ -30,6 +30,7 @@ if ('SKIPSQLALCHEMYTESTS' in os.environ):
     SKIPSQLALCHEMYTESTS=True
 
 
+#@TestHelperSuperClass.wipd
 class test_objectStoresMemory(testHelperSuperClass):
   def test_defaultCreation(self):
     objectStoreConfigDict = None
@@ -58,16 +59,15 @@ class test_objectStoresMemory(testHelperSuperClass):
     with self.assertRaises(Exception) as context:
       a = undertest.createObjectStoreInstance("Not A Dict", self.getObjectStoreExternalFns())
     self.checkGotRightExceptionType(context,undertest.ObjectStoreConfigNotDictObjectExceptionClass)
-  
+
   def test_dictWithoutTypePassedToCreation(self):
     objectStoreConfigDict = {'Som': 'dsds'}
     with self.assertRaises(Exception) as context:
       a = undertest.createObjectStoreInstance(objectStoreConfigDict, self.getObjectStoreExternalFns())
     self.checkGotRightExceptionType(context,undertest.InvalidObjectStoreConfigMissingTypeClass)
-      
+
   def test_dictWithUnknownTypePassedToCreation(self):
     objectStoreConfigDict = {'Type': 'SomeInvalidObjectStoreType'}
     with self.assertRaises(Exception) as context:
       a = undertest.createObjectStoreInstance(objectStoreConfigDict, self.getObjectStoreExternalFns())
     self.checkGotRightExceptionType(context,undertest.InvalidObjectStoreConfigUnknownTypeClass)
-         

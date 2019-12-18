@@ -118,7 +118,6 @@ class test_objectStoresTenantAware(local_helpers):
     #Check objT5 correct in testTenant2
     self.assertObjectTypeDataCorrectViaGETOnly(objectStoreType, testTenant2, "objT5", JSONString2)
 
-  @TestHelperSuperClass.wipd
   def test_getAllRowsForObjectType(self):
     objectStoreType = self.setupUnevenData()
 
