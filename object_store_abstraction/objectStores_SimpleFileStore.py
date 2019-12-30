@@ -172,11 +172,12 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
       if ignoreMissingObject:
         return None
       raise TriedToDeleteMissingObjectException
-    (o_objectDICT, o_ObjectVersion, o_creationDate, o_lastUpdateDate, o_objectKey) = self.getObjectJSONWithoutLock(objectType, objectKey)
-    if o_objectDICT is not None:
-      if str(o_ObjectVersion) != str(objectVersion):
-        raise WrongObjectVersionException
-      
+    if objectVersion is not None:
+      (o_objectDICT, o_ObjectVersion, o_creationDate, o_lastUpdateDate, o_objectKey) = self.getObjectJSONWithoutLock(objectType, objectKey)
+      if o_objectDICT is not None:
+        if str(o_ObjectVersion) != str(objectVersion):
+          raise WrongObjectVersionException
+
     with self.objectStore.fileAccessLock:
       #Simple way of doing it - call a get and see what is returned
       #(o_objectDICT, o_ObjectVersion, o_creationDate, o_lastUpdateDate) = self.getObjectJSONWithoutLock(objectType, objectKey)
