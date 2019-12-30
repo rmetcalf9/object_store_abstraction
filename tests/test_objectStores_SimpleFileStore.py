@@ -12,7 +12,7 @@ ConfigDict = {
   "BaseLocation": "./tests/SimpleFileStore"
 }
 
-#@TestHelperSuperClass.wipd
+@TestHelperSuperClass.wipd
 class objectStoresSimpleFileStore(TestHelperSuperClass.testHelperSuperClass):
   def test_genericSimpleFileStoreTests(self):
     def getObjFn(ConfigDict, resetData = True):
@@ -141,17 +141,18 @@ class objectStoresSimpleFileStore(TestHelperSuperClass.testHelperSuperClass):
       #print(self.jobs[jobGUID]._caculatedDict(self.appObj))
       obj, objVersion, creationDateTime, lastUpdateDateTime, objKey = connectionContext.getObjectJSON(objectType,keyToTest)
       self.assertEqual(obj, someDict)
-    storeConnection.executeInsideTransaction(someFn)
-
+      return objVersion
+    objVersion = storeConnection.executeInsideTransaction(someFn)
 
     storeConnection2 = undertest.createObjectStoreInstance(ConfigDict, self.getObjectStoreExternalFns())
-
 
     def someFn(connectionContext):
       #print(self.jobs[jobGUID]._caculatedDict(self.appObj))
       newObjectVersion = connectionContext.removeJSONObject(
-        objectType,
-        keyToTest
+        objectType=objectType,
+        objectKey=keyToTest,
+        objectVersion=objVersion,
+        ignoreMissingObject=False
       )
       self.assertEqual(newObjectVersion, None)
     storeConnection2.executeInsideTransaction(someFn)
@@ -161,3 +162,33 @@ class objectStoresSimpleFileStore(TestHelperSuperClass.testHelperSuperClass):
       obj, objVersion, creationDateTime, lastUpdateDateTime, objKey = connectionContext.getObjectJSON(objectType,keyToTest)
       self.assertEqual(obj, None)
     storeConnection2.executeInsideTransaction(someFn)
+
+  def test_remove_objectversionmismatch(self):
+    objectType = "chartnames"
+    keyToTest = "usr::linkvisAutoconfigTestUser/:_/untitle  dsdsWITHPACES"
+    someDict = { "d": "d"}
+
+    storeConnection = undertest.createObjectStoreInstance(ConfigDict, self.getObjectStoreExternalFns())
+    storeConnection.resetDataForTest()
+    def someFn(connectionContext):
+      #print(self.jobs[jobGUID]._caculatedDict(self.appObj))
+      return connectionContext.saveJSONObject(
+        objectType,
+        keyToTest,
+        someDict,
+        objectVersion = None
+      )
+    newObjectVersion = storeConnection.executeInsideTransaction(someFn)
+
+    def removeButWithWrongObjectVersion(connectionContext):
+      #print(self.jobs[jobGUID]._caculatedDict(self.appObj))
+      return connectionContext.removeJSONObject(
+        objectType=objectType,
+        objectKey=keyToTest,
+        objectVersion=123,
+        ignoreMissingObject=False
+      )
+
+    with self.assertRaises(Exception) as context:
+      newObjectVersion = storeConnection.executeInsideTransaction(removeButWithWrongObjectVersion)
+    self.checkGotRightExceptionType(context,undertest.WrongObjectVersionException)
