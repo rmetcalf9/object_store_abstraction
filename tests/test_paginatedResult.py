@@ -19,7 +19,7 @@ class MockIterator(object_store_abstraction.PaginatedResultIteratorBaseClass):
     return self.list[self.curIdx-1]
 
 
-@TestHelperSuperClass.wipd
+#@TestHelperSuperClass.wipd
 class test_paginatedResult(TestHelperSuperClass.testHelperSuperClass):
 
   def test_getPaginatedResultUsingIterator(self):

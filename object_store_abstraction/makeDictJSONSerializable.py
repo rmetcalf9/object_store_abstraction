@@ -1,15 +1,16 @@
 #Some types of object are not JSON serialbizle
 # this class swaps them for RJM objects which are
 import json
+import decimal
 
 standardTypeTagString = "rj5mt3ypebdf3ase_TYPE"
 
 def getRJMJSONSerializableDICT(normalDICT):
   return _recursiveConvertFromNormalToRJM(normalDICT)
-  
+
 def getNormalDICTFromRJMJSONSerializableDICT(RJMDICT):
   return _recursiveConvertFromRJMToNormal(RJMDICT)
-  
+
 def getJSONtoPutInStore(origObj):
   #print("Putting in:", type(origObj), ":", origObj)
   return json.dumps(getRJMJSONSerializableDICT(origObj))
@@ -31,6 +32,8 @@ def _recursiveConvertFromNormalToRJM(anyObj):
     return anyObj
   if isinstance(anyObj,bytes):
     return getRJMTypeFromOrigObj(anyObj).toJSONableDICT()
+  if isinstance(anyObj,decimal.Decimal):
+    return getRJMTypeFromOrigObj(anyObj).toJSONableDICT()
   return anyObj
 
 def _recursiveConvertFromRJMToNormal(anyObj):
@@ -49,11 +52,15 @@ def _recursiveConvertFromRJMToNormal(anyObj):
 def getRJMTypeFromOrigObj(obj):
   if isinstance(obj,bytes):
     return RJMTypeBytesClass(obj, None)
+  if isinstance(obj,decimal.Decimal):
+    return RJMTypeDecimalClass(obj, None)
   raise Exception("Unhandled specialType")
 
 def getRJMTypeFromRJMTypeJSONDict(dictObjThatIsJSONRepresenationOfRJMTypeClass):
   if dictObjThatIsJSONRepresenationOfRJMTypeClass[standardTypeTagString] == 'RJMTypeBytesClass':
     return RJMTypeBytesClass(None, dictObjThatIsJSONRepresenationOfRJMTypeClass)
+  if dictObjThatIsJSONRepresenationOfRJMTypeClass[standardTypeTagString] == 'RJMTypeDecimalClass':
+    return RJMTypeDecimalClass(None, dictObjThatIsJSONRepresenationOfRJMTypeClass)
   raise Exception("Unknown type " + dictObjThatIsJSONRepresenationOfRJMTypeClass[standardTypeTagString])
 
 class RJMTypeBaseClass:
@@ -72,4 +79,12 @@ class RJMTypeBytesClass(RJMTypeBaseClass):
       standardTypeTagString: 'RJMTypeBytesClass',
       'data': self.obj.decode("utf-8")
     }
-    
+
+class RJMTypeDecimalClass(RJMTypeBaseClass):
+  def toJSONableDICT(self):
+    return {
+      standardTypeTagString: 'RJMTypeDecimalClass',
+      'data': str(self.obj)
+    }
+  def toOrig(self):
+    return decimal.Decimal(self.obj.decode("utf-8"))
