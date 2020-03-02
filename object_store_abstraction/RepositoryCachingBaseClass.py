@@ -1,6 +1,6 @@
 # A version of Repository that caches the objects instead of retrieveing on every get
 # provides a reset which clears cache and forces gets to happen again
-from RepositoryBaseClass import RepositoryBaseClass
+from .RepositoryBaseClass import RepositoryBaseClass
 
 
 class RepositoryCachingBaseClass(RepositoryBaseClass):
@@ -32,4 +32,3 @@ class RepositoryCachingBaseClass(RepositoryBaseClass):
   def remove(self, id, storeConnection):
     self.resetCacheItem(id)
     return RepositoryBaseClass.remove(self, id, storeConnection)
-

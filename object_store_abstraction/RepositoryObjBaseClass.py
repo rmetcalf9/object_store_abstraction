@@ -1,5 +1,5 @@
 import copy
-import RepositoryBaseClass
+from .RepositoryBaseClass import RepositoryBaseClass
 
 class RepositoryObjBaseClass():
   obj = None
