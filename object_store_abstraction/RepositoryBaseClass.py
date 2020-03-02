@@ -4,25 +4,29 @@ import copy
 class RepositoryValidationException(Exception):
   pass
 
-def RequireElement(object, elementName, objectName="Object"):
-    if elementName not in object:
-      raise validationException(objectName + " must have a " + elementName)
-    if object[elementName] is None:
-      raise validationException(objectName + " must have a " + elementName + " that is not empty")
-
-def RequireStringElement(object, elementName, objectName="Object"):
-    RequireElement(object, elementName, objectName)
-    if object[elementName] == '':
-      raise validationException(objectName + " must have a " + elementName + " that is not bank")
-
-def RequireListElement(object, elementName, objectName="Object"):
-    RequireElement(object, elementName, objectName)
-    if not isinstance(object[elementName], list):
-      raise validationException(objectName + " must have a " + elementName + " that is a list")
-
 class RepositoryBaseClass():
   objectStoreTypeString = None
   objectFactoryFn = None
+
+  @classmethod
+  def RequireElement(cls, object, elementName, objectName="Object"):
+      if elementName not in object:
+        raise RepositoryValidationException(objectName + " must have a " + elementName)
+      if object[elementName] is None:
+        raise RepositoryValidationException(objectName + " must have a " + elementName + " that is not empty")
+
+  @classmethod
+  def RequireStringElement(cls, object, elementName, objectName="Object"):
+      cls.RequireElement(object, elementName, objectName)
+      if object[elementName] == '':
+        raise RepositoryValidationException(objectName + " must have a " + elementName + " that is not bank")
+
+  @classmethod
+  def RequireListElement(cls, object, elementName, objectName="Object"):
+      cls.RequireElement(object, elementName, objectName)
+      if not isinstance(object[elementName], list):
+        raise RepositoryValidationException(objectName + " must have a " + elementName + " that is a list")
+
   def __init__(self, objectStoreTypeString, objectFactoryFn=None):
     self.objectStoreTypeString = objectStoreTypeString
     self.objectFactoryFn = objectFactoryFn

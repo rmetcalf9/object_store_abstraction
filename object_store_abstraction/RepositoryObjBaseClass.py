@@ -21,10 +21,10 @@ class RepositoryObjBaseClass():
   def __init__(self, obj, objVersion, creationDateTime, lastUpdateDateTime, objKey, repositoryObj):
     self.obj = copy.deepcopy(obj)
     self.repositoryObj = repositoryObj
-    if getMetadataElementKey() in self.obj:
+    if RepositoryObjBaseClass.getMetadataElementKey() in self.obj:
       del self.obj["metadata"]
-      # raise RepositoryBaseClass.validationException(getMetadataElementKey() + " tag must not be present in object")
-    self.obj[getMetadataElementKey()] = {
+      # raise RepositoryBaseClass.validationException(RepositoryObjBaseClass.getMetadataElementKey() + " tag must not be present in object")
+    self.obj[RepositoryObjBaseClass.getMetadataElementKey()] = {
       "objectVersion": objVersion,
       "creationDateTime": creationDateTime.isoformat(),
       "lastUpdateDateTime": lastUpdateDateTime.isoformat(),
