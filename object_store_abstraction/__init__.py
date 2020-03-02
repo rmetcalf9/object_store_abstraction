@@ -36,6 +36,11 @@ from .paginatedResult import getPaginatedResultUsingIterator
 from .paginatedResultIterator import PaginatedResultIteratorBaseClass
 from .paginatedResult import getPaginatedResultUsingPythonIterator
 
+#Repository
+from .RepositoryBaseClass import RepositoryBaseClass, RepositoryValidationException
+from .RepositoryCachingBaseClass import RepositoryCachingBaseClass
+from .RepositoryObjBaseClass import RepositoryObjBaseClass
+
 from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
