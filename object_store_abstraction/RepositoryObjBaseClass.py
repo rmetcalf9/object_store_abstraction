@@ -33,3 +33,11 @@ class RepositoryObjBaseClass():
 
   def getDict(self):
     return self.obj
+
+  def save(self, storeConnection):
+    objID, objectVersion = self.repositoryObj.upsert(
+      obj=self.getDict(),
+      objectVersion=self.getDict()[RepositoryObjBaseClass.getMetadataElementKey()]["objectVersion"],
+      storeConnection=storeConnection
+    )
+    return (objID, objectVersion)
