@@ -40,6 +40,10 @@ class TryingToCreateExistingObjectExceptionClass(Exception):
   pass
 TryingToCreateExistingObjectException = TryingToCreateExistingObjectExceptionClass("Tried to create an object that already exists")
 
+class InvalidObjectTypeExceptionClass(Exception):
+  pass
+InvalidObjectTypeException = InvalidObjectTypeExceptionClass("Object Type Name is invalid")
+
 def getDefaultGetSortKeyValueFn(outputFN):
   def defaultGetSortKeyValueFn(item, sortkeyName):
     return outputFN(item)[sortkeyName]
@@ -123,8 +127,13 @@ class ObjectStoreConnectionContext():
       raise
     return retVal
 
+  def validateObjectType(self, objectType):
+    if '_' in objectType:
+      raise InvalidObjectTypeException
+
   #Return value is objectVersion of object saved
   def saveJSONObject(self, objectType, objectKey, JSONString, objectVersion = None):
+    self.validateObjectType(objectType=objectType)
     if 'ObjectVersion' in JSONString:
       raise SavedObjectShouldNotContainObjectVersionException
     self._INT_varifyWeCanMutateData()

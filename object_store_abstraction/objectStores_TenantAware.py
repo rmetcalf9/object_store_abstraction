@@ -1,5 +1,5 @@
 
-objectTypeSeperator = "$:_}wol{}"
+objectTypeSeperator = "$:}wol{}"
 
 class CallingNonTenantAwareVersion(Exception):
   pass
