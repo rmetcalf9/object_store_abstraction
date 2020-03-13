@@ -364,7 +364,7 @@ class Iterator(PaginatedResultIteratorBaseClass):
     # Get first page
     self.curResponseIdx = 0
     self.curResponse = self.dynamoDBStoreConnectionContext.objectStore.getTable(self.objectType).scan(
-        FilterExpression=Key('partition_key').begins_with(self.objectType),
+        FilterExpression=Key('partition_key').begins_with(self.objectType + "_"),
     )
 
     #self.objectKeys = list(self.memoryStoreConnectionContext.objectStore._INT_getDictForObjectType(objectType).keys())
