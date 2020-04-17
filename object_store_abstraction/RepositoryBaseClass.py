@@ -9,6 +9,26 @@ class RepositoryBaseClass():
   objectFactoryFn = None
 
   @classmethod
+  def requireBooleanElement(cls, obj, elementName, objectName):
+    cls.RequireStringElement(obj, elementName, objectName)
+    if not isinstance(obj[elementName], bool):
+      raise RepositoryValidationException(objectName + " must have a " + elementName + " that is a boolean")
+
+  @classmethod
+  def reqireIntegerElement(cls, obj, elementName, objectName, minval=None, maxval=None):
+    cls.RequireStringElement(obj, elementName, objectName)
+    try:
+      val = int(obj[elementName])
+    except ValueError:
+      raise RepositoryValidationException(objectName + " must have a " + elementName + " that is an integer")
+    if minval is not None:
+      if val < minval:
+        raise RepositoryValidationException(objectName + " must have a " + elementName + " that is an integer greater than " + str(minval))
+    if maxval is not None:
+      if val > maxval:
+        raise RepositoryValidationException(objectName + " must have a " + elementName + " that is an integer less than " + str(maxval))
+
+  @classmethod
   def RequireElement(cls, object, elementName, objectName="Object"):
       if elementName not in object:
         raise RepositoryValidationException(objectName + " must have a " + elementName)
