@@ -11,7 +11,12 @@ ConfigDict = {
     "maxCacheSize": 100,
     "cullToSize": 50
   },
-  "TablePolicyOverride": {
+  "ObjectTypeOverride": {
+    "bad": {
+      "cache": True,
+      "maxCacheSize": 100,
+      "cullToSize": 50
+    }
   }
 }
 
