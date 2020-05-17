@@ -12,13 +12,15 @@ ConfigDict = {
   "DefaultPolicy": {
     "cache": False,
     "maxCacheSize": 100,
-    "cullToSize": 50
+    "cullToSize": 50,
+    "timeout": 1000 #in miliseconds 1000 = 1 second
   },
   "ObjectTypeOverride": {
     "bad": {
       "cache": True,
       "maxCacheSize": 100,
-      "cullToSize": 50
+      "cullToSize": 50,
+      "timeout": 1000 #in miliseconds 1000 = 1 second
     }
   }
 }

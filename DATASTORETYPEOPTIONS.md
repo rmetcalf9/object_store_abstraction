@@ -104,10 +104,16 @@ Depending on the datastores used, the amount of data, and other considerations d
   "DefaultPolicy": {
     "cache": True/False,
     "maxCacheSize": 100,
-    "cullToSize": 50
+    "cullToSize": 50,
+    "timeout": 60 000  #Miliseconds (Example is 1 minute)
   },
   "TablePolicyOverride": {
     "**TableNAme**": {**} #Same as DefaultPolicy
   }
 }
 ```
+
+## Timing uses time.pref_counter
+time.perf_counter()
+See https://realpython.com/python-timer/
+
