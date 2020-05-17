@@ -1,10 +1,13 @@
-from object_store_abstraction import ObjectStore, ObjectStoreConfigError
+from object_store_abstraction import ObjectStore, ObjectStoreConfigError, createObjectStoreInstance
 from .ConnectionContext import ConnectionContext
 import copy
+from .CachePolicy import CachePolicyClass
 
 class ObjectStore_Caching(ObjectStore):
   defaultPolicy = None
   overridePolicies = None
+  cachingStore = None
+  mainStore = None
 
   def __init__(self, configJSON, externalFns, detailLogging, type, factoryFn):
     super(ObjectStore_Caching, self).__init__(externalFns, detailLogging, type)
@@ -13,27 +16,26 @@ class ObjectStore_Caching(ObjectStore):
     for x in requiredConfigParams:
       if x not in configJSON:
         raise ObjectStoreConfigError("APIAPP_OBJECTSTORECONFIG Caching ERROR - config param " + x + " missing")
-    def checkPolicyElementsOK(policy, name):
-      policyRequiredElements = ["cache", "maxCacheSize", "cullToSize"]
-      for x in policyRequiredElements:
-        if x not in policy:
-          raise ObjectStoreConfigError("APIAPP_OBJECTSTORECONFIG Caching ERROR - config param " + name + " " + x + " missing")
-        if not isinstance(policy["cache"], bool):
-          raise ObjectStoreConfigError("APIAPP_OBJECTSTORECONFIG Caching ERROR - config param " + name + " cache must be True or False")
-        if policy["cache"]:
-          if not isinstance(policy["maxCacheSize"], int):
-            raise ObjectStoreConfigError("APIAPP_OBJECTSTORECONFIG Caching ERROR - config param " + name + " maxCacheSize must be int")
-          if not isinstance(policy["cullToSize"], int):
-            raise ObjectStoreConfigError("APIAPP_OBJECTSTORECONFIG Caching ERROR - config param " + name + " cullToSize must be int")
-          if policy["cullToSize"] >= policy["maxCacheSize"]:
-            raise ObjectStoreConfigError("APIAPP_OBJECTSTORECONFIG Caching ERROR - config param " + name + " maxCacheSize must be greater than cullToSize")
 
-    checkPolicyElementsOK(policy=configJSON["DefaultPolicy"], name="DefaultPolicy")
-    for tableName in configJSON["ObjectTypeOverride"]:
-      checkPolicyElementsOK(policy=configJSON["ObjectTypeOverride"][tableName], name=tableName + " policy")
+    self.defaultPolicy = CachePolicyClass(copy.deepcopy(configJSON["DefaultPolicy"]), errorName="DefaultPolicy")
+    self.overridePolicies = {}
+    for objectType in configJSON["ObjectTypeOverride"]:
+      self.overridePolicies[objectType] = CachePolicyClass(copy.deepcopy(configJSON["ObjectTypeOverride"][objectType]), errorName="objectTypeOverride " + objectType + " ObjectTypeOverride")
 
-    self.defaultPolicy = copy.deepcopy(configJSON["DefaultPolicy"])
-    self.overridePolicies = copy.deepcopy(configJSON["ObjectTypeOverride"])
+    cachingConfigDict = { "Type": "Memory" }
+    if "Caching" in configJSON:
+      cachingConfigDict = configJSON["Caching"]
+
+    self.cachingStore = createObjectStoreInstance(
+      cachingConfigDict,
+      externalFns,
+      detailLogging=detailLogging
+    )
+    self.mainStore = createObjectStoreInstance(
+      configJSON["Main"],
+      externalFns,
+      detailLogging=detailLogging
+    )
 
     # ##"Caching": {**}, #If missing memory is used
     # "Main": {}, #Main persistant store

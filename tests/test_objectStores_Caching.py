@@ -5,9 +5,12 @@ import object_store_abstraction as undertest
 ConfigDict = {
   "Type": "Caching",
   ##"Caching": {**}, #If missing memory is used
-  "Main": {}, #Main persistant store
+  "Main": {
+    "Type": "Memory" #For testing main store is memory
+     #in real uses it would not be
+  }, #Main persistant store
   "DefaultPolicy": {
-    "cache": True,
+    "cache": False,
     "maxCacheSize": 100,
     "cullToSize": 50
   },
