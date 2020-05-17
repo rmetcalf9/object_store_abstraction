@@ -93,3 +93,21 @@ Depending on the datastores used, the amount of data, and other considerations d
  - Manual extract of data from the origin store and upload to the target.
  - Run utility in samples which will preforma a migration. This is a little brittle as it loads all object keys into memory before doing the migration so will not work on larger data sizes.
  - Develop passive migration program which stays online for a while and migrates records one by one in a throttled manor.
+
+# Caching Datastore
+
+```
+{
+  "Type": "Caching",
+  "Caching": {**}, #If missing memory is used
+  "Main": {**}, #Main persistant store
+  "DefaultPolicy": {
+    "cache": True/False,
+    "maxCacheSize": 100,
+    "cullToSize": 50
+  },
+  "TablePolicyOverride": {
+    "**TableNAme**": {**} #Same as DefaultPolicy
+  }
+}
+```

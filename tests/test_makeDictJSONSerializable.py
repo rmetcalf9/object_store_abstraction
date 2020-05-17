@@ -67,7 +67,7 @@ testCaseList.append(('JSONString2', JSONString2))
 testCaseList.append(('ObjectWithDecimalString',{"id": "9e8426b9-6a4a-467d-b667-b95f0b01b077", "x": 103.91526765470616, "y": -45.090213780814636}))
 testCaseList.append(('DecimalObject', decimal.Decimal('5.5')))
 
-@TestHelperSuperClass.wipd
+#@TestHelperSuperClass.wipd
 class testConversionToJSONSerailisable(unittest.TestCase):
   def test_allCasesGiveSameResult(self):
     for x in testCaseList:
