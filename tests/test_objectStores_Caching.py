@@ -10,7 +10,7 @@ ConfigDict = {
      #in real uses it would not be
   }, #Main persistant store
   "DefaultPolicy": {
-    "cache": False,
+    "cache": True,
     "maxCacheSize": 100,
     "cullToSize": 50,
     "timeout": 1000 #in miliseconds 1000 = 1 second

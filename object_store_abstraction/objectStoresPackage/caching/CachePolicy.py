@@ -1,5 +1,5 @@
 from object_store_abstraction import ObjectStoreConfigError
-
+import time
 
 class CachePolicyClass():
   caching = None
@@ -38,18 +38,43 @@ class CachePolicyClass():
   def __isCaching(self):
     return self.caching
 
+  def __putObjectIntoCache(self, objectType, objectKey, JSONString, objectVersion, cacheContext):
+    dictToStore = {
+      "exp": time.perf_counter(),
+      "d": JSONString
+    }
+    cacheContext._saveJSONObject(objectType, objectKey, dictToStore, objectVersion)
+
+  def __preformCull(self, cacheContext):
+    raise Exception("Not Implemented __preformCull")
+
   def _removeJSONObject(self, objectType, objectKey, objectVersion, ignoreMissingObject, cacheContext):
     if not self.__isCaching():
       return None
-    raise Exception("Not Implemented")
+    cacheContext._removeJSONObject(objectType, objectKey, objectVersion, ignoreMissingObject=True)
+    return None # return value not used
 
   def _saveJSONObject(self, objectType, objectKey, JSONString, objectVersion, cacheContext):
     if not self.__isCaching():
       return None
-    raise Exception("Not Implemented")
+    self.__putObjectIntoCache(objectType, objectKey, JSONString, objectVersion, cacheContext)
+    self.__preformCull(cacheContext)
+    return None
 
   def _getObjectJSON(self, objectType, objectKey, cacheContext, mainContext):
     if not self.__isCaching():
       return mainContext._getObjectJSON(objectType, objectKey)
-    raise Exception("Not Implemented")
+
+    # get From Cache
+
+    # If it has not expired then return cache value
+
+    # If it is expired lookup from main context
+
+    raise Exception("Not Implemented _getObjectJSON")
+    ##self.__putObjectIntoCache(objectType, objectKey, JSONString, objectVersion, cacheContext)
+    self.__preformCull(cacheContext)
+
+    # Return main context value
+
 
