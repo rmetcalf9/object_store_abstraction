@@ -20,7 +20,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
 
   def _saveJSONObject(self, objectType, objectKey, JSONString, objectVersion):
     ret = self.mainContext._saveJSONObject(objectType, objectKey, JSONString, objectVersion)
-    self.objectStore.getPolicy(objectType)._saveJSONObject(objectType, objectKey, JSONString, objectVersion, cacheContext=self.cachingContext)
+    self.objectStore.getPolicy(objectType)._saveJSONObject(objectType, objectKey, JSONString, objectVersion, cacheContext=self.cachingContext, cullQueues=self.objectStore.cullQueues)
     return ret
 
   def _removeJSONObject(self, objectType, objectKey, objectVersion, ignoreMissingObject):
@@ -29,7 +29,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
     return ret
 
   def _getObjectJSON(self, objectType, objectKey):
-    return self.objectStore.getPolicy(objectType)._getObjectJSON(objectType, objectKey, cacheContext=self.cachingContext, mainContext=self.mainContext)
+    return self.objectStore.getPolicy(objectType)._getObjectJSON(objectType, objectKey, cacheContext=self.cachingContext, mainContext=self.mainContext, cullQueues=self.objectStore.cullQueues)
 
   def _list_all_objectTypes(self):
     return self.mainContext._list_all_objectTypes()

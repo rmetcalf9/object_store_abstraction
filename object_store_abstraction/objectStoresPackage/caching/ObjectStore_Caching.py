@@ -2,15 +2,19 @@ from object_store_abstraction import ObjectStore, ObjectStoreConfigError, create
 from .ConnectionContext import ConnectionContext
 import copy
 from .CachePolicy import CachePolicyClass
+from .CullQueues import CullQueuesClass
 
 class ObjectStore_Caching(ObjectStore):
   defaultPolicy = None
   overridePolicies = None
   cachingStore = None
   mainStore = None
+  cullQueues = None
 
   def __init__(self, configJSON, externalFns, detailLogging, type, factoryFn):
     super(ObjectStore_Caching, self).__init__(externalFns, detailLogging, type)
+
+    self.cullQueues = CullQueuesClass()
 
     requiredConfigParams = ["Main", "DefaultPolicy", "ObjectTypeOverride"]
     for x in requiredConfigParams:
