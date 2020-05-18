@@ -50,7 +50,8 @@ class CachePolicyClass():
       "exp": time.perf_counter() + (self.timeout/1000),
       "d": JSONString
     }
-    cacheContext._saveJSONObject(objectType, objectKey, dictToStore, objectVersion)
+    # don't supply object version otherwise it will disallow creation
+    cacheContext._saveJSONObject(objectType, objectKey, dictToStore, objectVersion=None)
     queue = cullQueues.getQueue(objectType=objectType, maxsize=self.maxqueuesize)
     if queue.full():
       objectKeyFromQueue = queue.get()
