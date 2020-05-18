@@ -1,4 +1,4 @@
-from object_store_abstraction import ObjectStore, ObjectStoreConfigError, createObjectStoreInstance
+from object_store_abstraction import ObjectStore, ObjectStoreConfigError
 from .ConnectionContext import ConnectionContext
 import copy
 from .CachePolicy import CachePolicyClass
@@ -30,12 +30,12 @@ class ObjectStore_Caching(ObjectStore):
     if "Caching" in configJSON:
       cachingConfigDict = configJSON["Caching"]
 
-    self.cachingStore = createObjectStoreInstance(
+    self.cachingStore = factoryFn(
       cachingConfigDict,
       externalFns,
       detailLogging=detailLogging
     )
-    self.mainStore = createObjectStoreInstance(
+    self.mainStore = factoryFn(
       configJSON["Main"],
       externalFns,
       detailLogging=detailLogging

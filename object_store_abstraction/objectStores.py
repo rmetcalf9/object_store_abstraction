@@ -4,6 +4,7 @@ from .objectStores_SQLAlchemy import ObjectStore_SQLAlchemy
 from .objectStores_SimpleFileStore import ObjectStore_SimpleFileStore
 from .objectStores_DynamoDB import ObjectStore_DynamoDB
 from .objectStores_Migrating import ObjectStore_Migrating
+from .objectStoresPackage import ObjectStore_Caching
 
 class InvalidObjectStoreConfigMissingTypeClass(Exception):
   pass
@@ -57,6 +58,8 @@ def createObjectStoreInstance(
     return createFN("DynamoDB", objectStoreConfigDict, ObjectStore_DynamoDB, externalFns, detailLogging)
   if objectStoreConfigDict["Type"] == "Migrating":
     return createFN("Migrating", objectStoreConfigDict, ObjectStore_Migrating, externalFns, detailLogging)
+  if objectStoreConfigDict["Type"] == "Caching":
+    return createFN("Caching", objectStoreConfigDict, ObjectStore_Caching, externalFns, detailLogging)
 
   print("Trying to create object store type " + objectStoreConfigDict["Type"])
   raise InvalidObjectStoreConfigUnknownTypeException
