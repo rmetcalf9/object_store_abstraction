@@ -31,7 +31,7 @@ from .objectStores_SimpleFileStore import ObjectStore_SimpleFileStore
 from .objectStores_DynamoDB import ObjectStore_DynamoDB
 from .objectStores_Migrating import ObjectStore_Migrating
 from .objectStores_TenantAware import ObjectStore_TenantAware
-from .objectStoresPackage import ObjectStore_Caching
+from .objectStoresPackage import ObjectStore_Caching, UniqueQueue
 
 #Allowing reuse of iterator
 from .paginatedResult import sanatizePaginatedParamValues

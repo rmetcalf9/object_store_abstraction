@@ -1,3 +1,3 @@
 
-from .caching import ObjectStore_Caching
+from .caching import ObjectStore_Caching, UniqueQueue
 

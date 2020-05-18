@@ -3,7 +3,7 @@ import time
 
 class CachePolicyClass():
   caching = None
-  maxqueuesize = None
+  maxcachesize = None
   timeout = None
   def __init__(self, policy, errorName):
     if "cache" not in policy:
@@ -39,7 +39,7 @@ class CachePolicyClass():
         raise ObjectStoreConfigError(
           "APIAPP_OBJECTSTORECONFIG Caching ERROR - config param " + errorName + " timeout must be greater than 0")
     self.caching = policy["cache"]
-    self.maxqueuesize = policy["maxCacheSize"]
+    self.maxcachesize = policy["maxCacheSize"]
     self.timeout = policy["timeout"]
 
   def __isCaching(self):
@@ -62,7 +62,7 @@ class CachePolicyClass():
       # object version checking is done by main respository
       cacheContext._saveJSONObject(objectType, objectKey, dictToStore, objectVersion=frmCacheTuple[1])
 
-    queue = cullQueues.getQueue(objectType=objectType, maxsize=self.maxqueuesize)
+    queue = cullQueues.getQueue(objectType=objectType, maxsize=self.maxcachesize)
     if queue.full():
       objectKeyFromQueue = queue.get()
       self.__removeSingleElementFromCache(cacheContext=cacheContext, objectType=objectType, objectKey=objectKeyFromQueue)
@@ -74,8 +74,8 @@ class CachePolicyClass():
     return cacheContext._removeJSONObject(objectType, objectKey, objectVersion=None, ignoreMissingObject=True)
 
   def __preformCull(self, cacheContext, objectType, cullQueues):
-    queue = cullQueues.getQueue(objectType=objectType, maxsize=self.maxqueuesize)
-    while queue.qsize() > self.maxqueuesize:
+    queue = cullQueues.getQueue(objectType=objectType, maxsize=self.maxcachesize)
+    while queue.qsize() > self.maxcachesize:
       objectKeyFromQueue = queue.get()
       self.__removeSingleElementFromCache(cacheContext=cacheContext, objectType=objectType, objectKey=objectKeyFromQueue)
 
@@ -120,7 +120,8 @@ class CachePolicyClass():
       objectKey=objectKey,
       JSONString=fromMainTuple[0],
       objectVersion=fromMainTuple[1],
-      cacheContext=cacheContext, cullQueues=cullQueues
+      cacheContext=cacheContext,
+      cullQueues=cullQueues
     )
     return fromMainTuple
 
