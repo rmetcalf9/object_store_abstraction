@@ -29,7 +29,7 @@ ConfigDict = {
 class helper(TestHelperSuperClass.testHelperSuperClass):
   pass
 
-#@TestHelperSuperClass.wipd
+@TestHelperSuperClass.wipd
 class test_objectStoresMigrating(helper):
   def test_genericTests(self):
     def getObjFn(ConfigDict, resetData = True):
@@ -144,7 +144,7 @@ class test_objectStoresMigrating(helper):
     expected["BB"] = "BBCacheChange"
     self.assertEqual(objectDict, expected)
 
-  @TestHelperSuperClass.wipd
+  #@TestHelperSuperClass.wipd
   def test_cacheWontGrowAboveMaxSizeWhenAddingdifferentKEys(self):
     objectType = "CacheTestObj1"
     undertestCacheObjectStore = undertest.ObjectStore_Caching(

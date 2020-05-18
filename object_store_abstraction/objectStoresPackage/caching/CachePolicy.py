@@ -50,8 +50,18 @@ class CachePolicyClass():
       "exp": time.perf_counter() + (self.timeout/1000),
       "d": JSONString
     }
-    # don't supply object version otherwise it will disallow creation
-    cacheContext._saveJSONObject(objectType, objectKey, dictToStore, objectVersion=None)
+    #If we supply the object version then the save will fail on creation and mismatch
+    # if we don't supply the object version then the save will fail if object exists
+    # so instead it is looked up
+    frmCacheTuple = cacheContext._getObjectJSON(objectType=objectType, objectKey=objectKey)
+    if frmCacheTuple[0] is None:
+      #object is not currently in cache
+      cacheContext._saveJSONObject(objectType, objectKey, dictToStore, objectVersion=None)
+    else:
+      #object in cache, write with whatever object version we read
+      # object version checking is done by main respository
+      cacheContext._saveJSONObject(objectType, objectKey, dictToStore, objectVersion=frmCacheTuple[1])
+
     queue = cullQueues.getQueue(objectType=objectType, maxsize=self.maxqueuesize)
     if queue.full():
       objectKeyFromQueue = queue.get()
