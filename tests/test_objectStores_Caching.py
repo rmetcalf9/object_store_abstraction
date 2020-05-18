@@ -2,6 +2,7 @@ import TestHelperSuperClass
 import test_objectStores_GenericTests as genericTests
 import object_store_abstraction as undertest
 import copy
+import time
 
 ConfigDict = {
   "Type": "Caching",
@@ -172,4 +173,67 @@ class test_objectStoresMigrating(helper):
 
     self.assertEquals(len(cacheRows), 100)
     self.assertEquals(len(mainRows), 500)
+
+  def test_deleteItem(self):
+    objectType = "CacheTestObj1"
+    undertestCacheObjectStore = undertest.ObjectStore_Caching(
+      ConfigDict,
+      self.getObjectStoreExternalFns(),
+      detailLogging=False, type='testMEM',
+      factoryFn=undertest.createObjectStoreInstance
+    )
+    internalMainObjectStore = undertestCacheObjectStore.mainStore
+    internalCacheObjectStore = undertestCacheObjectStore.cachingStore
+
+    genericTests.addSampleRows(
+      undertestCacheObjectStore,
+      500,
+      bbString='BB',
+      offset=0,
+      objectType=objectType
+    )
+    objectKey="1231"
+
+    def dbfn(connectionContext):
+      return connectionContext.removeJSONObject(objectType=objectType, objectKey=objectKey, objectVersion=1, ignoreMissingObject=False)
+    newObjectVersion = undertestCacheObjectStore.executeInsideTransaction(dbfn)
+
+  def test_cacheItemExpires(self):
+    objectType = "CacheTestObj1"
+    undertestCacheObjectStore = undertest.ObjectStore_Caching(
+      ConfigDict,
+      self.getObjectStoreExternalFns(),
+      detailLogging=False, type='testMEM',
+      factoryFn=undertest.createObjectStoreInstance
+    )
+    internalMainObjectStore = undertestCacheObjectStore.mainStore
+    internalCacheObjectStore = undertestCacheObjectStore.cachingStore
+
+    genericTests.addSampleRows(
+      undertestCacheObjectStore,
+      500,
+      bbString='BB',
+      offset=0,
+      objectType=objectType
+    )
+    objectKey="1231"
+
+    #Load it into cache
+    def dbfn(storeConnection):
+      return storeConnection.getObjectJSON(
+        objectType=objectType,
+        objectKey=objectKey
+      )
+    (objectDict, ObjectVersion, creationDate, lastUpdateDate,
+     objectKey) = undertestCacheObjectStore.executeInsideConnectionContext(dbfn)
+
+    time.sleep(1.1)
+
+    def dbfn(storeConnection):
+      return storeConnection.getObjectJSON(
+        objectType=objectType,
+        objectKey=objectKey
+      )
+    (objectDict, ObjectVersion, creationDate, lastUpdateDate,
+     objectKey) = undertestCacheObjectStore.executeInsideConnectionContext(dbfn)
 

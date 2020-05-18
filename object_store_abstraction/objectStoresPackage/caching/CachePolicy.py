@@ -108,7 +108,7 @@ class CachePolicyClass():
         return tuple(retVal)
       else:
         #item has expired - remove it from cache
-        self.__removeSingleElementFromCache(objectType=objectType, objectKey=objectKey)
+        self.__removeSingleElementFromCache(cacheContext=cacheContext, objectType=objectType, objectKey=objectKey)
 
     #We get to this point if it is not in the cache
 
