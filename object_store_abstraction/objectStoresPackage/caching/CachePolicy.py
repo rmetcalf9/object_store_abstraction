@@ -58,9 +58,8 @@ class CachePolicyClass():
       #object is not currently in cache
       cacheContext._saveJSONObject(objectType, objectKey, dictToStore, objectVersion=None)
     else:
-      #object in cache, write with whatever object version we read
-      # object version checking is done by main respository
-      cacheContext._saveJSONObject(objectType, objectKey, dictToStore, objectVersion=frmCacheTuple[1])
+      #object in cache, write new object version
+      cacheContext._saveJSONObject(objectType, objectKey, dictToStore, objectVersion=objectVersion)
 
     queue = cullQueues.getQueue(objectType=objectType, maxsize=self.maxcachesize)
     if queue.full():
