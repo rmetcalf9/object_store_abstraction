@@ -48,7 +48,8 @@ class CachePolicyClass():
   def __putObjectIntoCache(self, objectType, objectKey, JSONString, objectVersion, cacheContext, cullQueues):
     dictToStore = {
       "exp": time.perf_counter() + (self.timeout/1000),
-      "d": JSONString
+      "d": JSONString,
+      "ver": objectVersion
     }
     #If we supply the object version then the save will fail on creation and mismatch
     # if we don't supply the object version then the save will fail if object exists
@@ -58,8 +59,8 @@ class CachePolicyClass():
       #object is not currently in cache
       cacheContext._saveJSONObject(objectType, objectKey, dictToStore, objectVersion=None)
     else:
-      #object in cache, write new object version
-      cacheContext._saveJSONObject(objectType, objectKey, dictToStore, objectVersion=objectVersion)
+      #object in cache,
+      cacheContext._saveJSONObject(objectType, objectKey, dictToStore, objectVersion=frmCacheTuple[1])
 
     queue = cullQueues.getQueue(objectType=objectType, maxsize=self.maxcachesize)
     if queue.full():
@@ -87,6 +88,11 @@ class CachePolicyClass():
   def _saveJSONObject(self, objectType, objectKey, JSONString, objectVersion, cacheContext, cullQueues):
     if not self.__isCaching():
       return None
+    # This is saving a change so we need to increment objectVersion when we store
+    if objectVersion is None:
+      objectVersion = 1
+    else:
+      objectVersion = int(objectVersion) + 1
     self.__putObjectIntoCache(objectType, objectKey, JSONString, objectVersion, cacheContext, cullQueues)
     return None
 
@@ -101,7 +107,8 @@ class CachePolicyClass():
       # If it has not expired then return cache value
       if time.perf_counter() < frmCacheTuple[0]["exp"]:
         retVal = list(frmCacheTuple)
-        retVal[0] = retVal[0]["d"]
+        retVal[0] = frmCacheTuple[0]["d"]
+        retVal[1] = frmCacheTuple[0]["ver"] #speficy original object version
         #Cache hit - we just need to return, but first make sure cache won't grow too much
         self.__preformCull(cacheContext, objectType, cullQueues)
         return tuple(retVal)
