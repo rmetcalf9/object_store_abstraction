@@ -90,11 +90,6 @@ class CachePolicyClass():
   def _saveJSONObjectV2(self, objectType, objectKey, JSONString, objectVersion, cacheContext, cullQueues, creationDateTime, lastUpdateDateTime):
     if not self.__isCaching():
       return None
-    # This is saving a change so we need to increment objectVersion when we store
-    if objectVersion is None:
-      objectVersion = 1
-    else:
-      objectVersion = int(objectVersion) + 1
     self.__putObjectIntoCache(
       objectType,
       objectKey,

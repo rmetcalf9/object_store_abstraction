@@ -34,13 +34,13 @@ class ConnectionContext(ObjectStoreConnectionContext):
     self.toContext._rollbackTransaction()
     return self.fromContext._rollbackTransaction()
 
-  def _saveJSONObject(self, objectType, objectKey, JSONString, objectVersion):
+  def _saveJSONObjectV2(self, objectType, objectKey, JSONString, objectVersion):
     to_objectDICT, to_ObjectVersion, to_creationDate, to_lastUpdateDate, to_objectKey = self.toContext._getObjectJSON(objectType, objectKey)
     if to_objectDICT is None:
-      self.toContext._saveJSONObject(objectType, objectKey, JSONString, objectVersion=None)
+      self.toContext._saveJSONObjectV2(objectType, objectKey, JSONString, objectVersion=None)
     else:
-      self.toContext._saveJSONObject(objectType, objectKey, JSONString, objectVersion=to_ObjectVersion)
-    return self.fromContext._saveJSONObject(objectType, objectKey, JSONString, objectVersion)
+      self.toContext._saveJSONObjectV2(objectType, objectKey, JSONString, objectVersion=to_ObjectVersion)
+    return self.fromContext._saveJSONObjectV2(objectType, objectKey, JSONString, objectVersion)
 
   def _removeJSONObject(self, objectType, objectKey, objectVersion, ignoreMissingObject):
     to_objectDICT = None

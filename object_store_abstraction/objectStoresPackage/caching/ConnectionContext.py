@@ -21,7 +21,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
   def _saveJSONObjectV2(self, objectType, objectKey, JSONString, objectVersion):
     (newObjVersion, creationDateTime, lastUpdateDateTime) = self.mainContext._saveJSONObjectV2(objectType, objectKey, JSONString, objectVersion)
     self.objectStore.getPolicy(objectType)._saveJSONObjectV2(
-      objectType, objectKey, JSONString, objectVersion, cacheContext=self.cachingContext, cullQueues=self.objectStore.cullQueues,
+      objectType, objectKey, JSONString, objectVersion=newObjVersion, cacheContext=self.cachingContext, cullQueues=self.objectStore.cullQueues,
       creationDateTime=creationDateTime,
       lastUpdateDateTime=lastUpdateDateTime
     )

@@ -31,7 +31,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
   def _rollbackTransaction(self):
     pass
 
-  def _saveJSONObject(self, objectType, objectKey, JSONString, objectVersion):
+  def _saveJSONObjectV2(self, objectType, objectKey, JSONString, objectVersion):
     partition_key = make_partition_key(objectType, objectKey)
     (curObjectDICT, curObjectVersion, curCreationDate, curLastUpdateDate, curObjectKey) = self._getObjectJSON(objectType, objectKey)
     curTime = self.objectStore.externalFns['getCurDateTime']().isoformat()
@@ -54,7 +54,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
               'objectDICT': jsonToStore
           }
       )
-      return newObjectVersion
+      return (newObjectVersion, curTime, curTime)
 
     if objectVersion is None:
       raise TryingToCreateExistingObjectException
@@ -75,7 +75,8 @@ class ConnectionContext(ObjectStoreConnectionContext):
         },
         ReturnValues="UPDATED_NEW"
     )
-    return newObjectVersion
+    #creation date not availiable without extra call
+    return (newObjectVersion, None, curTime)
 
   def getTupleFromItem(self, item):
     dt = parse(item['creationDate'])

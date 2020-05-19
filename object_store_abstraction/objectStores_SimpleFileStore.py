@@ -125,7 +125,7 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
     pass
 
 
-  def _saveJSONObject(self, objectType, objectKey, JSONString, objectVersion):
+  def _saveJSONObjectV2(self, objectType, objectKey, JSONString, objectVersion):
     with self.objectStore.fileAccessLock:
       curTimeValue = self.objectStore.externalFns['getCurDateTime']().isoformat()
 
@@ -165,7 +165,7 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
       target = open(fileName, 'w') #w mode overwrites file content
       target.write(str(DictToSave))
       target.close()
-    return newObjectVersion
+    return (newObjectVersion, createDate, updateDate)
 
   def _removeJSONObject(self, objectType, objectKey, objectVersion, ignoreMissingObject):
     if not self.objectStore.isKnownObjectType(objectType):

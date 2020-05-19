@@ -92,7 +92,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
     self.transaction = None
     return res
 
-  def _saveJSONObject(self, objectType, objectKey, JSONString, objectVersion):
+  def _saveJSONObjectV2(self, objectType, objectKey, JSONString, objectVersion):
     #print("JSONString:", JSONString)
     query = self.objectStore.objDataTable.select(
       whereclause=(
@@ -127,7 +127,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
         raise Exception('_saveJSONObject wrong number of rows inserted')
       #if result.inserted_primary_key[0] != objectKey:
       #  raise Exception('_saveJSONObject issue with primary key')
-      return newObjectVersion
+      return (newObjectVersion, curTime, curTime)
     if objectVersion is None:
       raise TryingToCreateExistingObjectException
     if str(firstRow.objectVersion) != str(objectVersion):
@@ -148,7 +148,9 @@ class ConnectionContext(ObjectStoreConnectionContext):
     if result.rowcount != 1:
       #print('Result count is ', result.rowcount)
       raise Exception('_saveJSONObject wrong number of rows updated')
-    return newObjectVersion
+
+    #not returning creation date time as it is not present without an extra query
+    return (newObjectVersion, None, curTime)
 
   def _removeJSONObject(self, objectType, objectKey, objectVersion, ignoreMissingObject):
     query = self.objectStore.objDataTable.delete(whereclause=(

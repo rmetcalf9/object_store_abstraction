@@ -40,6 +40,9 @@ class TenantAwareConnectionContext():
   def saveJSONObject(self, objectType, objectKey, JSONString, objectVersion = None):
     return self.objectStoreContext.saveJSONObject(self.__INT__getDirivedObjectType(objectType), objectKey, JSONString, objectVersion)
 
+  def saveJSONObjectV2(self, objectType, objectKey, JSONString, objectVersion = None):
+    return self.objectStoreContext.saveJSONObjectV2(self.__INT__getDirivedObjectType(objectType), objectKey, JSONString, objectVersion)
+
   def removeJSONObject(self, objectType, objectKey, objectVersion = None, ignoreMissingObject = False):
     return self.objectStoreContext.removeJSONObject(self.__INT__getDirivedObjectType(objectType), objectKey, objectVersion, ignoreMissingObject)
 
