@@ -157,7 +157,7 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
         newObjectVersion = int(objectVersion) + 1
         createDate = o_creationDate.isoformat()
         updateDate = curTimeValue
-        createDateToReturn = o_ObjectVersion
+        createDateToReturn = o_creationDate
         lastUpdateDataToReturn = curTime
 
       DictToSave = {

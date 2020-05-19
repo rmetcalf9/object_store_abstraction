@@ -250,6 +250,27 @@ def t_secondSaveObjectSendStringObjectVer(testClass, objectStoreType):
     storeConnection.executeInsideTransaction(someFn2)
   objectStoreType.executeInsideConnectionContext(dbfn)
 
+def t_secondSaveV2ObjectSendStringObjectVer(testClass, objectStoreType):
+  def someFn(connectionContext):
+    return connectionContext.saveJSONObjectV2("Test", "123", JSONString, None)
+  (savedVer, savedCreateDate, savedLastUpdateDate) = objectStoreType.executeInsideTransaction(someFn)
+
+  testClass.assertEqual(str(type(savedVer)),  "<class 'int'>", msg="saveJSONObjectV2 wrong savedVer Type")
+  testClass.assertEqual(str(type(savedCreateDate)),  "<class 'datetime.datetime'>", msg="saveJSONObjectV2 wrong savedCreateDate Type")
+  testClass.assertEqual(str(type(savedLastUpdateDate)),  "<class 'datetime.datetime'>", msg="saveJSONObjectV2 wrong savedLastUpdateDate Type")
+
+
+  def someFn2(connectionContext):
+    return connectionContext.saveJSONObjectV2("Test", "123", copy.deepcopy(JSONString), str(savedVer))
+  (savedVer2, savedCreateDate2, savedLastUpdateDate2) = objectStoreType.executeInsideTransaction(someFn2)
+
+  testClass.assertEqual(str(type(savedVer2)),  "<class 'int'>", msg="saveJSONObjectV2 wrong savedVer2 Type")
+  testClass.assertEqual(str(type(savedCreateDate2)),  "<class 'datetime.datetime'>", msg="saveJSONObjectV2 wrong savedCreateDate2 Type")
+  testClass.assertEqual(str(type(savedLastUpdateDate2)),  "<class 'datetime.datetime'>", msg="saveJSONObjectV2 wrong savedLastUpdateDate2 Type")
+
+  testClass.assertEqual(savedCreateDate,  savedCreateDate2, msg="saveJSONObjectV2 savedCreateDate should not have updated")
+
+
 #*************************************
 #   UpdateJSONObject Tests
 #*************************************
