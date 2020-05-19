@@ -45,11 +45,13 @@ class CachePolicyClass():
   def __isCaching(self):
     return self.caching
 
-  def __putObjectIntoCache(self, objectType, objectKey, JSONString, objectVersion, cacheContext, cullQueues):
+  def __putObjectIntoCache(self, objectType, objectKey, JSONString, objectVersion, cacheContext, cullQueues, creationDateTime, lastUpdateDateTime):
     dictToStore = {
       "exp": time.perf_counter() + (self.timeout/1000),
       "d": JSONString,
-      "ver": objectVersion
+      "ver": objectVersion,
+      "cre": creationDateTime,
+      "upd": lastUpdateDateTime
     }
     #If we supply the object version then the save will fail on creation and mismatch
     # if we don't supply the object version then the save will fail if object exists
@@ -57,10 +59,10 @@ class CachePolicyClass():
     frmCacheTuple = cacheContext._getObjectJSON(objectType=objectType, objectKey=objectKey)
     if frmCacheTuple[0] is None:
       #object is not currently in cache
-      cacheContext._saveJSONObject(objectType, objectKey, dictToStore, objectVersion=None)
+      cacheContext._saveJSONObjectV2(objectType, objectKey, dictToStore, objectVersion=None)
     else:
       #object in cache,
-      cacheContext._saveJSONObject(objectType, objectKey, dictToStore, objectVersion=frmCacheTuple[1])
+      cacheContext._saveJSONObjectV2(objectType, objectKey, dictToStore, objectVersion=frmCacheTuple[1])
 
     queue = cullQueues.getQueue(objectType=objectType, maxsize=self.maxcachesize)
     if queue.full():
@@ -85,7 +87,7 @@ class CachePolicyClass():
     self.__removeSingleElementFromCache(cacheContext=cacheContext, objectType=objectType, objectKey=objectKey)
     return None # return value not used
 
-  def _saveJSONObject(self, objectType, objectKey, JSONString, objectVersion, cacheContext, cullQueues):
+  def _saveJSONObjectV2(self, objectType, objectKey, JSONString, objectVersion, cacheContext, cullQueues, creationDateTime, lastUpdateDateTime):
     if not self.__isCaching():
       return None
     # This is saving a change so we need to increment objectVersion when we store
@@ -93,7 +95,16 @@ class CachePolicyClass():
       objectVersion = 1
     else:
       objectVersion = int(objectVersion) + 1
-    self.__putObjectIntoCache(objectType, objectKey, JSONString, objectVersion, cacheContext, cullQueues)
+    self.__putObjectIntoCache(
+      objectType,
+      objectKey,
+      JSONString,
+      objectVersion,
+      cacheContext,
+      cullQueues,
+      creationDateTime=creationDateTime,
+      lastUpdateDateTime=lastUpdateDateTime
+    )
     return None
 
   def _getObjectJSON(self, objectType, objectKey, cacheContext, mainContext, cullQueues):
@@ -109,6 +120,8 @@ class CachePolicyClass():
         retVal = list(frmCacheTuple)
         retVal[0] = frmCacheTuple[0]["d"]
         retVal[1] = frmCacheTuple[0]["ver"] #speficy original object version
+        retVal[2] = frmCacheTuple[0]["cre"] #speficy original (May not always ve correct)
+        retVal[3] = frmCacheTuple[0]["upd"] #speficy original (May not always ve correct)
         #Cache hit - we just need to return, but first make sure cache won't grow too much
         self.__preformCull(cacheContext, objectType, cullQueues)
         return tuple(retVal)
@@ -127,7 +140,9 @@ class CachePolicyClass():
       JSONString=fromMainTuple[0],
       objectVersion=fromMainTuple[1],
       cacheContext=cacheContext,
-      cullQueues=cullQueues
+      cullQueues=cullQueues,
+      creationDateTime=fromMainTuple[2],
+      lastUpdateDateTime=fromMainTuple[3]
     )
     return fromMainTuple
 

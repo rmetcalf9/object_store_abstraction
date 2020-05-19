@@ -17,7 +17,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
     pass
 
 
-  def _saveJSONObject(self, objectType, objectKey, JSONString, objectVersion):
+  def _saveJSONObjectV2(self, objectType, objectKey, JSONString, objectVersion):
     dictForObjectType = self.objectStore._INT_getDictForObjectType(objectType)
     curTimeValue = self.objectStore.externalFns['getCurDateTime']()
     newObjectVersion = None
@@ -34,7 +34,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
         raise WrongObjectVersionException
       newObjectVersion = int(objectVersion) + 1
     dictForObjectType[objectKey] = (JSONString, newObjectVersion, dictForObjectType[objectKey][2], curTimeValue, objectKey)
-    return newObjectVersion
+    return (newObjectVersion, dictForObjectType[objectKey][2], curTimeValue)
 
   def _removeJSONObject(self, objectType, objectKey, objectVersion, ignoreMissingObject):
     dictForObjectType = self.objectStore._INT_getDictForObjectType(objectType)

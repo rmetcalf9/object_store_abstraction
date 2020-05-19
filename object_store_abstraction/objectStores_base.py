@@ -133,11 +133,16 @@ class ObjectStoreConnectionContext():
 
   #Return value is objectVersion of object saved
   def saveJSONObject(self, objectType, objectKey, JSONString, objectVersion = None):
+    ret = self.saveJSONObjectV2(objectType, objectKey, JSONString, objectVersion)
+    return ret[0] #just return object version
+
+  #NEw version with Return value (newObjVersion, creationDateTime, lastUpdateDateTime)
+  def saveJSONObjectV2(self, objectType, objectKey, JSONString, objectVersion = None):
     self.validateObjectType(objectType=objectType)
     if 'ObjectVersion' in JSONString:
       raise SavedObjectShouldNotContainObjectVersionException
     self._INT_varifyWeCanMutateData()
-    return self._saveJSONObject(objectType, objectKey, JSONString, objectVersion)
+    return self._saveJSONObjectV2(objectType, objectKey, JSONString, objectVersion)
 
   #Return value is None
   def removeJSONObject(self, objectType, objectKey, objectVersion = None, ignoreMissingObject = False):
@@ -216,8 +221,8 @@ class ObjectStoreConnectionContext():
     return self._getAllRowsForObjectType(objectType, filterFN, outputFN, whereClauseText)
 
 
-  def _saveJSONObject(self, objectType, objectKey, JSONString, objectVersion):
-    raise Exception('_saveJSONObject Not Overridden')
+  def _saveJSONObjectV2(self, objectType, objectKey, JSONString, objectVersion):
+    raise Exception('_saveJSONObjectV2 Not Overridden')
   def _removeJSONObject(self, objectType, objectKey, objectVersion, ignoreMissingObject):
     raise Exception('_removeJSONObject Not Overridden')
   def _getObjectJSON(self, objectType, objectKey):

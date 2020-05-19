@@ -18,10 +18,14 @@ class ConnectionContext(ObjectStoreConnectionContext):
   def _rollbackTransaction(self):
     return self.mainContext._rollbackTransaction()
 
-  def _saveJSONObject(self, objectType, objectKey, JSONString, objectVersion):
-    ret = self.mainContext._saveJSONObject(objectType, objectKey, JSONString, objectVersion)
-    self.objectStore.getPolicy(objectType)._saveJSONObject(objectType, objectKey, JSONString, objectVersion, cacheContext=self.cachingContext, cullQueues=self.objectStore.cullQueues)
-    return ret
+  def _saveJSONObjectV2(self, objectType, objectKey, JSONString, objectVersion):
+    (newObjVersion, creationDateTime, lastUpdateDateTime) = self.mainContext._saveJSONObjectV2(objectType, objectKey, JSONString, objectVersion)
+    self.objectStore.getPolicy(objectType)._saveJSONObjectV2(
+      objectType, objectKey, JSONString, objectVersion, cacheContext=self.cachingContext, cullQueues=self.objectStore.cullQueues,
+      creationDateTime=creationDateTime,
+      lastUpdateDateTime=lastUpdateDateTime
+    )
+    return (newObjVersion, creationDateTime, lastUpdateDateTime)
 
   def _removeJSONObject(self, objectType, objectKey, objectVersion, ignoreMissingObject):
     ret = self.mainContext._removeJSONObject(objectType, objectKey, objectVersion, ignoreMissingObject)
