@@ -69,7 +69,7 @@ class helper(TestHelperSuperClass.testHelperSuperClass):
 
   #readSingleRow(self.undertestCacheObjectStore, objectType, objectKey, verifyMatches=exampleData)
 
-@TestHelperSuperClass.wipd
+#@TestHelperSuperClass.wipd
 class test_objectStoresMigrating(helper):
   def test_genericTests(self):
     def getObjFn(ConfigDict, resetData = True):

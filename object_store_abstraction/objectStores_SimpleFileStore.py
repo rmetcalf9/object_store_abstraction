@@ -126,8 +126,11 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
 
 
   def _saveJSONObjectV2(self, objectType, objectKey, JSONString, objectVersion):
+    createDateToReturn = None
+    lastUpdateDataToReturn = None
     with self.objectStore.fileAccessLock:
-      curTimeValue = self.objectStore.externalFns['getCurDateTime']().isoformat()
+      curTime = self.objectStore.externalFns['getCurDateTime']()
+      curTimeValue = curTime.isoformat()
 
       (o_objectDICT, o_ObjectVersion, o_creationDate, o_lastUpdateDate, o_objectKey) = self.getObjectJSONWithoutLock(objectType, objectKey)
 
@@ -142,6 +145,8 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
         newObjectVersion = 1
         createDate = curTimeValue
         updateDate = curTimeValue
+        createDateToReturn = curTime
+        lastUpdateDataToReturn = curTime
       else:
         # OBject exists we are updating it
         if objectVersion is None:
@@ -152,6 +157,8 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
         newObjectVersion = int(objectVersion) + 1
         createDate = o_creationDate.isoformat()
         updateDate = curTimeValue
+        createDateToReturn = o_ObjectVersion
+        lastUpdateDataToReturn = curTime
 
       DictToSave = {
         "Data": JSONString,
@@ -165,7 +172,8 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
       target = open(fileName, 'w') #w mode overwrites file content
       target.write(str(DictToSave))
       target.close()
-    return (newObjectVersion, createDate, updateDate)
+
+    return (newObjectVersion, createDateToReturn, lastUpdateDataToReturn)
 
   def _removeJSONObject(self, objectType, objectKey, objectVersion, ignoreMissingObject):
     if not self.objectStore.isKnownObjectType(objectType):

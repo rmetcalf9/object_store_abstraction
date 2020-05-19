@@ -121,7 +121,29 @@ def t_singleSaveAndRetrieveCommittedTransaction(testClass, objectStoreType):
     (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objectKey) = storeConnection.getObjectJSON("Test", "123")
     testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString, [  ], msg='Saved object dosen\'t match')
     testClass.assertJSONStringsEqualWithIgnoredKeys(objectKey, "123", [  ], msg='Returned key wrong')
+    testClass.assertEqual(str(type(lastUpdateDate)),  "<class 'datetime.datetime'>", msg="getObjectJSON wrong lastUpdateDate Type")
+    testClass.assertEqual(str(type(creationDate)),  "<class 'datetime.datetime'>", msg="getObjectJSON wrong creationDate Type")
   objectStoreType.executeInsideConnectionContext(dbfn)
+
+def t_singleSaveV2AndRetrieveCommittedTransaction(testClass, objectStoreType):
+  def dbfn(storeConnection):
+    def someFn(connectionContext):
+      return connectionContext.saveJSONObjectV2("Test", "123", copy.deepcopy(JSONString), None)
+
+    (savedVer, savedCreateDate, savedLastUpdateDate)  = storeConnection.executeInsideTransaction(someFn)
+
+    (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objectKey) = storeConnection.getObjectJSON("Test", "123")
+    testClass.assertJSONStringsEqualWithIgnoredKeys(objectDICT, JSONString, [  ], msg='Saved object dosen\'t match')
+    testClass.assertJSONStringsEqualWithIgnoredKeys(objectKey, "123", [  ], msg='Returned key wrong')
+    testClass.assertEqual(str(type(lastUpdateDate)),  "<class 'datetime.datetime'>", msg="getObjectJSON wrong lastUpdateDate Type")
+    testClass.assertEqual(str(type(creationDate)),  "<class 'datetime.datetime'>", msg="getObjectJSON wrong creationDate Type")
+    testClass.assertEqual(str(type(savedCreateDate)),  "<class 'datetime.datetime'>", msg="saveJSONObjectV2 wrong savedCreateDate Type")
+    testClass.assertEqual(str(type(savedLastUpdateDate)),  "<class 'datetime.datetime'>", msg="saveJSONObjectV2 wrong savedLastUpdateDate Type")
+    testClass.assertEqual(savedCreateDate,  creationDate, msg="saveJSONObjectV2 wrong savedCreateDate")
+    testClass.assertEqual(savedLastUpdateDate,  lastUpdateDate, msg="saveJSONObjectV2 wrong savedLastUpdateDate")
+
+  objectStoreType.executeInsideConnectionContext(dbfn)
+
 
 def t_singleSaveAndRetrieveUncommittedTransaction(testClass, objectStoreType):
   def someFn(connectionContext):

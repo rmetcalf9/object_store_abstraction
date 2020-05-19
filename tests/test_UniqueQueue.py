@@ -2,7 +2,7 @@ import unittest
 import TestHelperSuperClass
 from object_store_abstraction import UniqueQueue
 
-@TestHelperSuperClass.wipd
+#@TestHelperSuperClass.wipd
 class test_UniqueuQueue_TestClass(unittest.TestCase):
 
   def test_uniqueQueueMain(self):

@@ -34,7 +34,8 @@ class ConnectionContext(ObjectStoreConnectionContext):
   def _saveJSONObjectV2(self, objectType, objectKey, JSONString, objectVersion):
     partition_key = make_partition_key(objectType, objectKey)
     (curObjectDICT, curObjectVersion, curCreationDate, curLastUpdateDate, curObjectKey) = self._getObjectJSON(objectType, objectKey)
-    curTime = self.objectStore.externalFns['getCurDateTime']().isoformat()
+    curTime = self.objectStore.externalFns['getCurDateTime']()
+    curTimeValue = curTime.isoformat()
 
     if curObjectDICT is None:
       if objectVersion is not None:
@@ -49,8 +50,8 @@ class ConnectionContext(ObjectStoreConnectionContext):
               'objectType': objectType,
               'objectKey': objectKey,
               'objectVersion': newObjectVersion,
-              'creationDate': curTime,
-              'lastUpdateData': curTime,
+              'creationDate': curTimeValue,
+              'lastUpdateData': curTimeValue,
               'objectDICT': jsonToStore
           }
       )
@@ -70,13 +71,13 @@ class ConnectionContext(ObjectStoreConnectionContext):
         UpdateExpression="set objectVersion = :ov, lastUpdateData=:lud, objectDICT=:od",
         ExpressionAttributeValues={
             ':ov': newObjectVersion,
-            ':lud': curTime,
+            ':lud': curTimeValue,
             ':od': jsonToStore
         },
         ReturnValues="UPDATED_NEW"
     )
-    #creation date not availiable without extra call
-    return (newObjectVersion, None, curTime)
+
+    return (newObjectVersion, curCreationDate, curTime)
 
   def getTupleFromItem(self, item):
     dt = parse(item['creationDate'])
