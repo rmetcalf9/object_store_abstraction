@@ -1,5 +1,7 @@
 from object_store_abstraction import ObjectStoreConfigError
 import time
+from dateutil.parser import parse
+import pytz
 
 class CachePolicyClass():
   caching = None
@@ -46,12 +48,18 @@ class CachePolicyClass():
     return self.caching
 
   def __putObjectIntoCache(self, objectType, objectKey, JSONString, objectVersion, cacheContext, cullQueues, creationDateTime, lastUpdateDateTime):
+    # We do want to store null values in the cache
+    def getIsoFormatOrNone(val):
+      if val is None:
+        return val
+      return val.isoformat()
+
     dictToStore = {
       "exp": time.perf_counter() + (self.timeout/1000),
       "d": JSONString,
       "ver": objectVersion,
-      "cre": creationDateTime,
-      "upd": lastUpdateDateTime
+      "cre": getIsoFormatOrNone(creationDateTime),
+      "upd": getIsoFormatOrNone(lastUpdateDateTime)
     }
     #If we supply the object version then the save will fail on creation and mismatch
     # if we don't supply the object version then the save will fail if object exists
@@ -110,13 +118,19 @@ class CachePolicyClass():
     frmCacheTuple = cacheContext._getObjectJSON(objectType=objectType, objectKey=objectKey)
     if frmCacheTuple[0] is not None:
 
+      def getOutputDateTime(isoforamtDateTime):
+        if isoforamtDateTime is None:
+          return None
+        dt = parse(isoforamtDateTime)
+        return dt.astimezone(pytz.utc)
+
       # If it has not expired then return cache value
       if time.perf_counter() < frmCacheTuple[0]["exp"]:
         retVal = list(frmCacheTuple)
         retVal[0] = frmCacheTuple[0]["d"]
         retVal[1] = frmCacheTuple[0]["ver"] #speficy original object version
-        retVal[2] = frmCacheTuple[0]["cre"] #speficy original (May not always ve correct)
-        retVal[3] = frmCacheTuple[0]["upd"] #speficy original (May not always ve correct)
+        retVal[2] = getOutputDateTime(frmCacheTuple[0]["cre"]) #speficy original (May not always ve correct)
+        retVal[3] = getOutputDateTime(frmCacheTuple[0]["upd"]) #speficy original (May not always ve correct)
         #Cache hit - we just need to return, but first make sure cache won't grow too much
         self.__preformCull(cacheContext, objectType, cullQueues)
         return tuple(retVal)
@@ -128,6 +142,7 @@ class CachePolicyClass():
 
     # If it is expired lookup from main context
     fromMainTuple = mainContext._getObjectJSON(objectType, objectKey)
+
     ##__putObjectIntoCache will always preform a cull to prevent too much cache growth
     self.__putObjectIntoCache(
       objectType=objectType,
