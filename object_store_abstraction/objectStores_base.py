@@ -1,4 +1,5 @@
 from .paginatedResult import sanatizePaginatedParamValues, getPaginatedResultUsingIterator
+import datetime
 
 #Definition of Offset
 # offset is the number to skip before outputing
@@ -12,6 +13,7 @@ from .paginatedResult import sanatizePaginatedParamValues, getPaginatedResultUsi
 #  This is the baseClass other stores inherit from
 StoringNoneObjectAfterUpdateOperationException = Exception('Storing None Object After Update Operation')
 SavedObjectShouldNotContainObjectVersionException = Exception('SavedObjectShouldNotContainObjectVersion')
+SavingDateTimeTypeException = Exception('Saving datetime into objectstore not supported')
 
 class WrongObjectVersionExceptionClass(Exception):
   pass
@@ -131,6 +133,19 @@ class ObjectStoreConnectionContext():
     if '_' in objectType:
       raise InvalidObjectTypeException
 
+  def validateObjectDict(self, objectToSTore):
+    if objectToSTore is None:
+      return
+    if isinstance(objectToSTore, datetime.datetime):
+      raise SavingDateTimeTypeException
+    if isinstance(objectToSTore, dict):
+      for x in objectToSTore:
+        self.validateObjectDict(objectToSTore=objectToSTore[x])
+    if isinstance(objectToSTore, list):
+      for x in objectToSTore:
+        self.validateObjectDict(objectToSTore=x)
+    return
+
   #Return value is objectVersion of object saved
   def saveJSONObject(self, objectType, objectKey, JSONString, objectVersion = None):
     ret = self.saveJSONObjectV2(objectType, objectKey, JSONString, objectVersion)
@@ -139,6 +154,7 @@ class ObjectStoreConnectionContext():
   #NEw version with Return value (newObjVersion, creationDateTime, lastUpdateDateTime)
   def saveJSONObjectV2(self, objectType, objectKey, JSONString, objectVersion = None):
     self.validateObjectType(objectType=objectType)
+    self.validateObjectDict(objectToSTore=JSONString)
     if 'ObjectVersion' in JSONString:
       raise SavedObjectShouldNotContainObjectVersionException
     self._INT_varifyWeCanMutateData()

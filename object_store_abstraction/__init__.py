@@ -13,7 +13,7 @@ from .objectStores_base import WrongObjectVersionExceptionClass,  SuppliedObject
 from .objectStores_base import ObjectStore, ObjectStoreConnectionContext
 
 #Exception instances from base
-from .objectStores_base import WrongObjectVersionException, SuppliedObjectVersionWhenCreatingException, MissingTransactionContextException, UnallowedMutationException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException
+from .objectStores_base import WrongObjectVersionException, SuppliedObjectVersionWhenCreatingException, MissingTransactionContextException, UnallowedMutationException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SavingDateTimeTypeException
 #Helper fns from base
 from .objectStores_base import outputFnJustKeys, outputFnItems
 
