@@ -265,10 +265,13 @@ def t_secondSaveV2ObjectSendStringObjectVer(testClass, objectStoreType):
   (savedVer2, savedCreateDate2, savedLastUpdateDate2) = objectStoreType.executeInsideTransaction(someFn2)
 
   testClass.assertEqual(str(type(savedVer2)),  "<class 'int'>", msg="saveJSONObjectV2 wrong savedVer2 Type")
-  testClass.assertEqual(str(type(savedCreateDate2)),  "<class 'datetime.datetime'>", msg="saveJSONObjectV2 wrong savedCreateDate2 Type")
+  if savedCreateDate2 is not None:
+    # Some adapters don't support returning created date
+    testClass.assertEqual(str(type(savedCreateDate2)),  "<class 'datetime.datetime'>", msg="saveJSONObjectV2 wrong savedCreateDate2 Type")
   testClass.assertEqual(str(type(savedLastUpdateDate2)),  "<class 'datetime.datetime'>", msg="saveJSONObjectV2 wrong savedLastUpdateDate2 Type")
 
-  testClass.assertEqual(savedCreateDate,  savedCreateDate2, msg="saveJSONObjectV2 savedCreateDate should not have updated")
+  if savedCreateDate2 is not None:
+    testClass.assertEqual(savedCreateDate,  savedCreateDate2, msg="saveJSONObjectV2 savedCreateDate should not have updated")
 
 
 #*************************************

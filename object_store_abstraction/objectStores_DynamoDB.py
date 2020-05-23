@@ -86,7 +86,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
     lastUpdateDate = dt.astimezone(pytz.utc)
     convertedObjectDICT = getObjFromJSONThatWasPutInStore(item['objectDICT'])
 
-    return convertedObjectDICT, item['objectVersion'], creationDate, lastUpdateDate, item['objectKey']
+    return convertedObjectDICT, int(item['objectVersion']), creationDate, lastUpdateDate, item['objectKey']
 
   def _removeJSONObject(self, objectType, objectKey, objectVersion, ignoreMissingObject):
     #Object version error only raised when not ignoring missing
