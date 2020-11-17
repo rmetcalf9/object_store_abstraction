@@ -8,12 +8,12 @@ sp_install_requires = [
   'pyjwt==1.7.1',
   'sqlalchemy==1.3.1',
   'PyMySQL==0.9.3',
-  'python-dateutil==2.7.2',
+  'python-dateutil==2.8.1',
   'boto3==1.9.188'
 ]
 sp_tests_require = [
   'nose==1.3.7',
-  'python_Testing_Utilities==0.1.5'
+  'python_Testing_Utilities==0.1.7'
 ]
 
 all_require = sp_install_requires + sp_tests_require
