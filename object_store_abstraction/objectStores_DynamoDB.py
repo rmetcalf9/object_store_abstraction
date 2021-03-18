@@ -126,11 +126,20 @@ class ConnectionContext(ObjectStoreConnectionContext):
   def _getObjectJSON(self, objectType, objectKey):
     partition_key = make_partition_key(objectType, objectKey)
 
-    response = self.objectStore.getTable(objectType).get_item(
-        Key={
-            'partition_key': partition_key
-        }
-    )
+    table = self.objectStore.getTable(objectType)
+
+    response = None
+    try:
+      response = table.get_item(
+          Key={
+              'partition_key': partition_key
+          }
+      )
+    except botocoreexceptions.ResourceNotFoundException as e:
+      # if we get BEFORE any inserts the partition key will not exist
+      #  in this case the item isn't in the store
+      return None, None, None, None, None
+
     if "Item" not in response:
       return None, None, None, None, None
 
