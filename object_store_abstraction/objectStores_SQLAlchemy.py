@@ -1,4 +1,4 @@
-from .objectStores_base import readOptionalBooleanValueFromConfigDict, ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, ObjectStoreConfigError, MissingTransactionContextException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException
+from .objectStores_base import ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, ObjectStoreConfigError, MissingTransactionContextException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException
 from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, ForeignKey, BigInteger, DateTime, JSON, func, UniqueConstraint, and_, Text, select
 import pytz
 ##import datetime
@@ -308,24 +308,35 @@ class ObjectStore_SQLAlchemy(ObjectStore):
     else:
       self.objectPrefix = ""
 
-    pool_pre_ping=readOptionalBooleanValueFromConfigDict(key="poolPrePing",default=False,configDict=ConfigDict)
+    otherArgsForCreateEngine = {}
+    if "create_engine_args" in ConfigDict:
+      otherArgsForCreateEngine = ConfigDict["create_engine_args"]
+    else:
+      otherArgsForCreateEngine = {
+        "pool_recycle": 3600,
+        "pool_size": 40,
+        "max_overflow": 0
+      }
+      if "connect_args" in ConfigDict:
+        if ConfigDict["connect_args"] is not None:
+          otherArgsForCreateEngine["connect_args"] = ConfigDict["connect_args"]
 
-    connect_args = None
     if "ssl_ca" in ConfigDict:
       #print("ssl_ca:", ConfigDict['ssl_ca'])
       if not os.path.isfile(ConfigDict['ssl_ca']):
         raise Exception("Supplied ssl_ca dosen't exist")
-      connect_args = {
-        "ssl": {'ca': ConfigDict['ssl_ca']}
-      }
+      if "connect_args" not in ConfigDict:
+        ConfigDict["connect_args"] = {}
 
-    #My experiment for SSL https://code.metcarob.com/node/249
-    #debugging https://github.com/PyMySQL/PyMySQL/blob/master/pymysql/connections.py
+      ConfigDict["connect_args"]["ssl"] = {'ca': ConfigDict['ssl_ca']}
 
-    if connect_args is None:
-      self.engine = create_engine(ConfigDict["connectionString"], pool_recycle=3600, pool_size=40, max_overflow=0, pool_pre_ping=pool_pre_ping)
-    else:
-      self.engine = create_engine(ConfigDict["connectionString"], pool_recycle=3600, pool_size=40, max_overflow=0, connect_args=connect_args, pool_pre_ping=pool_pre_ping)
+    if "poolclass" in otherArgsForCreateEngine:
+      if otherArgsForCreateEngine["poolclass"] == "StaticPool":
+        otherArgsForCreateEngine["poolclass"] = StaticPool
+
+    if detailLogging:
+      print("Creating connection with args:", otherArgsForCreateEngine)
+    self.engine = create_engine(ConfigDict["connectionString"], **otherArgsForCreateEngine)
 
     metadata = MetaData()
     #(objDICT, objectVersion, creationDate, lastUpdateDate)
