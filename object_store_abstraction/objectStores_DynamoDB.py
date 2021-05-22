@@ -1,6 +1,6 @@
 #https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/dynamodb.html#DynamoDB.Table.get_item
 
-from .objectStores_base import ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException, ObjectStoreConfigError
+from .objectStores_base import readOptionalBooleanValueFromConfigDict, ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException, ObjectStoreConfigError
 from .paginatedResult import getPaginatedResult
 from .paginatedResultIterator import PaginatedResultIteratorBaseClass, sortListOfKeysToDictBySortString, PaginatedResultIteratorFromDictWithAttrubtesAsKeysClass
 
@@ -278,15 +278,7 @@ class ObjectStore_DynamoDB(ObjectStore):
     if endpointURL.strip().upper() == "NONE":
       endpointURL = None
 
-    singleTableModeTT = configJSON["single_table_mode"].strip().upper()
-    if singleTableModeTT == "FALSE":
-      self.singleTableMode = False
-    else:
-      if singleTableModeTT.strip().upper() == "TRUE":
-        self.singleTableMode = True
-      else:
-        raise ObjectStoreConfigError("APIAPP_OBJECTSTORECONFIG DynamoDB ERROR - single_table_mode must be true or false")
-
+    self.singleTableMode=readOptionalBooleanValueFromConfigDict(key="single_table_mode",default=None,configDict=configJSON)
 
     self.awsSession = AWSSession(
       aws_access_key_id=configJSON["aws_access_key_id"],

@@ -1,4 +1,4 @@
-from .objectStores_base import ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, ObjectStoreConfigError, MissingTransactionContextException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException
+from .objectStores_base import readOptionalBooleanValueFromConfigDict, ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, ObjectStoreConfigError, MissingTransactionContextException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException
 from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, ForeignKey, BigInteger, DateTime, JSON, func, UniqueConstraint, and_, Text, select
 import pytz
 ##import datetime
@@ -308,6 +308,8 @@ class ObjectStore_SQLAlchemy(ObjectStore):
     else:
       self.objectPrefix = ""
 
+    pool_pre_ping=readOptionalBooleanValueFromConfigDict(key="poolPrePing",default=False,configDict=ConfigDict)
+
     connect_args = None
     if "ssl_ca" in ConfigDict:
       #print("ssl_ca:", ConfigDict['ssl_ca'])
@@ -321,9 +323,9 @@ class ObjectStore_SQLAlchemy(ObjectStore):
     #debugging https://github.com/PyMySQL/PyMySQL/blob/master/pymysql/connections.py
 
     if connect_args is None:
-      self.engine = create_engine(ConfigDict["connectionString"], pool_recycle=3600, pool_size=40, max_overflow=0)
+      self.engine = create_engine(ConfigDict["connectionString"], pool_recycle=3600, pool_size=40, max_overflow=0, pool_pre_ping=pool_pre_ping)
     else:
-      self.engine = create_engine(ConfigDict["connectionString"], pool_recycle=3600, pool_size=40, max_overflow=0, connect_args=connect_args)
+      self.engine = create_engine(ConfigDict["connectionString"], pool_recycle=3600, pool_size=40, max_overflow=0, connect_args=connect_args, pool_pre_ping=pool_pre_ping)
 
     metadata = MetaData()
     #(objDICT, objectVersion, creationDate, lastUpdateDate)

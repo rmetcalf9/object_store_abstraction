@@ -76,6 +76,32 @@ except:
 
 '''
 
+#Utility read config functions
+def readOptionalBooleanValueFromConfigDict(key,default,configDict):
+  shouldReturnDefault = False
+  if key not in configDict:
+    shouldReturnDefault = True
+  else:
+    val = configDict[key]
+    if val is None:
+      shouldReturnDefault = True
+
+  if shouldReturnDefault:
+    if default is not None:
+      return default
+    raise ObjectStoreConfigError("readOptionalBooleanValueFromConfigDict ERROR - " + key + " not specified and no default")
+
+  if isinstance(val, bool):
+    return val
+  if isinstance(val, str):
+    val = val.strip().upper()
+    if val == "TRUE":
+      return True
+    if val == "FALSE":
+      return False
+  raise ObjectStoreConfigError("readOptionalBooleanValueFromConfigDict ERROR - " + key + " must be true or false (got " + str(val) + ")")
+
+
 #Utility output functions
 def outputFnJustKeys(item):
   (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objectKey) = item
