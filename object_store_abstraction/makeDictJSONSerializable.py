@@ -13,7 +13,10 @@ def getNormalDICTFromRJMJSONSerializableDICT(RJMDICT):
 
 def getJSONtoPutInStore(origObj):
   #print("Putting in:", type(origObj), ":", origObj)
-  return json.dumps(getRJMJSONSerializableDICT(origObj))
+  convertedDict = getRJMJSONSerializableDICT(origObj)
+  #print("Converted:", convertedDict)
+  #print("ORig:", origObj)
+  return json.dumps(convertedDict)
 
 def getObjFromJSONThatWasPutInStore(jsonFromStore):
   jsonDict = json.loads(jsonFromStore)
@@ -23,17 +26,21 @@ def getObjFromJSONThatWasPutInStore(jsonFromStore):
 
 def _recursiveConvertFromNormalToRJM(anyObj):
   if isinstance(anyObj,dict):
+    output = {}
     for x in anyObj:
-      anyObj[x] = _recursiveConvertFromNormalToRJM(anyObj[x])
-    return anyObj
+      output[x] = _recursiveConvertFromNormalToRJM(anyObj[x])
+    return output
   if isinstance(anyObj,list):
+    output = []
     for i in range(len(anyObj)):
-      anyObj[i] = _recursiveConvertFromNormalToRJM(anyObj[i])
-    return anyObj
+      output.append(_recursiveConvertFromNormalToRJM(anyObj[i]))
+    return output
   if isinstance(anyObj,bytes):
     return getRJMTypeFromOrigObj(anyObj).toJSONableDICT()
   if isinstance(anyObj,decimal.Decimal):
     return getRJMTypeFromOrigObj(anyObj).toJSONableDICT()
+
+  #It was not a type that we recognise so return original
   return anyObj
 
 def _recursiveConvertFromRJMToNormal(anyObj):

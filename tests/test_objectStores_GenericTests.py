@@ -84,6 +84,28 @@ def runAllGenericTests(testClass, getObjFn, ConfigDict, expectPersistance=True):
 #   SaveJSONObject Tests
 #*************************************
 
+def t_saveWillNotChangeInternalTypes(testClass, objectStoreType):
+  testDict = {
+    "string": "sampleString",
+    "bytes": "sampleBytes".encode(),
+    "dict": {
+      "string": "sampleString",
+      "bytes": "sampleBytes".encode()
+    }
+  }
+  testClass.assertEqual(testDict["string"].__class__.__name__, "str")
+  testClass.assertEqual(testDict["bytes"].__class__.__name__, "bytes")
+  testClass.assertEqual(testDict["dict"].__class__.__name__, "dict")
+  testClass.assertEqual(testDict["dict"]["string"].__class__.__name__, "str")
+  testClass.assertEqual(testDict["dict"]["bytes"].__class__.__name__, "bytes")
+  def someFn(connectionContext):
+    return connectionContext.saveJSONObject(objectType="Test", objectKey="123", JSONString=testDict, objectVersion=None)
+  objectStoreType.executeInsideTransaction(someFn)
+  testClass.assertEqual(testDict["string"].__class__.__name__, "str", msg="String object was converted by store")
+  testClass.assertEqual(testDict["bytes"].__class__.__name__, "bytes", msg="bytes object was converted by store")
+  testClass.assertEqual(testDict["dict"]["string"].__class__.__name__, "str", msg="String object in dict was converted by store")
+  testClass.assertEqual(testDict["dict"]["bytes"].__class__.__name__, "bytes", msg="Bytes object in dict was converted by store")
+
 
 def t_saveFailsWithInvalidObjectVersionFirstSave(testClass, objectStoreType):
   objVerIDToSaveAs = 123

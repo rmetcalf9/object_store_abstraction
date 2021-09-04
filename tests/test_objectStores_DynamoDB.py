@@ -38,7 +38,7 @@ DynamoDB_LocalDBConfigDict_multiTable = {
   "single_table_mode": "false"
 }
 
-#@TestHelperSuperClass.wipd
+@TestHelperSuperClass.wipd
 class test_objectStoresDynamoDB(objectStoresWithPrefix):
   def test_genericTests(self):
     if SKIPSQLALCHEMYTESTS:
