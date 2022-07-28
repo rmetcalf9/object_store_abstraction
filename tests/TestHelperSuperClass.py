@@ -9,10 +9,6 @@ import pytz
 import jwt
 from base64 import b64decode
 
-from nose.plugins.attrib import attr
-def wipd(f):
-    return attr('wip')(f)
-
 class testHelperSuperClass(unittest.TestCase):
   curDateTimeOverrideForTesting = None
   def __init__(self, a):

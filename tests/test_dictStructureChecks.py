@@ -6,7 +6,6 @@ import object_store_abstraction as undertest
 class helpers():
   pass
 
-@TestHelperSuperClass.wipd
 class test_ductStructureChecks(TestHelperSuperClass.testHelperSuperClass):
   def test_cannotsaveWithNestedDateTime(self):
     objectType="testObjectType"

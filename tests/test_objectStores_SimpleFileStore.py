@@ -12,7 +12,6 @@ ConfigDict = {
   "BaseLocation": "./tests/SimpleFileStore"
 }
 
-@TestHelperSuperClass.wipd
 class objectStoresSimpleFileStore(TestHelperSuperClass.testHelperSuperClass):
   def test_genericSimpleFileStoreTests(self):
     def getObjFn(ConfigDict, resetData = True):
