@@ -210,8 +210,8 @@ class test_objectStoresMigrating(helper):
     cacheRows = internalCacheObjectStore.executeInsideConnectionContext(dbfn)
     mainRows = internalMainObjectStore.executeInsideConnectionContext(dbfn)
 
-    self.assertEquals(len(cacheRows), 100)
-    self.assertEquals(len(mainRows), 500)
+    self.assertEqual(len(cacheRows), 100)
+    self.assertEqual(len(mainRows), 500)
 
   def test_deleteItem(self):
     objectType = "CacheTestObj1"

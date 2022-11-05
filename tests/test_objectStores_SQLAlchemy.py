@@ -3,6 +3,7 @@ import TestHelperSuperClass
 
 '''
 These tests require a local mysql database
+ - DB IS RJM Personal infrastructure - password for DB is in docker-compose
 To setup log into db as admin and run the following commands:
 
 create database saas_user_man CHARACTER SET utf8 COLLATE utf8_general_ci;
