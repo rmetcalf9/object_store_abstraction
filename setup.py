@@ -9,7 +9,7 @@ sp_install_requires = [
   'sqlalchemy==1.3.1',
   'PyMySQL==0.9.3',
   'python-dateutil==2.8.1',
-  'boto3==1.24.39'
+  'boto3==1.26.97'
 ]
 sp_tests_require = [
   'pytest==7.1.27',
