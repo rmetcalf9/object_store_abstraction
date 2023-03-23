@@ -5,7 +5,7 @@ import versioneer
 sp_install_requires = [
   'pytz==2019.3',
   'sortedcontainers==2.4.0',
-  'pyjwt==1.7.1',
+  'pyjwt==2.4.0',
   'sqlalchemy==1.3.1',
   'PyMySQL==0.9.3',
   'python-dateutil==2.8.1',
