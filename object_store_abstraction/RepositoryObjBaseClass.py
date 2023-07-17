@@ -41,3 +41,15 @@ class RepositoryObjBaseClass():
       storeConnection=storeConnection
     )
     return (objID, objectVersion)
+
+  def delete(self, storeConnection):
+    return self.remove(storeConnection)
+
+  def remove(self, storeConnection):
+    # none is always retuened
+    return self.repositoryObj.remove(
+      id=self.getDict()["id"],
+      storeConnection=storeConnection,
+      objectVersion=self.getDict()[RepositoryObjBaseClass.getMetadataElementKey()]["objectVersion"],
+      ignoreMissingObject=False
+    )
