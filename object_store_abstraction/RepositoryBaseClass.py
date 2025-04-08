@@ -99,3 +99,11 @@ class RepositoryBaseClass():
   #Used in devscripts
   def getAllRowsForObjectType(self, filterFN, outputFN, whereClauseText, storeConnection):
     return storeConnection.getAllRowsForObjectType(self.objectStoreTypeString, filterFN, outputFN, whereClauseText)
+
+  def is_valid_dict(val_dict, required_fields, option_field_values):
+    for cur_field in required_fields:
+      if cur_field not in val_dict.keys():
+        return "Missing " + cur_field
+      if cur_field in option_field_values:
+        if not val_dict[cur_field] in option_field_values[cur_field]:
+          return "Invalid " + cur_field
