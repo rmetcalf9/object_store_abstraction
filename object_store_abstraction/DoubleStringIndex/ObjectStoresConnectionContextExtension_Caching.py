@@ -1,0 +1,4 @@
+from .ObjectStoresConnectionContextExtensionBase import ObjectStoresConnectionContextExtensionBase
+
+class DoubleStringIndexConnectionContextExtension(ObjectStoresConnectionContextExtensionBase):
+    pass

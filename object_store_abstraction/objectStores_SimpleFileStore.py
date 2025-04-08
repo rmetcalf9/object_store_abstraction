@@ -6,6 +6,7 @@ from dateutil.parser import parse
 import pytz
 from .paginatedResult import getPaginatedResult
 from .paginatedResultIterator import PaginatedResultIteratorBaseClass, sortListOfKeysToDictBySortString
+from .DoubleStringIndex import ConnectionContext_SimpleFileStore
 
 import shutil #For remove dir and contents
 
@@ -60,7 +61,7 @@ directoryNamePrefix = "_"
 class ConnectionContextSimpleFileStorePrivateFns(ObjectStoreConnectionContext):
   objectStore = None
   def __init__(self, objectStore):
-    super(ConnectionContextSimpleFileStorePrivateFns, self).__init__()
+    super(ConnectionContextSimpleFileStorePrivateFns, self).__init__(doubleStringIndex=ConnectionContext_SimpleFileStore)
     self.objectStore = objectStore
 
   #Return the object type directory or None

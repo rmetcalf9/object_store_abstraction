@@ -55,7 +55,7 @@ Each has got it's own metadata which carries a object version, save and update t
 On creation it is passed a store instance which is ueses.
 
 ### Repository Object
-This reprsents an object returned by the repository. This has a save function to update just this record.
+This represents an object returned by the repository. This has a save function to update just this record.
 It has an "objectStoreTypeString" parameter which segments the data.
 
 ### Double String Index

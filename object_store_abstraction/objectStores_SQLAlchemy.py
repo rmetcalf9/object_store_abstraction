@@ -6,6 +6,7 @@ from dateutil.parser import parse
 import os
 import logging
 from .paginatedResult import getPaginatedResult
+from .DoubleStringIndex import ConnectionContext_SQLAlchemy
 
 from .makeDictJSONSerializable import getJSONtoPutInStore, getObjFromJSONThatWasPutInStore
 from .paginatedResultIterator import PaginatedResultIteratorBaseClass, sortListOfKeysToDictBySortString, PaginatedResultIteratorFromDictWithAttrubtesAsKeysClass
@@ -67,7 +68,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
   objectStore = None
 
   def __init__(self, objectStore):
-    super(ConnectionContext, self).__init__()
+    super(ConnectionContext, self).__init__(doubleStringIndex=ConnectionContext_SQLAlchemy)
     self.objectStore = objectStore
     self.connection = self.objectStore.engine.connect()
 

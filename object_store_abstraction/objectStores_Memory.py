@@ -1,11 +1,12 @@
 from .objectStores_base import ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException
 from .paginatedResult import getPaginatedResult
 from .paginatedResultIterator import PaginatedResultIteratorBaseClass, sortListOfKeysToDictBySortString
+from .DoubleStringIndex import ConnectionContext_Memory
 
 class ConnectionContext(ObjectStoreConnectionContext):
   objectStore = None
   def __init__(self, objectStore):
-    super(ConnectionContext, self).__init__()
+    super(ConnectionContext, self).__init__(ConnectionContext_Memory(main_context=self))
     self.objectStore = objectStore
 
   #transactional memory not implemented

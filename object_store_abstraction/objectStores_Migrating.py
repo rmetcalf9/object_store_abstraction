@@ -1,5 +1,6 @@
 from .objectStores_base import ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException, ObjectStoreConfigError
 from .paginatedResult import getPaginatedResult
+from .DoubleStringIndex import ConnectionContext_Migrating
 
 '''
 Migrating store type handles moving datastore from one type to another
@@ -18,7 +19,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
   fromContext = None
   toContext = None
   def __init__(self, objectStore):
-    super(ConnectionContext, self).__init__()
+    super(ConnectionContext, self).__init__(doubleStringIndex=ConnectionContext_Migrating)
     self.objectStore = objectStore
     self.fromContext = self.objectStore.fromStore._getConnectionContext()
     self.toContext = self.objectStore.toStore._getConnectionContext()

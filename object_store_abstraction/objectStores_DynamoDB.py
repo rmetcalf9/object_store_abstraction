@@ -13,6 +13,7 @@ import logging
 from dateutil.parser import parse
 import pytz
 from .makeDictJSONSerializable import getJSONtoPutInStore, getObjFromJSONThatWasPutInStore
+from .DoubleStringIndex import ConnectionContext_DynamoDB
 
 def make_partition_key(objectType, objectKey):
   return objectType + "_" + objectKey
@@ -20,7 +21,7 @@ def make_partition_key(objectType, objectKey):
 class ConnectionContext(ObjectStoreConnectionContext):
   objectStore = None
   def __init__(self, objectStore):
-    super(ConnectionContext, self).__init__()
+    super(ConnectionContext, self).__init__(doubleStringIndex=ConnectionContext_DynamoDB)
     self.objectStore = objectStore
 
   #transactions not implemented

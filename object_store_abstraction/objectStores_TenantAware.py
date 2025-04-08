@@ -1,3 +1,4 @@
+from .DoubleStringIndex import ConnectionContext_TenantAware
 
 objectTypeSeperator = "$:}wol{}"
 
@@ -14,9 +15,12 @@ UnsupportedObjectTypeException = UnsupportedObjectType('Object Type contains a r
 class TenantAwareConnectionContext():
   objectStoreContext = None
   tenantName = None
+  doubleStringIndex = None
+
   def __init__(self, tenantName, objectStoreContext):
     self.tenantName = tenantName
     self.objectStoreContext = objectStoreContext
+    self.doubleStringIndex = ConnectionContext_TenantAware(objectStoreContext)
     if objectTypeSeperator in tenantName:
       raise UnsupportedTenantNameException
 

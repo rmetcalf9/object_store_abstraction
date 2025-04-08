@@ -120,8 +120,11 @@ class ObjectStoreConnectionContext():
   #if object version is set to none object version checking is turned off
   # object version may be a number or a guid depending on store technology
   callsToStartTransaction = None
-  def __init__(self):
+  doubleStringIndex = None
+
+  def __init__(self, doubleStringIndex):
     self.callsToStartTransaction = 0
+    self.doubleStringIndex = doubleStringIndex
 
   def _INT_startTransaction(self):
     if self.callsToStartTransaction != 0:
