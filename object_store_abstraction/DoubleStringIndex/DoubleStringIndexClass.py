@@ -1,25 +1,29 @@
 
 
-class DoubleStringIndexBaseClass():
+class DoubleStringIndexClass():
     # Like a repository but much simpler
     objectStoreTypeString = None
 
     def __init__(self, objectStoreTypeString):
         self.objectStoreTypeString = objectStoreTypeString
 
-    def save(keyA, keyB, storeConnection):
+    def save(self, keyA, keyB, storeConnection):
+        if not isinstance(keyA, str):
+            raise Exception("Invalid Key A Type", type(keyA))
+        if not isinstance(keyB, str):
+            raise Exception("Invalid Key B Type", type(keyB))
         return storeConnection.doubleStringIndex.save(self.objectStoreTypeString, keyA, keyB)
 
-    def getByA(keyA, storeConnection):
+    def getByA(self,  keyA, storeConnection):
         return storeConnection.doubleStringIndex.getByA(self.objectStoreTypeString, keyA)
 
-    def getByB(keyB, storeConnection):
+    def getByB(self, keyB, storeConnection):
         return storeConnection.doubleStringIndex.getByB(self.objectStoreTypeString, keyB)
 
-    def removeByA(keyA, storeConnection):
+    def removeByA(self, keyA, storeConnection):
         return storeConnection.doubleStringIndex.removeByA(self.objectStoreTypeString, keyA)
 
-    def removeByB(keyB, storeConnection):
+    def removeByB(self, keyB, storeConnection):
         return storeConnection.doubleStringIndex.removeByB(self.objectStoreTypeString, keyB)
 
 

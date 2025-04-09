@@ -43,6 +43,7 @@ SQLAlchemy_LocalDBConfigDict = {
   "Type":"SQLAlchemy",
   "connectionString":"mysql+pymysql://saas_user_man_user:saas_user_man_testing_password@127.0.0.1:10103/saas_user_man"
 }
+#command line to connect: mysql -h 127.0.0.1 -P 10103 -u saas_user_man_user -p saas_user_man
 SQLAlchemy_LocalDBConfigDict_withPrefix = copy.deepcopy(SQLAlchemy_LocalDBConfigDict)
 SQLAlchemy_LocalDBConfigDict_withPrefix["objectPrefix"] ="testPrefix"
 

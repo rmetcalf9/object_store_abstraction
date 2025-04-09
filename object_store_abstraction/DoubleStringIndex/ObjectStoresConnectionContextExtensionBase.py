@@ -6,17 +6,17 @@ class ObjectStoresConnectionContextExtensionBase():
     def __init__(self, main_context):
         self.main_context = main_context
 
-    def save(objectStoreTypeString, keyA, keyB):
+    def save(self, objectStoreTypeString, keyA, keyB):
         raise Exception(ExceptionMsg + "save")
 
-    def getByA(objectStoreTypeString, keyA):
+    def getByA(self, objectStoreTypeString, keyA):
         raise Exception(ExceptionMsg + "getByA")
 
-    def getByB(objectStoreTypeString, keyB):
+    def getByB(self, objectStoreTypeString, keyB):
         raise Exception(ExceptionMsg + "getByB")
 
-    def removeByA(objectStoreTypeString, keyA):
+    def removeByA(self, objectStoreTypeString, keyA):
         raise Exception(ExceptionMsg + "removeByA")
 
-    def removeByB(objectStoreTypeString, keyB):
+    def removeByB(self, objectStoreTypeString, keyB):
         raise Exception(ExceptionMsg + "removeByB")

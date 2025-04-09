@@ -99,9 +99,20 @@ class ConnectionContext(ObjectStoreConnectionContext):
 # Class that will store objects in memory only
 class ObjectStore_Memory(ObjectStore):
   objectData = None
+
+  doubleStringIndex = None
+  #structure:
+  # {
+  #  objTypeSyt: {
+  #     byA: {},
+  #     byB: {}
+  #  }
+  # }
+
   def __init__(self, configJSON, externalFns, detailLogging, type, factoryFn):
     super(ObjectStore_Memory, self).__init__(externalFns, detailLogging, type)
     self.objectData = dict()
+    self.doubleStringIndex = {}
     #Dict = (objDICT, objectVersion, creationDate, lastUpdateDate)
 
   def _INT_getDictForObjectType(self, objectType):
@@ -109,6 +120,9 @@ class ObjectStore_Memory(ObjectStore):
       #print("Creating dict for " + objectType)
       self.objectData[objectType] = dict()
     return self.objectData[objectType]
+
+  def _INT_getDictForDoubleStringIndex(self):
+    return self.doubleStringIndex
 
   def _getConnectionContext(self):
     return ConnectionContext(self)
