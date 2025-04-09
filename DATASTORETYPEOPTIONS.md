@@ -75,6 +75,9 @@ single_table_mode should probably be set as there are only 256 tables per AWS ac
 
 # Migrating Datastore
 
+NOTE: Migration of indexes is covered but the batch utility has not been altered to migrate the indexes.
+When I come to do a migration this needs to be done.
+
 This is a special datastore type which allows data to be live migrated from one data store to another. Two stores are specified and both are connected to. All data reads are produced from the "From" store. All save and remove operations are propagated to both "From" and "To" data stores. This means the following process can be used in doing a migration:
 
 1. To start with the micro-service is running connected to data store A
