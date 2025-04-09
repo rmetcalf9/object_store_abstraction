@@ -66,12 +66,12 @@ objectStoreTypeString which segments the data.
 
 
 TODO
-TenantAware
 Caching
-Migrating
+TenantAware
 
 DONE
 Memory
 SimpleFileStore
 SQLAlchemy
 DynamoDB
+Migrating
