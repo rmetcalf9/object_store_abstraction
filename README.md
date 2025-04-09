@@ -61,12 +61,11 @@ It has an "objectStoreTypeString" parameter which segments the data.
 ### Double String Index
 This is equivalent to a repository but much simpler.
 There is no object type.
-It is just a set of strings which can be quicklky looked up. There are no extra metadata stored.
+It is just a set of strings which can be quickly looked up. There are no extra metadata stored.
 objectStoreTypeString which segments the data.
 
 
 TODO
-DynamoDB
 TenantAware
 Caching
 Migrating
@@ -75,3 +74,4 @@ DONE
 Memory
 SimpleFileStore
 SQLAlchemy
+DynamoDB

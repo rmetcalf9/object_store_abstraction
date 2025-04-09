@@ -7,6 +7,7 @@ import pytz
 
 import test_objectStores_GenericTests as genericTests
 from test_objectStores_GenericTests import addSampleRows, assertCorrectPaginationResult
+import test_objectStores_GenericTests_DoubleStringIndex as genericTestsDoubleStringIndex
 
 import object_store_abstraction as undertest
 
@@ -41,7 +42,7 @@ DynamoDB_LocalDBConfigDict_multiTable = {
 class test_objectStoresDynamoDB(objectStoresWithPrefix):
   def test_genericTests(self):
     if SKIPSQLALCHEMYTESTS:
-      print("Skipping SQLAlchemyTests")
+      print("SKIPSQLALCHEMYTESTS Set Skipping DynamoDB")
       return
     def getObjFn(DynamoDB_LocalDBConfigDict, resetData = True):
       obj = undertest.ObjectStore_DynamoDB(DynamoDB_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA', factoryFn=undertest.createObjectStoreInstance)
@@ -52,7 +53,7 @@ class test_objectStoresDynamoDB(objectStoresWithPrefix):
 
   def test_genericTests_MultiTable(self):
     if SKIPSQLALCHEMYTESTS:
-      print("Skipping SQLAlchemyTests")
+      print("SKIPSQLALCHEMYTESTS Set Skipping DynamoDB")
       return
     def getObjFn(DynamoDB_LocalDBConfigDict, resetData = True):
       obj = undertest.ObjectStore_DynamoDB(DynamoDB_LocalDBConfigDict_multiTable, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA', factoryFn=undertest.createObjectStoreInstance)
@@ -60,6 +61,28 @@ class test_objectStoresDynamoDB(objectStoresWithPrefix):
         obj.resetDataForTest()
       return obj
     genericTests.runAllGenericTests(self, getObjFn, DynamoDB_LocalDBConfigDict_multiTable)
+
+  def test_genericTests_doublestringindex(self):
+    if SKIPSQLALCHEMYTESTS:
+      print("SKIPSQLALCHEMYTESTS Set Skipping DynamoDB")
+      return
+    def getObjFn(DynamoDB_LocalDBConfigDict, resetData = True):
+      obj = undertest.ObjectStore_DynamoDB(DynamoDB_LocalDBConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA', factoryFn=undertest.createObjectStoreInstance)
+      if resetData:
+        obj.resetDataForTest()
+      return obj
+    genericTestsDoubleStringIndex.runAllGenericTests(self, getObjFn, DynamoDB_LocalDBConfigDict)
+
+  def test_genericTests_doublestringindex_MultiTable(self):
+    if SKIPSQLALCHEMYTESTS:
+      print("SKIPSQLALCHEMYTESTS Set Skipping DynamoDB")
+      return
+    def getObjFn(DynamoDB_LocalDBConfigDict, resetData = True):
+      obj = undertest.ObjectStore_DynamoDB(DynamoDB_LocalDBConfigDict_multiTable, self.getObjectStoreExternalFns(), detailLogging=False, type='testSQLA', factoryFn=undertest.createObjectStoreInstance)
+      if resetData:
+        obj.resetDataForTest()
+      return obj
+    genericTestsDoubleStringIndex.runAllGenericTests(self, getObjFn, DynamoDB_LocalDBConfigDict_multiTable)
 
   #Different prefixes don't share data
   def test_differentPrefixesDontShareData(self):
