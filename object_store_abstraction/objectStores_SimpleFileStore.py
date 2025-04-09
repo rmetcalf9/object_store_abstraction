@@ -310,12 +310,6 @@ class ObjectStore_SimpleFileStore(ObjectStore):
       if curDir.startswith(directoryNamePrefix):
         self.setKnownObjectType(getKeyFromFileSystemSafeString(curDir[len(directoryNamePrefix):]))
 
-  def _INT_getDictForObjectType(self, objectType):
-    if objectType not in self.objectData:
-      #print("Creating dict for " + objectType)
-      self.objectData[objectType] = dict()
-    return self.objectData[objectType]
-
   #required for unit testing
   # using transaction even though they are not supported
   def _resetDataForTest(self):
