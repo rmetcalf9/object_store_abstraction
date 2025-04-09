@@ -21,7 +21,7 @@ def make_partition_key(objectType, objectKey):
 class ConnectionContext(ObjectStoreConnectionContext):
   objectStore = None
   def __init__(self, objectStore):
-    super(ConnectionContext, self).__init__(doubleStringIndex=ConnectionContext_DynamoDB)
+    super(ConnectionContext, self).__init__(doubleStringIndex=ConnectionContext_DynamoDB(main_context=self))
     self.objectStore = objectStore
 
   #transactions not implemented

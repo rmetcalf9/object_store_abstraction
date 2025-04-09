@@ -61,7 +61,7 @@ directoryNamePrefix = "_"
 class ConnectionContextSimpleFileStorePrivateFns(ObjectStoreConnectionContext):
   objectStore = None
   def __init__(self, objectStore):
-    super(ConnectionContextSimpleFileStorePrivateFns, self).__init__(doubleStringIndex=ConnectionContext_SimpleFileStore)
+    super(ConnectionContextSimpleFileStorePrivateFns, self).__init__(doubleStringIndex=ConnectionContext_SimpleFileStore(main_context=self))
     self.objectStore = objectStore
 
   #Return the object type directory or None

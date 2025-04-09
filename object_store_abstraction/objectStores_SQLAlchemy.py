@@ -68,7 +68,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
   objectStore = None
 
   def __init__(self, objectStore):
-    super(ConnectionContext, self).__init__(doubleStringIndex=ConnectionContext_SQLAlchemy)
+    super(ConnectionContext, self).__init__(doubleStringIndex=ConnectionContext_SQLAlchemy(main_context=self))
     self.objectStore = objectStore
     self.connection = self.objectStore.engine.connect()
 

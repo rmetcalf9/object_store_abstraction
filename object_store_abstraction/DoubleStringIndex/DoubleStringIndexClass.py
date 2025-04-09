@@ -12,7 +12,7 @@ class DoubleStringIndexClass():
             raise Exception("Invalid Key A Type", type(keyA))
         if not isinstance(keyB, str):
             raise Exception("Invalid Key B Type", type(keyB))
-        return storeConnection.doubleStringIndex.save(self.objectStoreTypeString, keyA, keyB)
+        return storeConnection.doubleStringIndex.save(objectStoreTypeString=self.objectStoreTypeString, keyA=keyA, keyB=keyB)
 
     def getByA(self,  keyA, storeConnection):
         return storeConnection.doubleStringIndex.getByA(self.objectStoreTypeString, keyA)

@@ -20,7 +20,7 @@ class TenantAwareConnectionContext():
   def __init__(self, tenantName, objectStoreContext):
     self.tenantName = tenantName
     self.objectStoreContext = objectStoreContext
-    self.doubleStringIndex = ConnectionContext_TenantAware(objectStoreContext)
+    self.doubleStringIndex = ConnectionContext_TenantAware(objectStoreContext(main_context=self))
     if objectTypeSeperator in tenantName:
       raise UnsupportedTenantNameException
 

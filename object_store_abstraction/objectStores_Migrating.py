@@ -19,7 +19,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
   fromContext = None
   toContext = None
   def __init__(self, objectStore):
-    super(ConnectionContext, self).__init__(doubleStringIndex=ConnectionContext_Migrating)
+    super(ConnectionContext, self).__init__(doubleStringIndex=ConnectionContext_Migrating(main_context=self))
     self.objectStore = objectStore
     self.fromContext = self.objectStore.fromStore._getConnectionContext()
     self.toContext = self.objectStore.toStore._getConnectionContext()

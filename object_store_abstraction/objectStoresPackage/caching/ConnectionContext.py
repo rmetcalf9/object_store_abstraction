@@ -7,7 +7,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
   mainContext = None
   cachingContext = None
   def __init__(self, objectStore):
-    super(ConnectionContext, self).__init__(doubleStringIndex=ConnectionContext_Caching)
+    super(ConnectionContext, self).__init__(doubleStringIndex=ConnectionContext_Caching(main_context=self))
     self.objectStore = objectStore
     self.cachingContext =  self.objectStore.cachingStore._getConnectionContext()
     self.mainContext =  self.objectStore.mainStore._getConnectionContext()
