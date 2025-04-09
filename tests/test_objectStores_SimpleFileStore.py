@@ -25,10 +25,10 @@ class objectStoresSimpleFileStore(TestHelperSuperClass.testHelperSuperClass):
       return obj
     genericTests.runAllGenericTests(self, getObjFn, ConfigDict)
 
-  # def test_genericTests_doublestringindex(self):
-  #   def getObjFn(ConfigDict, resetData = True):
-  #     return undertest.ObjectStore_SimpleFileStore(ConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSFS', factoryFn=undertest.createObjectStoreInstance)
-  #   genericTestsDoubleStringIndex.runAllGenericTests(self, getObjFn, ConfigDict)
+  def test_genericTests_doublestringindex(self):
+    def getObjFn(ConfigDict, resetData = True):
+      return undertest.ObjectStore_SimpleFileStore(ConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSFS', factoryFn=undertest.createObjectStoreInstance)
+    genericTestsDoubleStringIndex.runAllGenericTests(self, getObjFn, ConfigDict)
 
 
   def test_creationWithMissingBaseLocationFails(self):

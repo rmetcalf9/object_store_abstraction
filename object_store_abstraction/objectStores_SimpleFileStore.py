@@ -47,17 +47,6 @@ def localScanDir(directoryToScan, OnlyReturnDirectories):
 
   return subDirsToDel
 
-def getFileSystemSafeStringFromKey(key):
-  b64enc = base64.b64encode(key.encode('utf-8')).decode()
-  return b64enc.replace("/","_").replace("+",":")
-
-def getKeyFromFileSystemSafeString(fss):
-  b64enc = fss.replace("_","/").replace(":","+")
-  return base64.b64decode(b64enc.encode('utf-8')).decode('utf-8')
-
-directoryNamePrefix = "_"
-
-
 class ConnectionContextSimpleFileStorePrivateFns(ObjectStoreConnectionContext):
   objectStore = None
   def __init__(self, objectStore):
@@ -66,7 +55,7 @@ class ConnectionContextSimpleFileStorePrivateFns(ObjectStoreConnectionContext):
 
   #Return the object type directory or None
   def getObjectTypeDirectory(self, objectType, createObjectDir):
-    dirString =  self.objectStore.baseLocation + "/" + directoryNamePrefix + getFileSystemSafeStringFromKey(objectType)
+    dirString =  self.objectStore.baseLocation + "/" + self.objectStore.directoryNamePrefix + self.objectStore.getFileSystemSafeStringFromKey(objectType)
     if self.objectStore.isKnownObjectType(objectType):
       return dirString
     if os.path.exists(dirString):
@@ -83,15 +72,15 @@ class ConnectionContextSimpleFileStorePrivateFns(ObjectStoreConnectionContext):
       lis = localScanDir(self.objectStore.baseLocation, OnlyReturnDirectories=True)
     results = []
     for x in lis:
-      if x.startswith(directoryNamePrefix):
-        results.append(getKeyFromFileSystemSafeString(x[1:]))
+      if x.startswith(self.objectStore.directoryNamePrefix):
+        results.append(self.objectStore.getKeyFromFileSystemSafeString(x[1:]))
     return results
 
   def getObjectFile(self, objectType, objectKey, createObjectDir):
     dirString = self.getObjectTypeDirectory(objectType, createObjectDir)
     if dirString is None:
       return None
-    return dirString + "/" + getFileSystemSafeStringFromKey(objectKey)
+    return dirString + "/" + self.objectStore.getFileSystemSafeStringFromKey(objectKey)
 
   def getObjectJSONWithoutLock(self, objectType, objectKey):
     fileName = self.getObjectFile(objectType, objectKey, False)
@@ -240,7 +229,7 @@ class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
       objectFiles = localScanDir(otd, False)
       for curFileName in objectFiles:
         #print(otd + "/" + curFileName + "->" + getKeyFromFileSystemSafeString(curFileName))
-        objectKey = getKeyFromFileSystemSafeString(curFileName)
+        objectKey = self.objectStore.getKeyFromFileSystemSafeString(curFileName)
         #print("OK:" + objectKey)
         (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objKey) = self._getObjectJSON(objectType, objectKey)
         collectedObjects[objectKey] = (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objKey)
@@ -267,18 +256,36 @@ class ObjectStore_SimpleFileStore(ObjectStore):
   # using with when accessing see https://www.bogotobogo.com/python/Multithread/python_multithreading_Using_Locks_with_statement_Context_Manager.php
   #  this deals properly with exceptions
 
+  directoryNamePrefix = "_"
   knownExistingObjectTypes = None #reduce os.dir exist calls by storeing objects we know have a dir
+
+  directoryNamePrefixDoubleStringIndex = "i"
+  knownExistingIndexTypes = None #reduce os.dir exist calls by storeing objects we know have a dir
+
+  def getFileSystemSafeStringFromKey(self, key):
+    b64enc = base64.b64encode(key.encode('utf-8')).decode()
+    return b64enc.replace("/", "_").replace("+", ":")
+
+  def getKeyFromFileSystemSafeString(self, fss):
+    b64enc = fss.replace("_", "/").replace(":", "+")
+    return base64.b64decode(b64enc.encode('utf-8')).decode('utf-8')
 
   def isKnownObjectType(self, objectType):
     return objectType in self.knownExistingObjectTypes
   def setKnownObjectType(self, objectType):
     self.knownExistingObjectTypes[objectType] = True
 
+  def isKnownIndexType(self, indexType):
+    return indexType in self.knownExistingIndexTypes
+  def setKnownIndexType(self, indexType):
+    self.knownExistingIndexTypes[indexType] = True
+
   def __init__(self, ConfigDict, externalFns, detailLogging, type, factoryFn):
     super(ObjectStore_SimpleFileStore, self).__init__(externalFns, detailLogging, type)
 
     self.fileAccessLock = threading.Lock()
     self.knownExistingObjectTypes = {}
+    self.knownExistingIndexTypes = {}
 
     if "BaseLocation" not in ConfigDict:
       raise ObjectStoreConfigError("APIAPP_OBJECTSTORECONFIG SimpleFileStore ERROR - BaseLocation param Missing")
@@ -307,8 +314,8 @@ class ObjectStore_SimpleFileStore(ObjectStore):
     # Scan base directory and load in all known object types
     subDirs = localScanDir(directoryToScan=self.baseLocation, OnlyReturnDirectories=True)
     for curDir in subDirs:
-      if curDir.startswith(directoryNamePrefix):
-        self.setKnownObjectType(getKeyFromFileSystemSafeString(curDir[len(directoryNamePrefix):]))
+      if curDir.startswith(self.directoryNamePrefix):
+        self.setKnownObjectType(self.getKeyFromFileSystemSafeString(curDir[len(self.directoryNamePrefix):]))
 
   #required for unit testing
   # using transaction even though they are not supported
@@ -317,7 +324,9 @@ class ObjectStore_SimpleFileStore(ObjectStore):
       subDirsToDel = localScanDir(directoryToScan=self.baseLocation, OnlyReturnDirectories=True)
 
       for curDir in subDirsToDel:
-        if curDir.startswith(directoryNamePrefix):
+        if curDir.startswith(self.directoryNamePrefix):
+          shutil.rmtree(self.baseLocation + "/" + curDir)
+        if curDir.startswith(self.directoryNamePrefixDoubleStringIndex):
           shutil.rmtree(self.baseLocation + "/" + curDir)
 
     with self.fileAccessLock:
@@ -345,7 +354,7 @@ class Iterator(PaginatedResultIteratorBaseClass):
       objFilenames = localScanDir(otd, False)
     self.objectKeys = []
     for curObjFilename in objFilenames:
-      self.objectKeys.append(getKeyFromFileSystemSafeString(curObjFilename))
+      self.objectKeys.append(self.simpleFileStoreConnectionContext.objectStore.getKeyFromFileSystemSafeString(curObjFilename))
 
     if sort is not None:
       # Load all objects into dict indexed by key
