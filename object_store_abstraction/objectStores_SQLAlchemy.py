@@ -60,7 +60,7 @@ def literalquery(statement):
 '''
 ###--------------
 
-objectStoreHardCodedVersionInteger = 1
+objectStoreHardCodedVersionInteger = 2
 
 class ConnectionContext(ObjectStoreConnectionContext):
   connection = None
@@ -293,6 +293,7 @@ class ConnectionContext(ObjectStoreConnectionContext):
 class ObjectStore_SQLAlchemy(ObjectStore):
   engine = None
   objDataTable = None
+  idxDataTable = None
   verTable = None
   objectPrefix = None
   def __init__(self, ConfigDict, externalFns, detailLogging, type, factoryFn):
@@ -358,6 +359,16 @@ class ObjectStore_SQLAlchemy(ObjectStore):
         Column('lastUpdateDate_iso8601', String(length=40)),
         UniqueConstraint('type', 'key', name=self.objectPrefix + '_objData_ix1')
     )
+    self.idxDataTable = Table(self.objectPrefix + '_idxData', metadata,
+        #Tired intorudcing a seperate primary key and using key column as index but
+        # I found the same lenght restriction exists on an index
+        Column('id', Integer, primary_key=True),
+        Column('type', String(50), index=True),
+        Column('keyA', String(140), index=True), #MariaDB has smaller limit on inexes
+        Column('keyB', String(140), index=True),
+        UniqueConstraint('type', 'keyA', name=self.objectPrefix + '_idxData_ix1'),
+        UniqueConstraint('type', 'keyB', name=self.objectPrefix + '_idxData_ix2')
+    )
     self.verTable = Table(self.objectPrefix + '_ver', metadata,
         Column('id', Integer, primary_key=True),
         Column('first_installed_ver', Integer),
@@ -369,35 +380,59 @@ class ObjectStore_SQLAlchemy(ObjectStore):
 
     self._INT_setupOrUpdateVer(externalFns)
 
-  #AppObj passed in as None
-  def _INT_setupOrUpdateVer(self, externalFns):
-    def someFn(connectionContext):
-      curTime = externalFns['getCurDateTime']()
-      query = self.verTable.select()
+  def get_current_db_version(self, connectionContext, externalFns):
+    curTime = externalFns['getCurDateTime']()
+    query = self.verTable.select()
+    result = connectionContext._INT_execute(query)
+    if result.rowcount != 1:
+      if result.rowcount != 0:
+        raise Exception('invalid database structure - can\'t read version')
+      # There are 0 rows, create one
+      query = self.verTable.insert().values(
+        first_installed_ver=objectStoreHardCodedVersionInteger,
+        current_installed_ver=objectStoreHardCodedVersionInteger,
+        creationDate_iso8601=curTime.isoformat(),
+        lastUpdateDate_iso8601=curTime.isoformat()
+      )
       result = connectionContext._INT_execute(query)
-      if result.rowcount != 1:
-        if result.rowcount != 0:
-          raise Exception('invalid database structure - can\'t read version')
-        #There are 0 rows, create one
-        query = self.verTable.insert().values(
-          first_installed_ver=objectStoreHardCodedVersionInteger,
-          current_installed_ver=objectStoreHardCodedVersionInteger,
-          creationDate_iso8601=curTime.isoformat(),
-          lastUpdateDate_iso8601=curTime.isoformat()
-        )
-        result = connectionContext._INT_execute(query)
-        return
-      firstRow = result.first()
-      if objectStoreHardCodedVersionInteger == firstRow['current_installed_ver']:
-        return
+      return objectStoreHardCodedVersionInteger
+    firstRow = result.first()
+    return firstRow['current_installed_ver']
+
+  def set_current_db_version(self, connectionContext, externalFns, newversion):
+    curTime = externalFns['getCurDateTime']()
+    query = self.verTable.update().values(
+      current_installed_ver=newversion,
+      lastUpdateDate_iso8601=curTime.isoformat()
+    )
+    result = connectionContext._INT_execute(query)
+    return newversion
+
+  def _INT_setupOrUpdateVer(self, externalFns):
+    # Bring the database up to required version
+    def someFn(connectionContext):
+      return self.get_current_db_version(connectionContext, externalFns)
+
+    current_db_version = self.executeInsideTransaction(someFn)
+    if current_db_version == 1:
+      print("Detected DB version 1 - updating to 2 - no changes required")
+      def someFn2(connectionContext):
+        return self.set_current_db_version(connectionContext, externalFns, 2)
+      current_db_version = self.executeInsideTransaction(someFn2)
+
+
+    if current_db_version < objectStoreHardCodedVersionInteger:
+      print("Current Version", current_db_version)
+      print("Required Version", objectStoreHardCodedVersionInteger)
       raise Exception('Not Implemented - update datastore from x to objectStoreHardCodedVersionInteger')
-    self.executeInsideTransaction(someFn)
 
 
   def _resetDataForTest(self):
     def someFn(connectionContext):
       query = self.objDataTable.delete()
       connectionContext._INT_execute(query)
+      query2 = self.idxDataTable.delete()
+      connectionContext._INT_execute(query2)
     self.executeInsideTransaction(someFn)
 
   def _getConnectionContext(self):

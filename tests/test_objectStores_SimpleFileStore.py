@@ -27,7 +27,10 @@ class objectStoresSimpleFileStore(TestHelperSuperClass.testHelperSuperClass):
 
   def test_genericTests_doublestringindex(self):
     def getObjFn(ConfigDict, resetData = True):
-      return undertest.ObjectStore_SimpleFileStore(ConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSFS', factoryFn=undertest.createObjectStoreInstance)
+      obj = undertest.ObjectStore_SimpleFileStore(ConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testSFS', factoryFn=undertest.createObjectStoreInstance)
+      if resetData:
+        obj.resetDataForTest()
+      return obj
     genericTestsDoubleStringIndex.runAllGenericTests(self, getObjFn, ConfigDict)
 
 
