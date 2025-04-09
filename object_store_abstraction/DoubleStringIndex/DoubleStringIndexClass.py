@@ -12,6 +12,10 @@ class DoubleStringIndexClass():
             raise Exception("Invalid Key A Type", type(keyA))
         if not isinstance(keyB, str):
             raise Exception("Invalid Key B Type", type(keyB))
+        if len(keyA) > 140:
+            raise Exception("Keys can not be more than 140 chars")
+        if len(keyB) > 140:
+            raise Exception("Keys can not be more than 140 chars")
         return storeConnection.doubleStringIndex.save(objectStoreTypeString=self.objectStoreTypeString, keyA=keyA, keyB=keyB)
 
     def getByA(self,  keyA, storeConnection):
