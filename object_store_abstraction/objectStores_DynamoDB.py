@@ -13,7 +13,7 @@ import logging
 from dateutil.parser import parse
 import pytz
 from .makeDictJSONSerializable import getJSONtoPutInStore, getObjFromJSONThatWasPutInStore
-from object_store_abstraction.DoubleStringIndex import ConnectionContext_DynamoDB
+from .DoubleStringIndex import ConnectionContext_DynamoDB
 
 def make_partition_key(objectType, objectKey):
   return objectType + "_" + objectKey

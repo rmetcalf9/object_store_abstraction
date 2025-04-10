@@ -57,7 +57,7 @@ from .DoubleStringIndex import ConnectionContext_Migrating
 from .DoubleStringIndex import ConnectionContext_Caching
 from .DoubleStringIndex import ConnectionContext_TenantAware
 
-g
+
 from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions

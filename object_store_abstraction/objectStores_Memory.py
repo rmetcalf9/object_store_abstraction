@@ -1,7 +1,7 @@
 from .objectStores_base import ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException
 from .paginatedResult import getPaginatedResult
 from .paginatedResultIterator import PaginatedResultIteratorBaseClass, sortListOfKeysToDictBySortString
-from object_store_abstraction.DoubleStringIndex import ConnectionContext_Memory
+from .DoubleStringIndex import ConnectionContext_Memory
 
 class ConnectionContext(ObjectStoreConnectionContext):
   objectStore = None

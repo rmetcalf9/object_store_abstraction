@@ -6,7 +6,7 @@ from dateutil.parser import parse
 import os
 import logging
 from .paginatedResult import getPaginatedResult
-from object_store_abstraction.DoubleStringIndex import ConnectionContext_SQLAlchemy
+from .DoubleStringIndex import ConnectionContext_SQLAlchemy
 
 from .makeDictJSONSerializable import getJSONtoPutInStore, getObjFromJSONThatWasPutInStore
 from .paginatedResultIterator import PaginatedResultIteratorBaseClass, sortListOfKeysToDictBySortString, PaginatedResultIteratorFromDictWithAttrubtesAsKeysClass

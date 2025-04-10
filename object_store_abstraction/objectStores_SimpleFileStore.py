@@ -6,7 +6,7 @@ from dateutil.parser import parse
 import pytz
 from .paginatedResult import getPaginatedResult
 from .paginatedResultIterator import PaginatedResultIteratorBaseClass, sortListOfKeysToDictBySortString
-from object_store_abstraction.DoubleStringIndex import ConnectionContext_SimpleFileStore
+from .DoubleStringIndex import ConnectionContext_SimpleFileStore
 
 import shutil #For remove dir and contents
 
