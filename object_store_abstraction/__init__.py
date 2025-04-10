@@ -49,6 +49,15 @@ from .MultiTenantObjectStore import InvalidTenantNameException, MultiTenantObjec
 
 from .DoubleStringIndex import DoubleStringIndexClass, DoubleStringIndexInvalidKeyException
 
+# from .DoubleStringIndex import ConnectionContext_Memory
+# from .DoubleStringIndex import ConnectionContext_SimpleFileStore
+# from .DoubleStringIndex import ConnectionContext_SQLAlchemy
+# from .DoubleStringIndex import ConnectionContext_DynamoDB
+# from .DoubleStringIndex import ConnectionContext_Migrating
+# from .DoubleStringIndex import ConnectionContext_Caching
+# from .DoubleStringIndex import ConnectionContext_TenantAware
+
+
 from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions

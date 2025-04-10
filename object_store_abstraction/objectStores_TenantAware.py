@@ -1,4 +1,4 @@
-from .DoubleStringIndex import ConnectionContext_TenantAware
+from object_store_abstraction.DoubleStringIndex import ConnectionContext_TenantAware
 
 #works by adding tenant name to objectType
 

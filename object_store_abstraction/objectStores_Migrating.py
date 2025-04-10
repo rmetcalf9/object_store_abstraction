@@ -1,6 +1,6 @@
 from .objectStores_base import ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException, ObjectStoreConfigError
 from .paginatedResult import getPaginatedResult
-from .DoubleStringIndex import ConnectionContext_Migrating
+from object_store_abstraction.DoubleStringIndex import ConnectionContext_Migrating
 
 '''
 Migrating store type handles moving datastore from one type to another
