@@ -8,7 +8,7 @@ def isThisTestToRun(nam, reqObjCon):
     return reqObjCon
   return False
 
-def runAllGenericTests(testClass, getObjFn, ConfigDict):
+def runAllGenericTests(testClass, getObjFn, ConfigDict, tenantAweare=False):
   curModuleName = globals()['__name__']
 
 
@@ -27,7 +27,12 @@ def runAllGenericTests(testClass, getObjFn, ConfigDict):
       # print("")
       test_fn = globals()[x]
       obj = getObjFn(ConfigDict)
-      test_fn(testClass, obj)
+      def executeInsideTransactionFn(someFn):
+          if tenantAweare:
+              obj.executeInsideTransaction(tenantName="testTEn", fnToExecute=someFn)
+          else:
+              obj.executeInsideTransaction(fnToExecute=someFn)
+      test_fn(testClass, executeInsideTransactionFn)
   for x in testsRequiringObjConsturctor:
       # print("**********************************************************************")
       # print("    test RQU CON" + x)
@@ -37,7 +42,7 @@ def runAllGenericTests(testClass, getObjFn, ConfigDict):
       test_fn(testClass, getObjFn, ConfigDict)
 
 
-def t_saveAndRetrieveTwoStrings(testClass, objectStoreType):
+def t_saveAndRetrieveTwoStrings(testClass, objectStoreType_executeInsideTransaction):
     type = "test"
     doubleStringIndex = DoubleStringIndexClass(type)
     keys = [("KeyA_1","123abc"),("KeyA_2","222123abc"),("KeyA_3","alwaysremainB")]
@@ -47,13 +52,13 @@ def t_saveAndRetrieveTwoStrings(testClass, objectStoreType):
             doubleStringIndex.save(keyA, keyB, connectionContext)
             testClass.assertEqual(doubleStringIndex.getByA(keyA, connectionContext), keyB)
             testClass.assertEqual(doubleStringIndex.getByB(keyB, connectionContext), keyA)
-    objectStoreType.executeInsideTransaction(someFn)
+    objectStoreType_executeInsideTransaction(someFn)
 
     def someFn2(connectionContext):
         for (keyA, keyB) in keys:
             testClass.assertEqual(doubleStringIndex.getByA(keyA, connectionContext), keyB)
             testClass.assertEqual(doubleStringIndex.getByB(keyB, connectionContext), keyA)
-    objectStoreType.executeInsideTransaction(someFn2)
+    objectStoreType_executeInsideTransaction(someFn2)
 
     def someFn3(connectionContext):
         doubleStringIndex.removeByA(keys[0][0], connectionContext)
@@ -63,7 +68,7 @@ def t_saveAndRetrieveTwoStrings(testClass, objectStoreType):
         testClass.assertEqual(doubleStringIndex.getByB(keys[1][1], connectionContext), keys[1][0])
         testClass.assertEqual(doubleStringIndex.getByA(keys[2][0], connectionContext), keys[2][1])
         testClass.assertEqual(doubleStringIndex.getByB(keys[2][1], connectionContext), keys[2][0])
-    objectStoreType.executeInsideTransaction(someFn3)
+    objectStoreType_executeInsideTransaction(someFn3)
 
     def someFn4(connectionContext):
         doubleStringIndex.removeByB(keys[1][1], connectionContext)
@@ -73,9 +78,9 @@ def t_saveAndRetrieveTwoStrings(testClass, objectStoreType):
         testClass.assertEqual(doubleStringIndex.getByB(keys[1][1], connectionContext), None)
         testClass.assertEqual(doubleStringIndex.getByA(keys[2][0], connectionContext), keys[2][1])
         testClass.assertEqual(doubleStringIndex.getByB(keys[2][1], connectionContext), keys[2][0])
-    objectStoreType.executeInsideTransaction(someFn4)
+    objectStoreType_executeInsideTransaction(someFn4)
 
-def t_willNotAcceptNonStringKeys(testClass, objectStoreType):
+def t_willNotAcceptNonStringKeys(testClass, objectStoreType_executeInsideTransaction):
     doubleStringIndex = DoubleStringIndexClass("type")
 
     def someFn(connectionContext):
@@ -87,9 +92,9 @@ def t_willNotAcceptNonStringKeys(testClass, objectStoreType):
             doubleStringIndex.save("keyA", {}, connectionContext)
         with testClass.assertRaises(Exception) as context:
             doubleStringIndex.save({}, "keyB", connectionContext)
-    objectStoreType.executeInsideTransaction(someFn)
+    objectStoreType_executeInsideTransaction(someFn)
 
-def t_twotypesareseperate(testClass, objectStoreType):
+def t_twotypesareseperate(testClass, objectStoreType_executeInsideTransaction):
     type1 = "test1"
     doubleStringIndex1 = DoubleStringIndexClass(type1)
     type2 = "test2"
@@ -103,9 +108,9 @@ def t_twotypesareseperate(testClass, objectStoreType):
         testClass.assertEqual(doubleStringIndex2.getByA("a", connectionContext), None)
         testClass.assertEqual(doubleStringIndex2.getByA("b", connectionContext), "2")
 
-    objectStoreType.executeInsideTransaction(someFn)
+    objectStoreType_executeInsideTransaction(someFn)
 
-def t_cannotstoenone(testClass, objectStoreType):
+def t_cannotstoenone(testClass, objectStoreType_executeInsideTransaction):
     doubleStringIndex1 = DoubleStringIndexClass("type")
     def someFn(connectionContext):
         with testClass.assertRaises(DoubleStringIndexInvalidKeyException) as context:
@@ -114,9 +119,9 @@ def t_cannotstoenone(testClass, objectStoreType):
         with testClass.assertRaises(DoubleStringIndexInvalidKeyException) as context:
             doubleStringIndex1.save("b",None, connectionContext)
 
-    objectStoreType.executeInsideTransaction(someFn)
+    objectStoreType_executeInsideTransaction(someFn)
 
-def t_canstoreemptystringaskey(testClass, objectStoreType):
+def t_canstoreemptystringaskey(testClass, objectStoreType_executeInsideTransaction):
     doubleStringIndex1 = DoubleStringIndexClass("type1")
     doubleStringIndex2 = DoubleStringIndexClass("type2")
     doubleStringIndex3 = DoubleStringIndexClass("type3")
@@ -139,4 +144,4 @@ def t_canstoreemptystringaskey(testClass, objectStoreType):
         testClass.assertEqual(doubleStringIndex3.getByB("", connectionContext), "1")
         testClass.assertEqual(doubleStringIndex3.getByB("1", connectionContext), None)
 
-    objectStoreType.executeInsideTransaction(someFn)
+    objectStoreType_executeInsideTransaction(someFn)

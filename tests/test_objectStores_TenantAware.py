@@ -6,6 +6,7 @@ from test_objectStores_GenericTests import JSONString, JSONString2, assertCorrec
 import copy
 import json
 from python_Testing_Utilities import objectsEqual
+import test_objectStores_GenericTests_DoubleStringIndex as genericTestsDoubleStringIndex
 
 
 ConfigDict = {}
@@ -36,6 +37,13 @@ class local_helpers(TestHelperSuperClass.testHelperSuperClass):
   def generateSimpleMemoryObjectStore(self):
     memStore = undertest.ObjectStore_Memory(ConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testMEM', factoryFn=undertest.createObjectStoreInstance)
     return undertest.ObjectStore_TenantAware(memStore)
+
+  def test_genericTests_doublestringindex(self):
+    def getObjFn(ConfigDict, resetData = True):
+      mem_object_store = undertest.ObjectStore_Memory(ConfigDict, self.getObjectStoreExternalFns(), detailLogging=False, type='testMEM', factoryFn=undertest.createObjectStoreInstance)
+      return undertest.ObjectStore_TenantAware(objectStore=mem_object_store)
+    genericTestsDoubleStringIndex.runAllGenericTests(self, getObjFn, ConfigDict, tenantAweare=True)
+
 
   def setupSomeTestDataForObjectType(self, connectionContext, tenantName, objectType, baseStr):
     for x in range(0,10):

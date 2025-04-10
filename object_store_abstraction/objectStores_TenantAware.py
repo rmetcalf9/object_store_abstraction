@@ -1,5 +1,7 @@
 from .DoubleStringIndex import ConnectionContext_TenantAware
 
+#works by adding tenant name to objectType
+
 objectTypeSeperator = "$:}wol{}"
 
 class CallingNonTenantAwareVersion(Exception):
@@ -20,7 +22,7 @@ class TenantAwareConnectionContext():
   def __init__(self, tenantName, objectStoreContext):
     self.tenantName = tenantName
     self.objectStoreContext = objectStoreContext
-    self.doubleStringIndex = ConnectionContext_TenantAware(objectStoreContext)
+    self.doubleStringIndex = ConnectionContext_TenantAware(main_context=self)
     if objectTypeSeperator in tenantName:
       raise UnsupportedTenantNameException
 
