@@ -26,7 +26,12 @@ setup(name='object_store_abstraction',
       author='Robert Metcalf',
       author_email='rmetcalf9@googlemail.com',
       license='MIT',
-      packages=['object_store_abstraction', 'object_store_abstraction.objectStoresPackage', 'object_store_abstraction.objectStoresPackage.caching'],
+      packages=[
+          'object_store_abstraction',
+          'object_store_abstraction.objectStoresPackage',
+          'object_store_abstraction.objectStoresPackage.caching',
+          'object_store_abstraction.DoubleStringIndex'
+      ],
       zip_safe=False,
       install_requires=sp_install_requires,
       tests_require=sp_tests_require,
