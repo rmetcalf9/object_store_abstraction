@@ -65,13 +65,3 @@ It is just a set of strings which can be quickly looked up. There are no extra m
 objectStoreTypeString which segments the data.
 
 
-TODO
-TenantAware
-
-DONE
-Memory
-SimpleFileStore
-SQLAlchemy
-DynamoDB
-Migrating
-Caching
