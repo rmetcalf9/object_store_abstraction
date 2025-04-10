@@ -47,7 +47,7 @@ from .RepositoryObjBaseClass import RepositoryObjBaseClass
 #MultiTenant OBject Store
 from .MultiTenantObjectStore import InvalidTenantNameException, MultiTenantObjectStore
 
-from .DoubleStringIndex import DoubleStringIndexClass
+from .DoubleStringIndex import DoubleStringIndexClass, DoubleStringIndexInvalidKeyException
 
 from ._version import get_versions
 __version__ = get_versions()['version']

@@ -1,4 +1,6 @@
 
+class DoubleStringIndexInvalidKeyException(Exception):
+    pass
 
 class DoubleStringIndexClass():
     # Like a repository but much simpler
@@ -8,14 +10,18 @@ class DoubleStringIndexClass():
         self.objectStoreTypeString = objectStoreTypeString
 
     def save(self, keyA, keyB, storeConnection):
+        if keyA is None:
+            raise DoubleStringIndexInvalidKeyException("Invalid Key A Type - Can not be none")
+        if keyB is None:
+            raise DoubleStringIndexInvalidKeyException("Invalid Key B Type - Can not be none")
         if not isinstance(keyA, str):
-            raise Exception("Invalid Key A Type", type(keyA))
+            raise DoubleStringIndexInvalidKeyException("Invalid Key A Type", type(keyA))
         if not isinstance(keyB, str):
-            raise Exception("Invalid Key B Type", type(keyB))
+            raise DoubleStringIndexInvalidKeyException("Invalid Key B Type", type(keyB))
         if len(keyA) > 140:
-            raise Exception("Keys can not be more than 140 chars")
+            raise DoubleStringIndexInvalidKeyException("Keys can not be more than 140 chars")
         if len(keyB) > 140:
-            raise Exception("Keys can not be more than 140 chars")
+            raise DoubleStringIndexInvalidKeyException("Keys can not be more than 140 chars")
         return storeConnection.doubleStringIndex.save(objectStoreTypeString=self.objectStoreTypeString, keyA=keyA, keyB=keyB)
 
     def getByA(self,  keyA, storeConnection):

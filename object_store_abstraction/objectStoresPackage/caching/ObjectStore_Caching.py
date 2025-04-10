@@ -11,8 +11,23 @@ class ObjectStore_Caching(ObjectStore):
   mainStore = None
   cullQueues = None
 
+  #For doubleStringIndex use same logic as memory store for the cache
+  # the cache won't expire
+  doubleStringIndexCache = None
+  #structure:
+  # {
+  #  objTypeSyt: {
+  #     byA: {},
+  #     byB: {}
+  #  }
+  # }
+  def _INT_getDictForDoubleStringIndexCache(self):
+    return self.doubleStringIndexCache
+
+
   def __init__(self, configJSON, externalFns, detailLogging, type, factoryFn):
     super(ObjectStore_Caching, self).__init__(externalFns, detailLogging, type)
+    self.doubleStringIndexCache = {}
 
     self.cullQueues = CullQueuesClass()
 
@@ -56,7 +71,6 @@ class ObjectStore_Caching(ObjectStore):
     if objectType in self.overridePolicies:
       return self.overridePolicies[objectType]
     return self.defaultPolicy
-
 
 
   def _getConnectionContext(self):

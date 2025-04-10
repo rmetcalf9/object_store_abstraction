@@ -1,5 +1,5 @@
 # Generic tests for doublestringindex
-from object_store_abstraction import DoubleStringIndexClass
+from object_store_abstraction import DoubleStringIndexClass, DoubleStringIndexInvalidKeyException
 
 def isThisTestToRun(nam, reqObjCon):
   if nam.startswith("t_"):
@@ -105,4 +105,38 @@ def t_twotypesareseperate(testClass, objectStoreType):
 
     objectStoreType.executeInsideTransaction(someFn)
 
+def t_cannotstoenone(testClass, objectStoreType):
+    doubleStringIndex1 = DoubleStringIndexClass("type")
+    def someFn(connectionContext):
+        with testClass.assertRaises(DoubleStringIndexInvalidKeyException) as context:
+            doubleStringIndex1.save(None,"1", connectionContext)
 
+        with testClass.assertRaises(DoubleStringIndexInvalidKeyException) as context:
+            doubleStringIndex1.save("b",None, connectionContext)
+
+    objectStoreType.executeInsideTransaction(someFn)
+
+def t_canstoreemptystringaskey(testClass, objectStoreType):
+    doubleStringIndex1 = DoubleStringIndexClass("type1")
+    doubleStringIndex2 = DoubleStringIndexClass("type2")
+    doubleStringIndex3 = DoubleStringIndexClass("type3")
+    def someFn(connectionContext):
+        doubleStringIndex1.save("", "1", connectionContext)
+        testClass.assertEqual(doubleStringIndex1.getByA("", connectionContext), "1")
+        testClass.assertEqual(doubleStringIndex1.getByA("1", connectionContext), None)
+        testClass.assertEqual(doubleStringIndex1.getByB("", connectionContext), None)
+        testClass.assertEqual(doubleStringIndex1.getByB("1", connectionContext), "")
+
+        doubleStringIndex2.save("", "", connectionContext)
+        testClass.assertEqual(doubleStringIndex2.getByA("", connectionContext), "")
+        testClass.assertEqual(doubleStringIndex2.getByA("1", connectionContext), None)
+        testClass.assertEqual(doubleStringIndex2.getByB("", connectionContext), "")
+        testClass.assertEqual(doubleStringIndex2.getByB("1", connectionContext), None)
+
+        doubleStringIndex3.save("1", "", connectionContext)
+        testClass.assertEqual(doubleStringIndex3.getByA("", connectionContext), None)
+        testClass.assertEqual(doubleStringIndex3.getByA("1", connectionContext), "")
+        testClass.assertEqual(doubleStringIndex3.getByB("", connectionContext), "1")
+        testClass.assertEqual(doubleStringIndex3.getByB("1", connectionContext), None)
+
+    objectStoreType.executeInsideTransaction(someFn)
