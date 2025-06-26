@@ -1,5 +1,5 @@
 # Generic tests for doublestringindex
-from object_store_abstraction import DoubleStringIndexClass, DoubleStringIndexInvalidKeyException
+from object_store_abstraction import DoubleStringIndexClass, DoubleStringIndexInvalidKeyException, InvalidObjectTypeExceptionClass
 
 def isThisTestToRun(nam, reqObjCon):
   if nam.startswith("t_"):
@@ -145,3 +145,12 @@ def t_canstoreemptystringaskey(testClass, objectStoreType_executeInsideTransacti
         testClass.assertEqual(doubleStringIndex3.getByB("1", connectionContext), None)
 
     objectStoreType_executeInsideTransaction(someFn)
+
+def t_willnotacceptinvalidobjectname(testClass, objectStoreType_executeInsideTransaction):
+    idx = DoubleStringIndexClass("invalid_objname")
+
+    def someFn(connectionContext):
+        idx.save("", "1", connectionContext)
+
+    with testClass.assertRaises(InvalidObjectTypeExceptionClass) as context:
+        objectStoreType_executeInsideTransaction(someFn)

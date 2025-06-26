@@ -10,6 +10,7 @@ class DoubleStringIndexClass():
         self.objectStoreTypeString = objectStoreTypeString
 
     def save(self, keyA, keyB, storeConnection):
+        storeConnection.validateObjectType(self.objectStoreTypeString)
         if keyA is None:
             raise DoubleStringIndexInvalidKeyException("Invalid Key A Type - Can not be none")
         if keyB is None:

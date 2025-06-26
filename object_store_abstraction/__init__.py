@@ -9,11 +9,20 @@
 """
 
 #Exception classes from base
-from .objectStores_base import WrongObjectVersionExceptionClass,  SuppliedObjectVersionWhenCreatingExceptionClass, ObjectStoreConfigError,  MissingTransactionContextExceptionClass, UnallowedMutationExceptionClass,  TriedToDeleteMissingObjectExceptionClass, TryingToCreateExistingObjectExceptionClass
+from .objectStores_base import WrongObjectVersionExceptionClass,  SuppliedObjectVersionWhenCreatingExceptionClass, ObjectStoreConfigError,  MissingTransactionContextExceptionClass, UnallowedMutationExceptionClass,  TriedToDeleteMissingObjectExceptionClass, TryingToCreateExistingObjectExceptionClass, InvalidObjectTypeException
 from .objectStores_base import ObjectStore, ObjectStoreConnectionContext
 
 #Exception instances from base
-from .objectStores_base import WrongObjectVersionException, SuppliedObjectVersionWhenCreatingException, MissingTransactionContextException, UnallowedMutationException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SavingDateTimeTypeException
+from .objectStores_base import (
+    WrongObjectVersionException,
+    SuppliedObjectVersionWhenCreatingException,
+    MissingTransactionContextException,
+    UnallowedMutationException,
+    TriedToDeleteMissingObjectException,
+    TryingToCreateExistingObjectException,
+    SavingDateTimeTypeException,
+    InvalidObjectTypeExceptionClass
+)
 #Helper fns from base
 from .objectStores_base import outputFnJustKeys, outputFnItems
 

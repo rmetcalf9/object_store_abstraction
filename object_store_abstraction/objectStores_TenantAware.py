@@ -42,6 +42,9 @@ class TenantAwareConnectionContext():
       raise
     return retVal
 
+  def validateObjectType(self, objectType):
+      derivtype = self.INT__getDirivedObjectType(objectType)
+      return self.objectStoreContext.validateObjectType(objectType)
 
   def saveJSONObject(self, objectType, objectKey, JSONString, objectVersion = None):
     return self.objectStoreContext.saveJSONObject(self.INT__getDirivedObjectType(objectType), objectKey, JSONString, objectVersion)
