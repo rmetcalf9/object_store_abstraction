@@ -107,3 +107,7 @@ class RepositoryBaseClass():
       if cur_field in option_field_values:
         if not val_dict[cur_field] in option_field_values[cur_field]:
           return "Invalid " + cur_field
+
+  # Delete all records of this type
+  def truncate(self, storeConnection):
+    return storeConnection.truncateObjectType(self.objectStoreTypeString)

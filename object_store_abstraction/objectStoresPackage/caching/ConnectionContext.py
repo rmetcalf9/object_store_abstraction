@@ -13,11 +13,12 @@ class ConnectionContext(ObjectStoreConnectionContext):
     self.mainContext =  self.objectStore.mainStore._getConnectionContext()
 
   def _startTransaction(self):
-    return self.mainContext._startTransaction()
+    retVal = self.mainContext._INT_startTransaction()
+    return retVal
   def _commitTransaction(self):
-    return self.mainContext._commitTransaction()
+    return self.mainContext._INT_commitTransaction()
   def _rollbackTransaction(self):
-    return self.mainContext._rollbackTransaction()
+    return self.mainContext._INT_rollbackTransaction()
 
   def _saveJSONObjectV2(self, objectType, objectKey, JSONString, objectVersion):
     (newObjVersion, creationDateTime, lastUpdateDateTime) = self.mainContext._saveJSONObjectV2(objectType, objectKey, JSONString, objectVersion)
@@ -50,3 +51,8 @@ class ConnectionContext(ObjectStoreConnectionContext):
 
   def _getPaginatedResultIterator(self, query, sort, filterFN, getSortKeyValueFn, objectType):
     return self.mainContext._getPaginatedResultIterator(query, sort, filterFN, getSortKeyValueFn, objectType)
+
+  def _truncateObjectType(self, objectType):
+    # The _ skips the connectioncontext can mutate check
+    self.mainContext.truncateObjectType(objectType)
+    self.cachingContext._truncateObjectType(objectType)

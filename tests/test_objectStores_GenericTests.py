@@ -1198,3 +1198,56 @@ def t_FilterByQueryAndFunction(testClass, objectStoreType):
           break
     testClass.assertEqual(0, len(expectedRes), msg="Not all expected results were in the response")
   objectStoreType.executeInsideConnectionContext(dbfn)
+
+def t_truncateJsonObject(testClass, objectStoreType):
+  objectTypeA = "objectTypeA"
+  objectTypeB = "objectTypeB"
+
+  numRows = 30
+
+  def addDataDbfn(objectType):
+    def a(connectionContext):
+      for x in range(0,numRows):
+        k = "123" + str(x)
+        obj = {"sample": objectType + str(x).strip()}
+        _ = connectionContext.saveJSONObject(objectType, k, copy.deepcopy(obj), None)
+    return a
+
+  def checkDataDbfn(objectType):
+    def a(connectionContext):
+      for x in range(0,numRows):
+        k = "123" + str(x)
+        (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objectKey) =  connectionContext.getObjectJSON(objectType, k)
+        testClass.assertEqual(objectDICT["sample"], objectType + str(x).strip())
+    return a
+
+  def checkEmptyDataDbfn(objectType):
+    def a(connectionContext):
+      for x in range(0,numRows):
+        k = "123" + str(x)
+        (objectDICT, ObjectVersion, creationDate, lastUpdateDate, objectKey) =  connectionContext.getObjectJSON(objectType, k)
+        testClass.assertEqual(objectDICT, None)
+    return a
+
+  def truncateDbfn(objectType):
+    def a(connectionContext):
+      connectionContext.truncateObjectType(objectType)
+    return a
+
+
+  objectStoreType.executeInsideTransaction(addDataDbfn(objectTypeA))
+  objectStoreType.executeInsideTransaction(addDataDbfn(objectTypeB))
+
+  objectStoreType.executeInsideConnectionContext(checkDataDbfn(objectTypeA))
+  objectStoreType.executeInsideConnectionContext(checkDataDbfn(objectTypeB))
+
+  objectStoreType.executeInsideTransaction(truncateDbfn(objectTypeA))
+
+  objectStoreType.executeInsideConnectionContext(checkEmptyDataDbfn(objectTypeA))
+  objectStoreType.executeInsideConnectionContext(checkDataDbfn(objectTypeB))
+
+  objectStoreType.executeInsideTransaction(truncateDbfn(objectTypeB))
+
+  objectStoreType.executeInsideConnectionContext(checkEmptyDataDbfn(objectTypeA))
+  objectStoreType.executeInsideConnectionContext(checkEmptyDataDbfn(objectTypeB))
+

@@ -288,6 +288,14 @@ class ObjectStoreConnectionContext():
   def _getAllRowsForObjectType(self, objectType, filterFN, outputFN, whereClauseText):
     raise Exception('_getAllRowsForObjectType Not Implemented for this objectstore type')
 
+  def truncateObjectType(self, objectType):
+    self._INT_varifyWeCanMutateData()
+    return self._truncateObjectType(objectType)
+
+  def _truncateObjectType(self, objectType):
+    raise Exception('Not Overridden')
+
+
   #Optional override for closing the context
   def _close(self):
     pass

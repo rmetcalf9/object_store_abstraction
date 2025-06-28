@@ -26,14 +26,14 @@ class ConnectionContext(ObjectStoreConnectionContext):
 
   #transactional memory not implemented
   def _startTransaction(self):
-    self.toContext._startTransaction()
-    return self.fromContext._startTransaction()
+    self.toContext._INT_startTransaction()
+    return self.fromContext._INT_startTransaction()
   def _commitTransaction(self):
-    self.toContext._commitTransaction()
-    return self.fromContext._commitTransaction()
+    self.toContext._INT_commitTransaction()
+    return self.fromContext._INT_commitTransaction()
   def _rollbackTransaction(self):
-    self.toContext._rollbackTransaction()
-    return self.fromContext._rollbackTransaction()
+    self.toContext._INT_rollbackTransaction()
+    return self.fromContext._INT_rollbackTransaction()
 
   def _saveJSONObjectV2(self, objectType, objectKey, JSONString, objectVersion):
     to_objectDICT, to_ObjectVersion, to_creationDate, to_lastUpdateDate, to_objectKey = self.toContext._getObjectJSON(objectType, objectKey)
@@ -65,6 +65,10 @@ class ConnectionContext(ObjectStoreConnectionContext):
 
   def _getPaginatedResultIterator(self, query, sort, filterFN, getSortKeyValueFn, objectType):
     return self.fromContext._getPaginatedResultIterator(query, sort, filterFN, getSortKeyValueFn, objectType)
+
+  def _truncateObjectType(self, objectType):
+    self.toContext.truncateObjectType(objectType)
+    return self.fromContext.truncateObjectType(objectType)
 
 # Class that will store objects in memory only
 class ObjectStore_Migrating(ObjectStore):

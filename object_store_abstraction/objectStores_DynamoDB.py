@@ -226,6 +226,30 @@ class ConnectionContext(ObjectStoreConnectionContext):
       dict = self.__getAllRowsForObjectType(objectType, None, None)
       return PaginatedResultIteratorFromDictWithAttrubtesAsKeysClass(dict, query, sort, filterFN, getSortKeyValueFn)
 
+  def _truncateObjectType(self, objectType):
+    if self.objectStore.singleTableMode:
+      return self.__truncateObjectTypeSingleTableMode(objectType)
+    self.objectStore.multiTableModeDeleteEntireTable(objectType)
+
+  def __truncateObjectTypeSingleTableMode(self, objectType):
+    response = self.objectStore.getTable(objectType).scan(
+        FilterExpression=Key('partition_key').begins_with(objectType + "_"),
+    )
+    table = self.objectStore.getTable(objectType)
+    items = response['Items']
+
+    # Delete in batches of 25
+    from itertools import islice
+    def chunks(iterable, size):
+      iterator = iter(iterable)
+      for first in iterator:
+        yield [first, *list(islice(iterator, size - 1))]
+
+    for batch in chunks(items, 25):
+      with table.batch_writer() as batch_writer:
+        for item in batch:
+          batch_writer.delete_item(Key={'partition_key': item['partition_key']})
+
 # Class that will store objects
 class ObjectStore_DynamoDB(ObjectStore):
   awsSession = None
@@ -309,6 +333,11 @@ class ObjectStore_DynamoDB(ObjectStore):
           'dyn': self.awsDynamodbClient.Table(self.getTableName(objectType))
         }
 
+  def multiTableModeDeleteEntireTable(self, objectType):
+    if self.singleTableMode:
+      raise Exception("Must not run this in single table mode")
+    self.dynTables[objectType]["dyn"].delete()
+    del self.dynTables[objectType]
 
   def __createTable(self, objectType):
     resp = self.awsDynamodbClient.create_table(

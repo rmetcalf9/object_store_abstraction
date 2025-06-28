@@ -96,6 +96,12 @@ class ConnectionContext(ObjectStoreConnectionContext):
   def _getPaginatedResultIterator(self, query, sort, filterFN, getSortKeyValueFn, objectType):
     return Iterator(query, sort, filterFN, getSortKeyValueFn, self, objectType)
 
+  def _truncateObjectType(self, objectType):
+    if objectType not in self.objectStore.objectData:
+      return
+    del self.objectStore.objectData[objectType]
+
+
 # Class that will store objects in memory only
 class ObjectStore_Memory(ObjectStore):
   objectData = None

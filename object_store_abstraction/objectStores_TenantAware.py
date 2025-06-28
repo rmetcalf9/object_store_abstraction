@@ -80,6 +80,9 @@ class TenantAwareConnectionContext():
     return self.objectStoreContext._close()
 
 
+  def _truncateObjectType(self, objectType):
+    raise Exception("_truncateObjectType not ovverriden tennant aweare")
+
 class ObjectStore_TenantAware():
   objectStore = None
   def __init__(self, objectStore):

@@ -103,6 +103,12 @@ class ConnectionContextSimpleFileStorePrivateFns(ObjectStoreConnectionContext):
     lastUpdateDate = dt.astimezone(pytz.utc)
     return filecontentDict["Data"], filecontentDict["ObjVer"], creationDate, lastUpdateDate, objectKey
 
+  def _truncateObjectType(self, objectType):
+    dirString = self.getObjectTypeDirectory(objectType, False)
+    if dirString is None:
+      return
+    self.objectStore.removeKnownObjectType(objectType)
+    shutil.rmtree(dirString)
 
 class ConnectionContext(ConnectionContextSimpleFileStorePrivateFns):
 
@@ -274,6 +280,8 @@ class ObjectStore_SimpleFileStore(ObjectStore):
     return objectType in self.knownExistingObjectTypes
   def setKnownObjectType(self, objectType):
     self.knownExistingObjectTypes[objectType] = True
+  def removeKnownObjectType(self, objectType):
+    del self.knownExistingObjectTypes[objectType]
 
   def isKnownIndexType(self, indexType):
     return indexType in self.knownExistingIndexTypes

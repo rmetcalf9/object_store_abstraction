@@ -289,6 +289,11 @@ class ConnectionContext(ObjectStoreConnectionContext):
       getSortKeyValueFn=getSortKeyValueFn
     )
 
+  def _truncateObjectType(self, objectType):
+    query = self.objectStore.objDataTable.delete(whereclause=(
+      self.objectStore.objDataTable.c.type==objectType
+    ))
+    result = self._INT_execute(query)
 
 class ObjectStore_SQLAlchemy(ObjectStore):
   engine = None
