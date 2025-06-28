@@ -154,3 +154,67 @@ def t_willnotacceptinvalidobjectname(testClass, objectStoreType_executeInsideTra
 
     with testClass.assertRaises(InvalidObjectTypeExceptionClass) as context:
         objectStoreType_executeInsideTransaction(someFn)
+
+def t_truncateDoubleIndex(testClass, objectStoreType_executeInsideTransaction):
+    doubleStringIndex1 = DoubleStringIndexClass("type1")
+    doubleStringIndex2 = DoubleStringIndexClass("type2")
+    doubleStringIndex3 = DoubleStringIndexClass("type3")
+
+    def addRecords(idx):
+        def a(connectionContext):
+            idx.save("1", "A", connectionContext)
+            idx.save("2", "B", connectionContext)
+            idx.save("3", "C", connectionContext)
+        return a
+
+    def verifyRecords(idx):
+        def a(connectionContext):
+            testClass.assertEqual(idx.getByA("1", connectionContext), "A")
+            testClass.assertEqual(idx.getByB("A", connectionContext), "1")
+            testClass.assertEqual(idx.getByA("2", connectionContext), "B")
+            testClass.assertEqual(idx.getByB("B", connectionContext), "2")
+            testClass.assertEqual(idx.getByA("3", connectionContext), "C")
+            testClass.assertEqual(idx.getByB("C", connectionContext), "3")
+            testClass.assertEqual(idx.getByB("99", connectionContext), None)
+            testClass.assertEqual(idx.getByB("Z", connectionContext), None)
+        return a
+
+    def truncate(idx):
+        def a(connectionContext):
+            idx.truncate(connectionContext)
+        return a
+
+    def verifyEmptyRecords(idx):
+        def a(connectionContext):
+            testClass.assertEqual(idx.getByA("1", connectionContext), None)
+            testClass.assertEqual(idx.getByB("A", connectionContext), None)
+            testClass.assertEqual(idx.getByA("2", connectionContext), None)
+            testClass.assertEqual(idx.getByB("B", connectionContext), None)
+            testClass.assertEqual(idx.getByA("3", connectionContext), None)
+            testClass.assertEqual(idx.getByB("C", connectionContext), None)
+            testClass.assertEqual(idx.getByB("99", connectionContext), None)
+            testClass.assertEqual(idx.getByB("Z", connectionContext), None)
+        return a
+
+    objectStoreType_executeInsideTransaction(addRecords(doubleStringIndex1))
+    objectStoreType_executeInsideTransaction(addRecords(doubleStringIndex2))
+    objectStoreType_executeInsideTransaction(addRecords(doubleStringIndex3))
+
+    objectStoreType_executeInsideTransaction(verifyRecords(doubleStringIndex1))
+    objectStoreType_executeInsideTransaction(verifyRecords(doubleStringIndex2))
+    objectStoreType_executeInsideTransaction(verifyRecords(doubleStringIndex3))
+
+    objectStoreType_executeInsideTransaction(truncate(doubleStringIndex1))
+    objectStoreType_executeInsideTransaction(verifyEmptyRecords(doubleStringIndex1))
+    objectStoreType_executeInsideTransaction(verifyRecords(doubleStringIndex2))
+    objectStoreType_executeInsideTransaction(verifyRecords(doubleStringIndex3))
+
+    objectStoreType_executeInsideTransaction(truncate(doubleStringIndex2))
+    objectStoreType_executeInsideTransaction(verifyEmptyRecords(doubleStringIndex1))
+    objectStoreType_executeInsideTransaction(verifyEmptyRecords(doubleStringIndex2))
+    objectStoreType_executeInsideTransaction(verifyRecords(doubleStringIndex3))
+
+    objectStoreType_executeInsideTransaction(truncate(doubleStringIndex3))
+    objectStoreType_executeInsideTransaction(verifyEmptyRecords(doubleStringIndex1))
+    objectStoreType_executeInsideTransaction(verifyEmptyRecords(doubleStringIndex2))
+    objectStoreType_executeInsideTransaction(verifyEmptyRecords(doubleStringIndex3))

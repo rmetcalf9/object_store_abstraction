@@ -265,6 +265,7 @@ class ObjectStore_SimpleFileStore(ObjectStore):
   directoryNamePrefix = "_"
   knownExistingObjectTypes = None #reduce os.dir exist calls by storeing objects we know have a dir
 
+  # Index files are for the DoubleStringIndex storage
   directoryNamePrefixDoubleStringIndex = "i"
   knownExistingIndexTypes = None #reduce os.dir exist calls by storeing objects we know have a dir
 
@@ -287,6 +288,8 @@ class ObjectStore_SimpleFileStore(ObjectStore):
     return indexType in self.knownExistingIndexTypes
   def setKnownIndexType(self, indexType):
     self.knownExistingIndexTypes[indexType] = True
+  def removeKnownIndexType(self, indexType):
+    del self.knownExistingIndexTypes[indexType]
 
   def __init__(self, ConfigDict, externalFns, detailLogging, type, factoryFn):
     super(ObjectStore_SimpleFileStore, self).__init__(externalFns, detailLogging, type)

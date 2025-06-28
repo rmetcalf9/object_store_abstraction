@@ -1,5 +1,5 @@
 
-ExceptionMsg = "ObjectStore DoubleStringIndex - Not overriden - "
+ExceptionMsg = "ObjectStore DoubleStringIndex - Not overridden - "
 
 class ObjectStoresConnectionContextExtensionBase():
     main_context = None
@@ -20,3 +20,6 @@ class ObjectStoresConnectionContextExtensionBase():
 
     def removeByB(self, objectStoreTypeString, keyB):
         raise Exception(ExceptionMsg + "removeByB")
+
+    def truncate(self, objectStoreTypeString):
+        raise Exception(ExceptionMsg + "truncate")

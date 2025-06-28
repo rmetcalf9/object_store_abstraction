@@ -43,3 +43,9 @@ class DoubleStringIndexConnectionContextExtension(ObjectStoresConnectionContextE
         keyA = idx[objectStoreTypeString]["byB"][keyB]
         del idx[objectStoreTypeString]["byA"][keyA]
         del idx[objectStoreTypeString]["byB"][keyB]
+
+    def truncate(self, objectStoreTypeString):
+        idx = self.main_context.objectStore._INT_getDictForDoubleStringIndex()
+        if objectStoreTypeString not in idx:
+            return
+        del idx[objectStoreTypeString]

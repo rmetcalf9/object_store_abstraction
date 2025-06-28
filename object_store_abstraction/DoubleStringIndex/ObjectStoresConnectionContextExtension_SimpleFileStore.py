@@ -1,13 +1,19 @@
 from .ObjectStoresConnectionContextExtensionBase import ObjectStoresConnectionContextExtensionBase
 import os
 import json
+import shutil #For remove dir and contents
+
 class DoubleStringIndexConnectionContextExtension(ObjectStoresConnectionContextExtensionBase):
 
-    def getIndexFileName(self, objectStoreTypeString, byA):
-        #This will ensure the file exists - initing it if required
+    def getDirstring(self, objectStoreTypeString):
         dirString = self.main_context.objectStore.baseLocation
         dirString += "/" + self.main_context.objectStore.directoryNamePrefixDoubleStringIndex
         dirString += self.main_context.objectStore.getFileSystemSafeStringFromKey(objectStoreTypeString)
+        return dirString
+
+    def getIndexFileName(self, objectStoreTypeString, byA):
+        #This will ensure the file exists - initing it if required
+        dirString = self.getDirstring(objectStoreTypeString)
 
         if not self.main_context.objectStore.isKnownIndexType(objectStoreTypeString):
             if not os.path.isdir(dirString):
@@ -82,3 +88,9 @@ class DoubleStringIndexConnectionContextExtension(ObjectStoresConnectionContextE
             del byBIdx[keyB]
             self.saveIndex(indexAFilename, byAIdx)
             self.saveIndex(indexBFilename, byBIdx)
+
+    def truncate(self, objectStoreTypeString):
+        with self.main_context.objectStore.fileAccessLock:
+            dirString = self.getDirstring(objectStoreTypeString)
+            shutil.rmtree(dirString)
+            self.main_context.objectStore.removeKnownIndexType(objectStoreTypeString)

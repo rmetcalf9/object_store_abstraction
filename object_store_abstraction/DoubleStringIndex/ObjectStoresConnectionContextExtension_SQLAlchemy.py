@@ -73,3 +73,10 @@ class DoubleStringIndexConnectionContextExtension(ObjectStoresConnectionContextE
             )
         ))
         resultDelA = self.main_context._INT_execute(queryDelB)
+
+    def truncate(self, objectStoreTypeString):
+        queryTruncate = self.main_context.objectStore.idxDataTable.delete(whereclause=
+            self.main_context.objectStore.idxDataTable.c.type == objectStoreTypeString,
+        )
+        resultTruncate = self.main_context._INT_execute(queryTruncate)
+

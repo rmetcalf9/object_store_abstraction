@@ -115,3 +115,6 @@ class DoubleStringIndexConnectionContextExtension(ObjectStoresConnectionContextE
             JSONString=objectDICTB,
             objectVersion=ObjectVersionB
         )
+
+    def truncate(self, objectStoreTypeString):
+        self.main_context.truncateObjectType(objectStoreTypeString)

@@ -27,3 +27,7 @@ class DoubleStringIndexConnectionContextExtension(ObjectStoresConnectionContextE
     def removeByB(self, objectStoreTypeString, keyB):
         self.main_context.toContext.doubleStringIndex.removeByB(objectStoreTypeString, keyB)
         self.main_context.fromContext.doubleStringIndex.removeByB(objectStoreTypeString, keyB)
+
+    def truncate(self, objectStoreTypeString):
+        self.main_context.toContext.doubleStringIndex.truncate(objectStoreTypeString)
+        self.main_context.fromContext.doubleStringIndex.truncate(objectStoreTypeString)

@@ -37,4 +37,5 @@ class DoubleStringIndexClass():
     def removeByB(self, keyB, storeConnection):
         return storeConnection.doubleStringIndex.removeByB(self.objectStoreTypeString, keyB)
 
-
+    def truncate(self, storeConnection):
+        return storeConnection.doubleStringIndex.truncate(self.objectStoreTypeString)

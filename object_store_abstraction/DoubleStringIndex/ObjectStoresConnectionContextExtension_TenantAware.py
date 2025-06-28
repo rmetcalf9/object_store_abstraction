@@ -31,3 +31,8 @@ class DoubleStringIndexConnectionContextExtension(ObjectStoresConnectionContextE
             objectStoreTypeString=self.main_context.INT__getDirivedObjectType(objectStoreTypeString),
             keyB=keyB
         )
+
+    def truncate(self, objectStoreTypeString):
+        return self.main_context.objectStoreContext.doubleStringIndex.truncate(
+            objectStoreTypeString=self.main_context.INT__getDirivedObjectType(objectStoreTypeString)
+        )
