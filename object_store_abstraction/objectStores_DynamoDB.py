@@ -336,8 +336,9 @@ class ObjectStore_DynamoDB(ObjectStore):
   def multiTableModeDeleteEntireTable(self, objectType):
     if self.singleTableMode:
       raise Exception("Must not run this in single table mode")
-    self.dynTables[objectType]["dyn"].delete()
-    del self.dynTables[objectType]
+    if objectType in self.dynTables:
+      self.dynTables[objectType]["dyn"].delete()
+      del self.dynTables[objectType]
 
   def __createTable(self, objectType):
     resp = self.awsDynamodbClient.create_table(

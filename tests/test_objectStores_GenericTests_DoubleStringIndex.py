@@ -218,3 +218,12 @@ def t_truncateDoubleIndex(testClass, objectStoreType_executeInsideTransaction):
     objectStoreType_executeInsideTransaction(verifyEmptyRecords(doubleStringIndex1))
     objectStoreType_executeInsideTransaction(verifyEmptyRecords(doubleStringIndex2))
     objectStoreType_executeInsideTransaction(verifyEmptyRecords(doubleStringIndex3))
+
+    ## Truncate twice
+    objectStoreType_executeInsideTransaction(truncate(doubleStringIndex1))
+    objectStoreType_executeInsideTransaction(truncate(doubleStringIndex1))
+
+    ## Use again after truncate
+    objectStoreType_executeInsideTransaction(addRecords(doubleStringIndex1))
+    objectStoreType_executeInsideTransaction(verifyRecords(doubleStringIndex1))
+

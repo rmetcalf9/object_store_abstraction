@@ -289,7 +289,8 @@ class ObjectStore_SimpleFileStore(ObjectStore):
   def setKnownIndexType(self, indexType):
     self.knownExistingIndexTypes[indexType] = True
   def removeKnownIndexType(self, indexType):
-    del self.knownExistingIndexTypes[indexType]
+    if indexType in self.knownExistingIndexTypes:
+      del self.knownExistingIndexTypes[indexType]
 
   def __init__(self, ConfigDict, externalFns, detailLogging, type, factoryFn):
     super(ObjectStore_SimpleFileStore, self).__init__(externalFns, detailLogging, type)

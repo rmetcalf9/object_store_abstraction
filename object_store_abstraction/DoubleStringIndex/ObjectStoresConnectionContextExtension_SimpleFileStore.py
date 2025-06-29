@@ -92,5 +92,6 @@ class DoubleStringIndexConnectionContextExtension(ObjectStoresConnectionContextE
     def truncate(self, objectStoreTypeString):
         with self.main_context.objectStore.fileAccessLock:
             dirString = self.getDirstring(objectStoreTypeString)
-            shutil.rmtree(dirString)
+            if os.path.exists(dirString):
+                shutil.rmtree(dirString)
             self.main_context.objectStore.removeKnownIndexType(objectStoreTypeString)

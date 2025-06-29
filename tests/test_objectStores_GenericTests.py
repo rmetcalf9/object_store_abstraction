@@ -1251,3 +1251,13 @@ def t_truncateJsonObject(testClass, objectStoreType):
   objectStoreType.executeInsideConnectionContext(checkEmptyDataDbfn(objectTypeA))
   objectStoreType.executeInsideConnectionContext(checkEmptyDataDbfn(objectTypeB))
 
+  # Truncate twice
+  objectStoreType.executeInsideTransaction(truncateDbfn(objectTypeB))
+  objectStoreType.executeInsideTransaction(truncateDbfn(objectTypeB))
+
+  # works again after truncate
+  objectStoreType.executeInsideTransaction(addDataDbfn(objectTypeA))
+  objectStoreType.executeInsideTransaction(addDataDbfn(objectTypeB))
+
+  objectStoreType.executeInsideConnectionContext(checkDataDbfn(objectTypeA))
+  objectStoreType.executeInsideConnectionContext(checkDataDbfn(objectTypeB))
