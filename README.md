@@ -44,7 +44,7 @@ If you leave password blank you will be prompted
 ## Tpyes
 
 ### Object Store
-This is the main controling class that has the settings. It handles transactions.
+This is the main controlling class that has the settings. It handles transactions.
 There are many derived classes for different storage types.
 
 

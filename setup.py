@@ -12,8 +12,8 @@ sp_install_requires = [
   'boto3==1.26.97'
 ]
 sp_tests_require = [
-  'pytest==7.1.27',
-  'python_Testing_Utilities==0.1.7'
+  'pytest==8.1.0',
+  'python_Testing_Utilities==0.1.11'
 ]
 
 all_require = sp_install_requires + sp_tests_require
