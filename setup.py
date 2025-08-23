@@ -3,7 +3,7 @@ import versioneer
 
 #Dependancy lists maintained here and in tox.ini
 sp_install_requires = [
-  'pytz==2019.3',
+  'pytz==2025.2',
   'sortedcontainers==2.4.0',
   'pyjwt==2.8.0',
   'sqlalchemy==1.3.1',
