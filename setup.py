@@ -6,10 +6,10 @@ sp_install_requires = [
   'pytz==2025.2',
   'sortedcontainers==2.4.0',
   'pyjwt==2.8.0',
-  'sqlalchemy==1.3.1',
+  'sqlalchemy==2.0.44',
   'PyMySQL==0.9.3',
-  'python-dateutil==2.8.1',
-  'boto3==1.26.97'
+  'python-dateutil==2.9.0.post0',
+  'boto3==1.40.75'
 ]
 sp_tests_require = [
   'pytest==8.1.0',

@@ -50,7 +50,7 @@ class testHelperSuperClass(unittest.TestCase):
           print("           got: " + type(context.exception).__name__ + ' - ' + str(context.exception));
           print("")
           if context.exception.__traceback__ is None:
-            print("No traceback data in origional exception")
+            print("No traceback data in original exception")
           else:
             print("Original exception Traceback: ", context.exception.__traceback__)
           raise context.exception

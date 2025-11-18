@@ -1,5 +1,6 @@
 from .objectStores_base import ObjectStore, ObjectStoreConnectionContext, StoringNoneObjectAfterUpdateOperationException, WrongObjectVersionException, ObjectStoreConfigError, MissingTransactionContextException, TriedToDeleteMissingObjectException, TryingToCreateExistingObjectException, SuppliedObjectVersionWhenCreatingException
-from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, ForeignKey, BigInteger, DateTime, JSON, func, UniqueConstraint, and_, Text, select
+from sqlalchemy import create_engine, Table, Column, Integer, String, MetaData, ForeignKey, BigInteger, DateTime, JSON, \
+  func, UniqueConstraint, and_, Text, select, update, delete
 import pytz
 ##import datetime
 from dateutil.parser import parse
@@ -64,44 +65,48 @@ objectStoreHardCodedVersionInteger = 2
 
 class ConnectionContext(ObjectStoreConnectionContext):
   connection = None
-  transaction = None
+  isTransactionInProgress = None
   objectStore = None
 
   def __init__(self, objectStore):
     super(ConnectionContext, self).__init__(doubleStringIndex=ConnectionContext_SQLAlchemy(main_context=self))
     self.objectStore = objectStore
     self.connection = self.objectStore.engine.connect()
+    self.isTransactionInProgress = False
 
   def _startTransaction(self):
-    if self.transaction is not None:
+    if self.isTransactionInProgress:
       raise Exception("ERROR Starting transaction when there is already one in progress")
-    self.transaction = self.connection.begin()
+    ## _ = self.connection.begin() New auto begin behaviour
+    self.isTransactionInProgress = True
 
   #Internal function for executing a statement
   ## only called from this file
   def _INT_execute(self, statement):
-    if self.transaction is None:
+    if not self.isTransactionInProgress:
       MissingTransactionContextException
     return self.connection.execute(statement.execution_options(autocommit=False))
 
   def _commitTransaction(self):
-    res = self.transaction.commit()
-    self.transaction = None
+    res = self.connection.commit()
+    self.isTransactionInProgress = False
     return res
+
   def _rollbackTransaction(self):
-    res = self.transaction.rollback()
-    self.transaction = None
+    res = self.connection.rollback()
+    self.isTransactionInProgress = False
     return res
 
   def _saveJSONObjectV2(self, objectType, objectKey, JSONString, objectVersion):
     #print("JSONString:", JSONString)
-    query = self.objectStore.objDataTable.select(
-      whereclause=(
+    query = (
+      select(self.objectStore.objDataTable)  # 1. Start the select (pass the table/columns)
+      .where(  # 2. Use the .where() method
         and_(
-          self.objectStore.objDataTable.c.type==objectType,
-          self.objectStore.objDataTable.c.key==objectKey
-          )
+          self.objectStore.objDataTable.c.type == objectType,
+          self.objectStore.objDataTable.c.key == objectKey
         )
+      )
     )
     result =  self._INT_execute(query)
     firstRow = result.first()
@@ -134,16 +139,22 @@ class ConnectionContext(ObjectStoreConnectionContext):
     if str(firstRow.objectVersion) != str(objectVersion):
       raise WrongObjectVersionException
     newObjectVersion = firstRow.objectVersion + 1
-    query = self.objectStore.objDataTable.update(whereclause=(
-      and_(
-        self.objectStore.objDataTable.c.type==objectType,
-        self.objectStore.objDataTable.c.key==objectKey
+    table = self.objectStore.objDataTable
+    type_column = table.c.type
+    key_column = table.c.key
+    query = (
+      update(table)
+      .where(
+        and_(
+          type_column == objectType,
+          key_column == objectKey
         )
-      )).values(
-      objectVersion=newObjectVersion,
-      objectDICT=getJSONtoPutInStore(JSONString),
-      lastUpdateDate=curTime,
-      lastUpdateDate_iso8601=curTime.isoformat()
+      ).values(
+        objectVersion=newObjectVersion,
+        objectDICT=getJSONtoPutInStore(JSONString),
+        lastUpdateDate=curTime,
+        lastUpdateDate_iso8601=curTime.isoformat()
+      )
     )
     result = self._INT_execute(query)
     if result.rowcount != 1:
@@ -154,37 +165,51 @@ class ConnectionContext(ObjectStoreConnectionContext):
     return (newObjectVersion, None, curTime)
 
   def _removeJSONObject(self, objectType, objectKey, objectVersion, ignoreMissingObject):
-    query = self.objectStore.objDataTable.delete(whereclause=(
-      and_(
-        self.objectStore.objDataTable.c.type==objectType,
-        self.objectStore.objDataTable.c.key==objectKey
+    table = self.objectStore.objDataTable
+    type_column = table.c.type
+    key_column = table.c.key
+
+    query = (
+      delete(table)  # 1. Use the standalone delete() function
+      .where(  # 2. Use the .where() method instead of 'whereclause'
+        and_(
+          type_column == objectType,
+          key_column == objectKey
+        )
       )
-    ))
+    )
     result = self._INT_execute(query)
     if result.rowcount == 0:
       if not ignoreMissingObject:
         raise TriedToDeleteMissingObjectException
 
   def _INT_getTupleFromRow(self, row):
-    dt = parse(row['creationDate_iso8601'])
+    dt = parse(row.creationDate_iso8601)
     creationDate = dt.astimezone(pytz.utc)
-    dt = parse(row['lastUpdateDate_iso8601'])
+    dt = parse(row.lastUpdateDate_iso8601)
     lastUpdateDate = dt.astimezone(pytz.utc)
-    convertedObjectDICT = getObjFromJSONThatWasPutInStore(row['objectDICT'])
+    convertedObjectDICT = getObjFromJSONThatWasPutInStore(row.objectDICT)
 
-    return convertedObjectDICT, row['objectVersion'], creationDate, lastUpdateDate, row['key']
+    return convertedObjectDICT, row.objectVersion, creationDate, lastUpdateDate, row.key
 
 
   #Return value is objectDICT, ObjectVersion, creationDate, lastUpdateDate
   #Return None, None, None, None if object isn't in store
   ObjTableKeyMap = None
   def _getObjectJSON(self, objectType, objectKey):
-    query = self.objectStore.objDataTable.select(whereclause=(
-      and_(
-        self.objectStore.objDataTable.c.type==objectType,
-        self.objectStore.objDataTable.c.key==objectKey
+    table = self.objectStore.objDataTable
+    type_column = table.c.type
+    key_column = table.c.key
+
+    query = (
+      select(table)
+      .where(
+        and_(
+          type_column == objectType,
+          key_column == objectKey
+        )
       )
-    ))
+    )
     result = self._INT_execute(query)
     firstRow = result.fetchone()
     if firstRow is None:
@@ -197,7 +222,14 @@ class ConnectionContext(ObjectStoreConnectionContext):
   def _list_all_objectTypes(self):
     results = []
 
-    query = select([self.objectStore.objDataTable.c.type]).group_by(self.objectStore.objDataTable.c.type)
+    table = self.objectStore.objDataTable
+    type_column = table.c.type
+
+    # Refactored 2.0 statement:
+    query = (
+      select(type_column)  # 1. Pass the column(s) directly to select()
+      .group_by(type_column)  # 2. Use the chainable .group_by() method
+    )
     #print("QUERY:", query)
     result = self._INT_execute(query)
 
@@ -290,9 +322,15 @@ class ConnectionContext(ObjectStoreConnectionContext):
     )
 
   def _truncateObjectType(self, objectType):
-    query = self.objectStore.objDataTable.delete(whereclause=(
-      self.objectStore.objDataTable.c.type==objectType
-    ))
+    table = self.objectStore.objDataTable
+    type_column = table.c.type
+
+    query = (
+      delete(table)  # 1. Use the standalone delete() function
+      .where(  # 2. Use the .where() method
+        type_column == objectType
+      )
+    )
     result = self._INT_execute(query)
 
 class ObjectStore_SQLAlchemy(ObjectStore):
@@ -401,7 +439,7 @@ class ObjectStore_SQLAlchemy(ObjectStore):
       )
       result = connectionContext._INT_execute(query)
       return objectStoreHardCodedVersionInteger
-    firstRow = result.first()
+    firstRow = result.mappings().first()
     return firstRow['current_installed_ver']
 
   def set_current_db_version(self, connectionContext, externalFns, newversion):
@@ -470,9 +508,14 @@ class Iterator(PaginatedResultIteratorBaseClass):
           whereclauseToUse,
           self.sqlAlchemyStoreConnectionContext.objectStore.objDataTable.c.objectDICT.ilike('%' + query + '%')
         )
-    queryObj = self.sqlAlchemyStoreConnectionContext.objectStore.objDataTable.select(
-      whereclause=whereclauseToUse,
-      order_by=self.sqlAlchemyStoreConnectionContext.objectStore.objDataTable.c.key
+
+    table = self.sqlAlchemyStoreConnectionContext.objectStore.objDataTable
+    key_column = table.c.key
+
+    queryObj = (
+      select(table)
+      .where(whereclauseToUse)  # Use the .where() method
+      .order_by(key_column)  # Use the .order_by() method
     )
     # print("SQLAlch Itr queryObj", queryObj)
     self.result =  self.sqlAlchemyStoreConnectionContext._INT_execute(queryObj)
