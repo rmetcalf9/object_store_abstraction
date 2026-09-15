@@ -2,8 +2,33 @@ from ObjectStoresWithPrefix import objectStoresWithPrefix, JSONString, JSONStrin
 import TestHelperSuperClass
 
 '''
+Tests run against a local database
+Old way: mysql DB see instrucitons below
+New way: postgress DB next instructions
+
+### Postgress instructions
+
+I cheat and use my kongadb: dmu-kongadb
+get into container:
+
+docker exec -it dev_machine_utilities_dmu-kongadb.1.0epl38s3wwmr74ddebdk6qgwt psql -U konga
+CREATE DATABASE saas_user_man;
+\q
+
+docker exec -it dev_machine_utilities_dmu-kongadb.1.0epl38s3wwmr74ddebdk6qgwt psql -U konga -d saas_user_man
+CREATE USER saas_user_man_user WITH PASSWORD 'saas_user_man_testing_password';
+GRANT ALL PRIVILEGES ON DATABASE saas_user_man TO saas_user_man_user;
+CREATE SCHEMA IF NOT EXISTS saas_user_man AUTHORIZATION saas_user_man_user;
+GRANT USAGE, CREATE ON SCHEMA saas_user_man TO saas_user_man_user;
+ALTER ROLE saas_user_man_user SET search_path TO saas_user_man;
+
+
+### Below are the mysql instructions
 These tests require a local mysql database
  - DB IS RJM Personal infrastructure - password for DB is in docker-compose
+To get in
+docker exec -it dev_machine_utilities_dmu-testingmysqldb.1.uy7p7d045qoxqsnrfwzu6t8tu mysql -u root -p
+
 To setup log into db as admin and run the following commands:
 
 create database saas_user_man CHARACTER SET utf8 COLLATE utf8_general_ci;
@@ -41,10 +66,18 @@ if ('SKIPSQLALCHEMYTESTS' in os.environ):
 
 
 
-SQLAlchemy_LocalDBConfigDict = {
+SQLAlchemy_LocalDBConfigDict_mysql = {
   "Type":"SQLAlchemy",
   "connectionString":"mysql+pymysql://saas_user_man_user:saas_user_man_testing_password@127.0.0.1:10103/saas_user_man"
 }
+SQLAlchemy_LocalDBConfigDict_postgres = {
+  "Type":"SQLAlchemy",
+  "connectionString":"postgresql+psycopg://saas_user_man_user:saas_user_man_testing_password@127.0.0.1:10107/saas_user_man"
+}
+
+##SQLAlchemy_LocalDBConfigDict = copy.deepcopy(SQLAlchemy_LocalDBConfigDict_mysql)
+SQLAlchemy_LocalDBConfigDict = copy.deepcopy(SQLAlchemy_LocalDBConfigDict_postgres)
+
 SQLAlchemy_LocalDBConfigDict_withPrefix = copy.deepcopy(SQLAlchemy_LocalDBConfigDict)
 SQLAlchemy_LocalDBConfigDict_withPrefix["objectPrefix"] ="testPrefix"
 

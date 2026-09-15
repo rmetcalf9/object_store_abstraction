@@ -8,6 +8,7 @@ sp_install_requires = [
   'pyjwt==2.8.0',
   'sqlalchemy==2.0.44',
   'PyMySQL==0.9.3',
+  'psycopg[binary]==3.2.12',
   'python-dateutil==2.9.0.post0',
   'boto3==1.40.75'
 ]
