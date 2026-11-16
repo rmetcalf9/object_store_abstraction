@@ -5,7 +5,7 @@ import versioneer
 sp_install_requires = [
   'pytz==2025.2',
   'sortedcontainers==2.4.0',
-  'pyjwt==2.8.0',
+  'pyjwt==2.15.1',
   'sqlalchemy==2.0.44',
   'PyMySQL==0.9.3',
   'psycopg[binary]==3.2.12',
